@@ -1,5 +1,8 @@
 # Another Reddit Console Client (`arcc`)
 
+<!-- [![Build Status][travis-img]][travis] -->
+[![Build Status][appveyor-img]][appveyor]
+
 ## Introduction
 
 `arcc` is another console app for reading Reddit. Unlike the others, this one is written in C++, so what does that mean?
@@ -15,3 +18,9 @@
 1. Run the program
 
 And then you're ready to star using Redding from a console!
+
+<!-- [travis-img]: https://travis-ci.org/zethon/bbcpp.svg?branch=master
+[travis]: https://travis-ci.org/zethon/bbcpp -->
+
+[appveyor-img]: https://ci.appveyor.com/api/projects/status/goko4jxjkxhmvchq?svg=true
+[appveyor]: https://ci.appveyor.com/project/zethon/arcc
