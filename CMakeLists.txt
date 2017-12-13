@@ -32,4 +32,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
     )
 endif()
 
+find_package(Boost REQUIRED) 
+include_directories(${Boost_INCLUDE_DIRS}) 
+
 add_subdirectory(src)

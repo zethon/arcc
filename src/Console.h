@@ -3,19 +3,51 @@
 
 #pragma once
 
+#include <boost/signals2.hpp>
+
 namespace arcc
 {
 namespace console
 {
 
-class TerminalManager final
+class ConsoleHandler final
 {
 
 public:
-    TerminalManager();
-    ~TerminalManager();
+    ConsoleHandler();
+    ~ConsoleHandler();
 
     void run();
+
+	template <class Handler>
+	void setCharHandler(const Handler & h)
+	{
+		onChar.connect(h);
+	}
+
+	template <class Handler>
+	void setEnterHandler(const Handler & h)
+	{
+		onEnter.connect(h);
+	}     
+
+	template <class Handler>
+	void setBackSpaceHandler(const Handler & h)
+	{
+		onBackSpace.connect(h);
+	}
+
+	template <class Handler>
+	void setDeleteHandler(const Handler & h)
+	{
+		onDelete.connect(h);
+	}        
+
+private:
+    boost::signals2::signal<void(char)> onChar;
+    boost::signals2::signal<bool(void), boost::signals2::last_value<bool> > onEnter;
+    boost::signals2::signal<void(void)> onBackSpace;
+    boost::signals2::signal<void(void)> onDelete;
 };
 
 } // namespace console
