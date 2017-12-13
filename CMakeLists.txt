@@ -32,6 +32,12 @@ if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
     )
 endif()
 
+if (MSVC)
+	add_definitions(
+        -D_SCL_SECURE_NO_WARNINGS
+    )
+endif()
+
 find_package(Boost REQUIRED) 
 include_directories(${Boost_INCLUDE_DIRS}) 
 
