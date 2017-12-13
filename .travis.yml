@@ -27,7 +27,7 @@ matrix:
 
 script:
   - cmake .
-  - cmake --build . -- -j2
+  - cmake --build . -- -j3
 
 notifactions:
   email:
