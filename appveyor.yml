@@ -1,7 +1,5 @@
 version: 0.1.{build}
 
-CURL_VERSION: 7.57.0
-
 image: 
  - Visual Studio 2017
 
