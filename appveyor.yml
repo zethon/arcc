@@ -3,6 +3,10 @@ version: 0.1.{build}
 image: 
  - Visual Studio 2017
 
+install:
+  - curl -fsS -o curl-7.50.3.zip https://curl.haxx.se/download/curl-7.50.3.zip
+  - 7z x curl-7.50.3.zip -oc:\src\lib > NUL
+
 environment:
   BOOST_ROOT: C:\Libraries\boost_1_65_1
   matrix:
