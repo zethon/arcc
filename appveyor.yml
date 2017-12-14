@@ -1,11 +1,13 @@
 version: 0.1.{build}
 
+CURL_VERSION: 7.57.0
+
 image: 
  - Visual Studio 2017
 
 install:
-  - curl -fsS -o curl-7.50.3.zip https://curl.haxx.se/download/curl-7.50.3.zip
-  - 7z x curl-7.50.3.zip -oc:\src\lib > NUL
+  - curl -fsS -o curl-%CURL_VERSION%.zip https://curl.haxx.se/download/curl-%CURL_VERSION%.zip
+  - 7z x curl-%CURL_VERSION%.zip -oc:\src\lib > NUL
 
 environment:
   BOOST_ROOT: C:\Libraries\boost_1_65_1
@@ -14,5 +16,17 @@ environment:
     - VS_VERSION: "Visual Studio 15"
 
 build_script:
+  # remember where we are
+  - pushd .
+
+  # build curl
+  - cd c:\src\lib\curl-%CURL_VERSION%\winbuild
+  # Run this to enable nmake
+  - '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86'
+  - nmake /f Makefile.vc mode=dll VC=14 DEBUG=yes
+  - nmake /f Makefile.vc mode=dll VC=14 DEBUG=no
+
+  # go back to where we were and build
+  - popd
   - cmake "-G%VS_VERSION%" -H. -B_builds
   - cmake --build _builds --config "Debug"
