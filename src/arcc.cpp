@@ -93,8 +93,7 @@ bool executeCommand(const std::string& rawcmd)
         cmd	= cmd.substr(0, firstspace);
     }
 
-    std::cout << "command: " << cmd << std::endl;
-    std::cout << "params : " << params << std::endl;
+    consoleApp->exec(cmd, params);
 
     return success;
 }
@@ -102,7 +101,7 @@ bool executeCommand(const std::string& rawcmd)
 void initCommands()
 {
     consoleApp->addCommand({"quit,exit", "exit the program", 
-        [&](const std::string& params)
+        [](const std::string& params)
         {
             consoleApp->invokeExitHandler();
         }});

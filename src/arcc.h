@@ -58,7 +58,29 @@ public:
         }
     }
 
-    // void addCommand(const std::vector<std::string>& names, const std::string& helpMsg, ConsoleCommand::Handler handler);
+    void exec(const std::string& command, const std::string& params)
+    {
+        bool executed = false;
+
+        for (auto& c : _commands)
+        {
+            for (auto& alias : c.commandNames_)
+            {
+                if (alias == command)
+                {
+                    c.handler_(params);
+                    executed = true;
+                    goto endloop;
+                }
+            }
+        }
+
+        endloop:
+        if (!executed)
+        {
+            std::cout << "Invalid command: " << command << std::endl;
+        }
+    }
 };
 
 } // namespace console
