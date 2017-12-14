@@ -2,17 +2,32 @@
 // Copyright (c) 2017, Adalid Claure <aclaure@gmail.com>
 
 #include <iostream>
+#include <memory>
+#include <boost/algorithm/string.hpp>
+
+#include "libs/cxxopts.hpp"
 
 #include "core.h"
 #include "Console.h"
 
-using namespace arcc;
+#include "arcc.h"
+
+namespace arcc
+{
+namespace console
+{
+
+using ConsoleAppPtr = std::unique_ptr<ConsoleApp>;
+ConsoleAppPtr consoleApp;
+
+bool executeCommand(const std::string&);
 
 class ConsoleState
 {
     console::ConsoleHandler&    _terminalRef;
     std::string                 _commandLine;
     std::string::size_type      _currentPosition = 0;
+    bool                        _doExit = false;
 
 public:        
     ConsoleState(console::ConsoleHandler& terminal)
@@ -29,26 +44,26 @@ public:
         _currentPosition += 1;
     }
 
+    void setDoExit(bool val)
+    {
+        _doExit = val;
+    }
+
     bool doEnter()
     {
         std::cout << std::endl;
 
-        bool doExit = false;
-        if (_commandLine == "quit")
-        {
-            doExit = true;
-        }
-        else
-        {
-            std::cout << "Current Command: " << _commandLine << std::endl;
+        executeCommand(_commandLine); // could set _doExit=true
 
-            _commandLine.clear();
-            _currentPosition = 0;
+        _commandLine.clear();
+        _currentPosition = 0;
 
+        if (!_doExit)
+        {
             std::cout << "> " << std::flush;
         }
 
-        return doExit;
+        return _doExit;
     }    
 
     void doBackSpace()
@@ -62,13 +77,61 @@ public:
     }     
 };
 
+bool executeCommand(const std::string& rawcmd)
+{
+    bool success = false; // assume failure!
+
+    std::string params;
+    std::string cmd{rawcmd};
+    
+    boost::algorithm::trim(cmd);
+
+    auto firstspace = cmd.find(' ');
+    if (firstspace != std::string::npos)
+    {
+        params	= cmd.substr(firstspace + 1);
+        cmd	= cmd.substr(0, firstspace);
+    }
+
+    std::cout << "command: " << cmd << std::endl;
+    std::cout << "params : " << params << std::endl;
+
+    return success;
+}
+
+void initCommands()
+{
+    consoleApp->addCommand({"quit,exit", "exit the program", 
+        [&](const std::string& params)
+        {
+            consoleApp->invokeExitHandler();
+        }});
+
+    consoleApp->addCommand({"ping", "ping a website",
+        [](const std::string& params)
+        {
+            std::cout << "ping!" << std::endl;
+        }});
+}
+
+} // namespace console
+} // namespace arcc
+
 int main(int argc, char* argv[])
 {
+    using namespace arcc;
+    using namespace arcc::console;
+
     std::cout <<  APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;
 
-    console::ConsoleHandler terminal;
+    consoleApp = std::make_unique<ConsoleApp>();
+    initCommands();
+
+    ConsoleHandler terminal;
     ConsoleState conStat(terminal);
+
+    consoleApp->setExitHandler([&conStat]() { conStat.setDoExit(true); });
 
     terminal.setCharHandler(boost::bind(&ConsoleState::doChar, &conStat, _1));
     terminal.setEnterHandler(boost::bind(&ConsoleState::doEnter, &conStat));

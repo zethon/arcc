@@ -5,6 +5,7 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
+    arcc.h
     core.h
     Console.h
 )
@@ -19,3 +20,6 @@ add_executable(${PROJECT_NAME}
     ${SOURCE_FILES}
     ${HEADER_FILES}
 )
+
+target_link_libraries(${PROJECT_NAME}
+    ${CURL_LIBRARIES})

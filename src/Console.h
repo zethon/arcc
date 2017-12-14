@@ -10,6 +10,8 @@ namespace arcc
 namespace console
 {
 
+// proxy class for dealing with a specific OS's keyboard, the definitions
+// reside in OS-specific .cpp files (ConsolePosix.cpp, ConsoleWindows.cpp)
 class ConsoleHandler final
 {
 
