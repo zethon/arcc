@@ -33,6 +33,7 @@ matrix:
       osx_image: xcode8.3
 
 script:
+  - g++ --version
   - cmake .
   - cmake --build . -- -j3
 
