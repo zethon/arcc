@@ -9,6 +9,7 @@ install:
   - 7z x curl-7.57.0.zip -oc:\src\lib > NUL
   - cd c:\src\lib\curl-7.57.0\winbuild
   # - '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86'
+  - ''"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64'
   - nmake /f Makefile.vc mode=dll VC=14 DEBUG=yes
   - nmake /f Makefile.vc mode=dll VC=14 DEBUG=no 
 
