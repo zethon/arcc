@@ -9,19 +9,25 @@ install:
   - sudo ./b2 -d0 --with-test install 
   - cd ..
 
-addons:
-  apt:
-    sources: 
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-5
+# addons:
+#   apt:
+#     sources: 
+#       - ubuntu-toolchain-r-test
+#     packages:
+#       - g++-5
 
 matrix:
   include:
     - os: linux
-      sudo: false
+      addons:
+        apt:
+          sources: 
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      # sudo: false
       # env: GCC_VER="5" CXX=/usr/bin/g++-5 CC=/usr/bin/gcc-5 cmake -D ENABLE_COVERAGE:BOOL=TRUE .
-      env: COMPILER=g++-5 CXX=g++-5
+      env: COMPILER=g++-5
       compiler: gcc-5
     - os: osx
       osx_image: xcode8.3
