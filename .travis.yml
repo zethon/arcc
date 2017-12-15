@@ -26,14 +26,13 @@ matrix:
           packages:
             - g++-5
       # sudo: false
-      # env: GCC_VER="5" CXX=/usr/bin/g++-5 CC=/usr/bin/gcc-5 cmake -D ENABLE_COVERAGE:BOOL=TRUE .
-      env: COMPILER=g++-5
-      compiler: gcc-5
+      env: GCC_VER="5" CXX=/usr/bin/g++-5 CC=/usr/bin/gcc-5 #cmake -DCMAKE_CXX_COMPILER=/usr/bin/g++-5 -DCMAKE_C_COMPILER=/usr/bin/gcc-5 .
+      # env: 
+      # compiler: gcc-5
     - os: osx
       osx_image: xcode8.3
 
 script:
-  - g++ --version
   - cmake .
   - cmake --build . -- -j3
 
