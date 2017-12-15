@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
     std::cout <<  APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;
 
-    consoleApp = std::make_unique<ConsoleApp>();
+    consoleApp = std::unique_ptr<ConsoleApp>(new ConsoleApp());
     initCommands();
 
     ConsoleHandler terminal;
