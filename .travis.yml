@@ -20,7 +20,7 @@ matrix:
   include:
     - os: linux
       sudo: false
-      env: CXX=/usr/bin/g++-5 CC=/usr/bin/gcc-5 cmake -D ENABLE_COVERAGE:BOOL=TRUE .
+      env: GCC_VER="5" CXX=/usr/bin/g++-5 CC=/usr/bin/gcc-5 cmake -D ENABLE_COVERAGE:BOOL=TRUE .
       compiler: gcc
     - os: osx
       osx_image: xcode8.3
