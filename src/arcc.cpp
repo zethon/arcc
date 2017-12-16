@@ -9,6 +9,7 @@
 
 #include "core.h"
 #include "Console.h"
+#include "WebClient.h"
 
 #include "arcc.h"
 
@@ -110,6 +111,8 @@ void initCommands()
         [](const std::string& params)
         {
             std::cout << "ping!" << std::endl;
+            WebClient client;
+            
         }});
 }
 

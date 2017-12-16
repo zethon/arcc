@@ -2,12 +2,14 @@ project(arcc)
 
 set(SOURCE_FILES
     arcc.cpp
+    WebClient.cpp
 )
 
 set(HEADER_FILES
     arcc.h
     core.h
     Console.h
+    WebClient.h
 )
 
 if (WIN32)
