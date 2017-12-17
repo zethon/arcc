@@ -5,6 +5,7 @@
 #include <memory>
 #include <chrono>
 #include <boost/algorithm/string.hpp>
+#include <boost/spirit/include/qi.hpp>
 
 #include "libs/cxxopts.hpp"
 
@@ -16,6 +17,7 @@
 
 namespace arcc
 {
+
 namespace console
 {
 
@@ -70,7 +72,12 @@ public:
 
     void doBackSpace()
     {
-        std::cout << "ConsoleState::doBackSpace()" << std::endl;
+        if (_currentPosition > 0)
+        {
+            _terminalRef.echoBackspace();
+            _commandLine.erase(_currentPosition, 1);
+            _currentPosition--;
+        }
     } 
 
     void doDelete()
@@ -111,13 +118,18 @@ void initCommands()
     consoleApp->addCommand({"ping", "ping a website",
         [](const std::string& params)
         {
-            auto t_start = std::chrono::high_resolution_clock::now();
-            WebClient client;
-            auto result = client.doRequest("google.com");
-            auto t_end = std::chrono::high_resolution_clock::now();
-            std::cout 
-              << std::chrono::duration<double, std::milli>(t_end-t_start).count()
-              << " ms\n";
+            try
+            {
+                auto t_start = std::chrono::high_resolution_clock::now();
+                WebClient client;
+                auto result = client.doRequest(params);
+                auto t_end = std::chrono::high_resolution_clock::now();
+                std::cout << result.data.size() << " bytes in " << std::chrono::duration<double, std::milli>(t_end-t_start).count() << " ms\n";
+            }
+            catch (WebClientError& e)
+            {
+                std::cout << "Could not ping because '" << e.what() << "'" << std::endl;
+            }
         }});
 }
 

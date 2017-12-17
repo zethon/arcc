@@ -75,12 +75,9 @@ void ConsoleHandler::run()
                     done = onEnter(); 
                 break;
 
+                case 0x7f:
                 case 0x08:
                     onBackSpace();
-                break;
-
-                case 0x7f:
-                    onDelete();
                 break;
             }
         }
@@ -89,6 +86,11 @@ void ConsoleHandler::run()
             done = true;
         }
     }
+}
+
+void ConsoleHandler::echoBackspace()
+{
+    std::cout << "\b \b" << std::flush;
 }
 
 } // namespace console

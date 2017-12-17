@@ -21,6 +21,8 @@ public:
 
     void run();
 
+    void echoBackspace();
+
 	template <class Handler>
 	void setCharHandler(const Handler & h)
 	{

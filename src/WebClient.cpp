@@ -38,7 +38,7 @@ WebClient::WebClient()
     curl_version_info_data *vinfo = curl_version_info(CURLVERSION_NOW);
     if (!(vinfo->features & CURL_VERSION_SSL))
     {
-        throw std::runtime_error("CURL SSL support is required but not enabled");
+        throw WebClientError("CURL SSL support is required but not enabled");
     }
 
     // set up our writer
@@ -137,7 +137,7 @@ auto WebClient::doRequest(const std::string& url, const std::string& payload, We
             ss << "Request error: " << curl_easy_strerror(result);
         }
 
-        throw std::runtime_error(ss.str());
+        throw WebClientError(ss.str());
     }
 
    return retval;
