@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <cstring>
 
 #include "WebClient.h"
 
