@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <chrono>
 #include <boost/algorithm/string.hpp>
 
 #include "libs/cxxopts.hpp"
@@ -110,9 +111,13 @@ void initCommands()
     consoleApp->addCommand({"ping", "ping a website",
         [](const std::string& params)
         {
-            std::cout << "ping!" << std::endl;
+            auto t_start = std::chrono::high_resolution_clock::now();
             WebClient client;
-            
+            auto result = client.doRequest("google.com");
+            auto t_end = std::chrono::high_resolution_clock::now();
+            std::cout 
+              << std::chrono::duration<double, std::milli>(t_end-t_start).count()
+              << " ms\n";
         }});
 }
 

@@ -42,7 +42,7 @@ public:
     WebClient();
     virtual ~WebClient();
 
-    WebClient::Reply doRequest(const std::string& url, const std::string& payload, Method method);
+    WebClient::Reply doRequest(const std::string& url, const std::string& payload = std::string(), Method method = Method::GET);
 
 };
 

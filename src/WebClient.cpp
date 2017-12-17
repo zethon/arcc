@@ -113,22 +113,31 @@ auto WebClient::doRequest(const std::string& url, const std::string& payload, We
 
     if (result == CURLE_OK)
     {
-        if (std::strlen(_errbuf) > 0)
-        {
-            std::stringstream ss;
-            ss << "Request error: " << _errbuf;
+        char *finalUrl;
+        curl_easy_getinfo(_curl, CURLINFO_EFFECTIVE_URL, &finalUrl);
 
-            throw std::runtime_error(ss.str());
-        }
-        else
-        {
+        retval.status = status;
 
+        if (status == 200)
+        {
+            retval.finalUrl = finalUrl;
+            retval.data = _buffer; // copy! :(
         }
-        
     }
     else
     {
+        std::stringstream ss;
 
+        if (std::strlen(_errbuf) > 0)
+        {
+            ss << "Request error: " << _errbuf;
+        }
+        else
+        {
+            ss << "Request error: " << curl_easy_strerror(result);
+        }
+
+        throw std::runtime_error(ss.str());
     }
 
    return retval;
