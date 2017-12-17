@@ -54,5 +54,10 @@ void ConsoleHandler::run()
     }
 }
 
+void ConsoleHandler::echoBackspace()
+{
+    std::cout << "\b \b" << std::flush;
+}
+
 } // namespace console
 } // namespace arcc
