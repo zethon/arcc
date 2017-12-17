@@ -8,7 +8,7 @@
 
 #include "WebClient.h"
 
-const uint      DEFAULT_MAX_REDIRECTS	= 5;
+const unsigned int DEFAULT_MAX_REDIRECTS = 5;
 
 namespace arcc
 {
@@ -22,6 +22,12 @@ static size_t CURLwriter(char *data, size_t size, size_t nmemb, std::string *wri
 
     writerData->append(data, size*nmemb);
     return size * nmemb;
+}
+
+int trace(CURL *handle, curl_infotype type, unsigned char *data, size_t size, void *userp)
+{
+   std::cout << data << std::endl;
+   return 1;
 }
 
 CURLcode curlGlobalInit()
@@ -57,8 +63,10 @@ WebClient::WebClient()
     // SSL CONFIG: since PEM is default, we needn't set it for PEM
     curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
-    // need to disable this otherwise SSL does not work on Windows 7
+#ifdef _WINDOWS
+    // need to disable this otherwise SSL does not work on Windows 7    
     curl_easy_setopt(_curl, CURLOPT_SSL_ENABLE_ALPN, 0);
+#endif
     
     // tell libcurl to redirect a post with a post after a 301, 302 or 303
     curl_easy_setopt(_curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
