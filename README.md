@@ -21,14 +21,6 @@ Just install and run! 👍
 
 Coming soon! ⏳
 
-## Instructions
-
-### Logging In
->Usage: login {username} {password}
-
-### Logging Out
->Usage: logout
-
 ## License
 
 <img align="right" src="https://opensource.org/trademarks/opensource/OSI-Approved-License-100x137.png">
