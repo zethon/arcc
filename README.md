@@ -55,6 +55,10 @@ https://curl.haxx.se/
 MIT License - https://github.com/nlohmann/json/blob/develop/LICENSE.MIT<br/>
 https://nlohmann.github.io/json/
 
+* `Simple-Web-Server`<br/>
+MIT License - https://github.com/eidheim/Simple-Web-Server/blob/master/LICENSE<br/>
+https://github.com/eidheim/Simple-Web-Server
+
 <!-- * `Lightweight C++ command line option parser`<br/>
 MIT License - https://github.com/jarro2783/cxxopts/blob/master/LICENSE<br/>
 https://github.com/jarro2783/cxxopts
