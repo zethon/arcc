@@ -4,6 +4,7 @@
 [![Build Status][appveyor-img]][appveyor]
 [![Average time to resolve an issue](https://isitmaintained.com/badge/resolution/zethon/arcc.svg)](https://isitmaintained.com/project/zethon/arcc "Average time to resolve an issue")
 [![Percentage of issues still open](https://isitmaintained.com/badge/open/zethon/arcc.svg)](https://isitmaintained.com/project/zethon/arcc "Percentage of issues still open")
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d1edc1ba75ec4170b4fbffda2a9a6f4b)](https://www.codacy.com/app/zethon/arcc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zethon/arcc&amp;utm_campaign=Badge_Grade)
 
 ## Introduction
 
