@@ -7,13 +7,47 @@
 #include <cstring>
 #include <iostream>
 
+#ifdef _WINDOWS
+#include <windows.h>
+#include <shellapi.h>
+#elif defined(__APPLE__)
+#include <CoreFoundation/CFBundle.h>
+#include <ApplicationServices/ApplicationServices.h>
+#endif
+
 #include "WebClient.h"
 
 const unsigned int  DEFAULT_MAX_REDIRECTS = 5;
-const std::string   DEFAULT_USERAGENT = "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0";
+
 
 namespace arcc
 {
+
+namespace utils
+{
+void openBrowser(const std::string& url_str)
+{
+#ifdef _WINDOWS
+    ShellExecute(0, 0, url_str.c_str(), 0, 0, SW_SHOWNORMAL);
+#elif defined(__APPLE__)
+    // only works with `http://` prepended
+    CFURLRef url = CFURLCreateWithBytes (
+        NULL,                        // allocator
+        (UInt8*)url_str.c_str(),     // URLBytes
+        url_str.length(),            // length
+        kCFStringEncodingASCII,      // encoding
+        NULL                         // baseURL
+    );
+
+    LSOpenCFURLRef(url,0);
+    CFRelease(url);
+#else
+    throw NotImplementedException();
+#endif
+}
+
+} // namespace utils
+
 
 static size_t CURLwriter(char *data, size_t size, size_t nmemb, std::string *writerData)
 {

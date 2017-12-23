@@ -11,6 +11,13 @@
 namespace arcc
 {
 
+namespace utils
+{
+
+void openBrowser(const std::string& url_str);
+
+}
+
 class WebClientError : public std::runtime_error
 {
 

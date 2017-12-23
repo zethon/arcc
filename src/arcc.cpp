@@ -6,15 +6,7 @@
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/format.hpp>
 
-#ifdef _WINDOWS
-#include <windows.h>
-#include <shellapi.h>
-#elif defined(__APPLE__)
-#include <CoreFoundation/CFBundle.h>
-#include <ApplicationServices/ApplicationServices.h>
-#endif
 
 #include <cxxopts.hpp>
 
@@ -30,56 +22,30 @@ namespace arcc
 namespace console
 {
 
-void openBrowser(const std::string& url_str)
-{
-#ifdef _WINDOWS
-   ShellExecute(0, 0, url_str.c_str(), 0, 0, SW_SHOWNORMAL);
-#elif defined(__APPLE__)
-    // only works with `http://` prepended
-    CFURLRef url = CFURLCreateWithBytes (
-        NULL,                        // allocator
-        (UInt8*)url_str.c_str(),     // URLBytes
-        url_str.length(),            // length
-        kCFStringEncodingASCII,      // encoding
-        NULL                         // baseURL
-    );
-    
-    LSOpenCFURLRef(url,0);
-    CFRelease(url);
-#else
-    throw NotImplementedException();
-#endif
-}
-
 using ConsoleAppPtr = std::unique_ptr<ConsoleApp>;
 ConsoleAppPtr consoleApp;
-
-void login()
-{
-    // auto& terminal = consoleApp->getTerminal();
-
-    const std::string oauth2url = 
-        (boost::format("https://ssl.reddit.com/api/v1/authorize?client_id=%1%&response_type=code&state=%2%&redirect_uri=%3%&duration=permanent&scope=%4%")
-        % REDDIT_CLIENT_ID
-        % REDDIT_RANDOM_STRING
-        % REDDIT_REDIRECT_URL
-        % REDDIT_SCOPE).str();
-
-    openBrowser(oauth2url);
-    consoleApp->getHttpServer().start();
-}
 
 void initCommands()
 {
     consoleApp->addCommand({"whoami", "whoami", [](const std::string& params)
     {
-        auto reddit = consoleApp->getRedditSession();
-        reddit->doRequest("/api/v1/me");
+        consoleApp->doUserRequest("/api/v1/me");
     }});
 
     consoleApp->addCommand({"login", "login", [](const std::string& params)
     {
-        login();
+        OAuth2Login login;
+        login.start(); // will block until the login results are returned
+
+        if (login.loggedIn())
+        {
+            consoleApp->setRedditSession(login.getRedditSession());
+            std::cout << "login successful c:" << std::endl;
+        }
+        else
+        {
+            std::cout << "login denied D:" << std::endl;
+        }
     }});
 
     consoleApp->addCommand({"quit,exit", "exit the program", 
@@ -106,7 +72,7 @@ void initCommands()
                     url = "http://" + url;
                 }
 
-                openBrowser(url);
+                utils::openBrowser(url);
             }
             else
             {
