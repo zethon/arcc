@@ -47,12 +47,14 @@ std::string getUserFolder()
     std::string retval;
 
 #ifdef _WINDOWS
-    // throw NotImplementedException();
+    throw NotImplementedException();
 #elif defined(__APPLE__)    
 struct passwd *pw = getpwuid(getuid());
 retval = pw->pw_dir;
+#elif defined(__linux__)
+    throw NotImplementedException();
 #else
-    // throw NotImplementedException();
+    throw NotImplementedException();
 #endif
 
     return retval;
@@ -74,6 +76,8 @@ void openBrowser(const std::string& url_str)
 
     LSOpenCFURLRef(url,0);
     CFRelease(url);
+#elif defined(__linux__)
+    throw NotImplementedException();
 #else
     throw NotImplementedException();
 #endif
