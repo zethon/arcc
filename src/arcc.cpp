@@ -88,7 +88,16 @@ void initCommands()
         {
             if (consoleApp->getRedditSession() != nullptr)
             {
+                // write an empty session file
+                boost::filesystem::path homefolder { utils::getUserFolder() };
+                boost::filesystem::path sessionfile = homefolder / ".arcc_session";
+                std::ofstream out(sessionfile.string());
+                out << nlohmann::json{};
+                out.close();                
+
+                // delete our session object
                 consoleApp->resetSession();
+
                 std::cout << "you have logged out =C" << std::endl;
             }
             else
@@ -159,14 +168,17 @@ void loadSession()
         nlohmann::json j;
         i >> j;
 
-        auto reddit = std::make_shared<RedditSession>(
-            j["accessToken"].get<std::string>(), 
-            j["refreshToken"].get<std::string>(), 
-            j["expiry"].get<double>());
+        if (j.find("accessToken") != j.end() && j.find("refreshToken") != j.end() && j.find("expiry") != j.end())
+        {
+            auto reddit = std::make_shared<RedditSession>(
+                j["accessToken"].get<std::string>(), 
+                j["refreshToken"].get<std::string>(), 
+                j["expiry"].get<double>());
 
-        consoleApp->setRedditSession(reddit);
+            consoleApp->setRedditSession(reddit);
 
-        std::cout << "loaded saved session" << std::endl;
+            std::cout << "loaded saved session" << std::endl;
+        }
     }
 }
 

@@ -3,18 +3,17 @@
 
 #include "utils.h"
 
+#include <exception>
+
 #ifdef _WINDOWS
-#include <windows.h>
-#include <shellapi.h>
+#   include <windows.h>
+#   include <shellapi.h>
 #elif defined(__APPLE__)
-
-#include <CoreFoundation/CFBundle.h>
-#include <ApplicationServices/ApplicationServices.h>
-
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-
+#   include <CoreFoundation/CFBundle.h>
+#   include <ApplicationServices/ApplicationServices.h>
+#   include <unistd.h>
+#   include <sys/types.h>
+#   include <pwd.h>
 #endif
 
 namespace utils
