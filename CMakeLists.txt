@@ -54,7 +54,8 @@ if (MSVC)
     SET(CMAKE_EXE_LINKER_FLAGS "/NODEFAULTLIB:library")
 endif()
 
-find_package(Boost COMPONENTS filesystem system thread REQUIRED) 
+set(Boost_USE_STATIC_LIBS ON)
+find_package(Boost COMPONENTS system thread filesystem REQUIRED) 
 include_directories(${Boost_INCLUDE_DIRS}) 
 
 add_subdirectory(Simple-Web-Server)
