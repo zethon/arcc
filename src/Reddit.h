@@ -62,18 +62,22 @@ class RedditSession final
     std::string     _accessToken;
     std::string     _refreshToken;
     
-    double          _expiry;        // number of seconds until the session needs refresh
-    TimePoint       _lastRefresh;
+    double          _expiry;            // number of seconds until the session needs refresh
+    TimePoint       _lastRefresh;       // keep track so we know when to refresh our token
 
-    WebClient       _webclient;
+    WebClient       _webclient;         // our "connection" to www.reddit.com
 
 public:
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
 
+    std::string accessToken() const { return _accessToken; }
+    std::string refreshToken() const { return _refreshToken; }
+    double expiry() const { return _expiry; }
+
     std::string doRequest(const std::string& endpoint, WebClient::Method method = WebClient::Method::GET);
 
 private:
-    void refreshToken();   
+    void doRefreshToken();   
 };
 
 } // namespace arcc

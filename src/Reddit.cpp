@@ -6,6 +6,7 @@
 #include <json.hpp>
 
 #include "Reddit.h"
+#include "utils.h"
 
 const std::string DEFAULT_USERAGENT = "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0";
 
@@ -17,7 +18,7 @@ void OAuth2Login::start()
     _server.resource["^/oauth2$"]["GET"] = 
         [&](std::shared_ptr<HttpServer::Response> response, std::shared_ptr<HttpServer::Request> request) 
         {
-            // TODO: ERROR HANDLING, LOL
+            std::string failedReason;
 
             std::stringstream stream;
             auto query_fields = request->parse_query_string();
@@ -25,8 +26,7 @@ void OAuth2Login::start()
 
             if (errorIt != query_fields.end())
             {
-                stream << "<h1>ERROR!</h1><h3>" << errorIt->second << "</h3>";
-                stream << "<p>You need to authorize <b>arcc</b> to use <b>Reddit</b>. You can try again by typing <b><i>login</i></b> in <b>arcc</b>";
+                failedReason = errorIt->second ;
             }
             else
             {
@@ -41,13 +41,39 @@ void OAuth2Login::start()
                 const std::string postData = (boost::format("grant_type=authorization_code&code=%1%&redirect_uri=%2%") % codeIt->second % REDDIT_REDIRECT_URL).str();
                 auto result = client.doRequest("https://www.reddit.com/api/v1/access_token", postData, WebClient::Method::POST);
                 
-                auto jreply = nlohmann::json::parse(result.data);                    
-                _reddit = std::make_shared<RedditSession>(jreply["access_token"], jreply["refresh_token"], jreply["expires_in"].get<double>());
+                if (result.status == 200)
+                {
+                    auto jreply = nlohmann::json::parse(result.data);                    
+                    _reddit = std::make_shared<RedditSession>(jreply["access_token"], jreply["refresh_token"], jreply["expires_in"].get<double>());
 
+                    _loggedIn = true;
+                }
+                else
+                {
+                    // TODO: need to support more failures if the retrieval to get the access token files
+                    //       see https://github.com/reddit/reddit/wiki/oauth2#authorization
+                    
+                    if (result.status == 401)
+                    {
+                        failedReason = "http basic authorization credentials were invalid";
+                    }
+                    else
+                    {
+                        failedReason = "authorization failed for an unknown reason";
+                    }
+                }
+            }
+
+            if (_loggedIn)
+            {
                 stream << "<h1>Login Successful!</h1>";
                 stream << "<p>You are now logged in to <b>Reddit</b> through <b>arcc</b> and may close this browser.";
-
-                _loggedIn = true;
+            }
+            else
+            {
+                stream << "<h1>ERROR!</h1>";
+                stream << "<big>reason:</big> <b><font style='font-family:monospace;'>" << failedReason << "</font></b>";
+                stream << "<p>You need to authorize <b>arcc</b> to use <b>Reddit</b>. You can try again by typing <b><i>login</i></b> in <b>arcc</b>";
             }
 
             response->write(stream);
@@ -69,6 +95,8 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
 {
     _webclient.setUserAgent(DEFAULT_USERAGENT);
     _webclient.setHeader("Authorization: bearer " + _accessToken);
+
+    // _commandMap.insert(std::make_par())
 }
 
 std::string RedditSession::doRequest(const std::string& endpoint, WebClient::Method method)
@@ -78,17 +106,10 @@ std::string RedditSession::doRequest(const std::string& endpoint, WebClient::Met
     std::string endpointUrl = requestUrl + endpoint;
 
     auto result = _webclient.doRequest(endpointUrl, std::string(), method);
-    auto jreply = nlohmann::json::parse(result.data);
-
-    std::cout << "username: " << jreply["name"].get<std::string>() << std::endl;
-    
-    std::time_t joined = jreply["created"].get<std::time_t>();
-    std::cout << "joined  : " << std::asctime(std::localtime(&joined));
-
     return result.data;
 }
 
-void RedditSession::refreshToken()
+void RedditSession::doRefreshToken()
 {
     std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now()-_lastRefresh;
     if (elapsed_seconds.count() > _expiry)

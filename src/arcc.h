@@ -18,16 +18,6 @@
 namespace arcc
 {
 
-class NotImplementedException : public std::logic_error
-{
-public:
-    NotImplementedException()
-    : std::logic_error("Function not yet implemented.")
-    {
-        // nothing to do
-    }
-};
-
 namespace console
 {
 
@@ -65,10 +55,10 @@ public:
 
     Terminal& getTerminal() { return _terminal; }
 
-    void addCommand(const ConsoleCommand& cmd)
+    void addCommand(const std::string& n, const std::string& hlp, ConsoleCommand::Handler hdr)
     {
-        _commands.push_back(cmd);
-    }
+        _commands.push_back(ConsoleCommand{n,hlp,hdr});
+    }    
 
     void doExitApp() { _doExit = true; }
 
@@ -120,17 +110,23 @@ public:
         }
     }
 
-    void doUserRequest(const std::string& endpoint)
+    std::string doReddit(const std::string& endpoint)
     {
+        std::string retval;
+
         if (_reddit)
         {
-            _reddit->doRequest(endpoint);
+            retval = _reddit->doRequest(endpoint);
         }
         else
         {
-            std::cout << "you must be logged in first! type `login` to sign into reddit" << std::endl;
+            std::cout << "you must be logged in first. type `login` to sign into reddit" << std::endl;
         }
+
+        return retval;
     }
+
+    void resetSession() { _reddit.reset(); }
 
     RedditSessionPtr getRedditSession() { return _reddit; }
     void setRedditSession(RedditSessionPtr val) { _reddit = val; }

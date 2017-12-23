@@ -6,13 +6,15 @@
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 #include <boost/spirit/include/qi.hpp>
-
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include <cxxopts.hpp>
 
 #include "core.h"
 #include "Terminal.h"
 #include "WebClient.h"
+#include "utils.h"
 
 #include "arcc.h"
 
@@ -25,36 +27,83 @@ namespace console
 using ConsoleAppPtr = std::unique_ptr<ConsoleApp>;
 ConsoleAppPtr consoleApp;
 
+void whoami()
+{
+    auto jsontext = consoleApp->doReddit("/api/v1/me");
+
+    if (jsontext.size() > 0)
+    {
+        auto jreply = nlohmann::json::parse(jsontext);
+
+        std::cout << "username: " << jreply["name"].get<std::string>() << std::endl;
+
+        std::time_t joined = jreply["created"].get<std::time_t>();
+        std::cout << "joined  : " << std::asctime(std::localtime(&joined));
+    }
+}
+
 void initCommands()
 {
-    consoleApp->addCommand({"whoami", "whoami", [](const std::string& params)
-    {
-        consoleApp->doUserRequest("/api/v1/me");
-    }});
+    consoleApp->addCommand("whoami", "whoami", [](const std::string&) { whoami(); });
 
-    consoleApp->addCommand({"login", "login", [](const std::string& params)
-    {
-        OAuth2Login login;
-        login.start(); // will block until the login results are returned
-
-        if (login.loggedIn())
+    consoleApp->addCommand("login", "login", [](const std::string& params)
         {
-            consoleApp->setRedditSession(login.getRedditSession());
-            std::cout << "login successful c:" << std::endl;
-        }
-        else
-        {
-            std::cout << "login denied D:" << std::endl;
-        }
-    }});
+            if (!consoleApp->getRedditSession())
+            {
+                OAuth2Login login;
+                login.start(); // will block until the login results are returned
 
-    consoleApp->addCommand({"quit,exit", "exit the program", 
+                if (login.loggedIn())
+                {
+                    consoleApp->setRedditSession(login.getRedditSession());
+
+                    boost::filesystem::path homefolder { utils::getUserFolder() };
+                    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
+
+                    nlohmann::json j;
+
+                    auto reddit = consoleApp->getRedditSession();
+                    j["accessToken"] = reddit->accessToken();
+                    j["refreshToken"] = reddit->refreshToken();
+                    j["expiry"] = reddit->expiry();
+
+                    std::ofstream out(sessionfile.string());
+                    out << j;
+                    out.close();
+
+                    std::cout << "login successful (/◔ ◡ ◔)/" << std::endl;
+                }
+                else
+                {
+                    std::cout << "login denied D:" << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "you are already logged in" << std::endl;
+            }
+        });
+
+    consoleApp->addCommand("logout", "logout of the current session",[](const std::string&)
+        {
+            if (consoleApp->getRedditSession() != nullptr)
+            {
+                consoleApp->resetSession();
+                std::cout << "you have logged out =C" << std::endl;
+            }
+            else
+            {
+                std::cout << "you are not logged in" << std::endl;
+            }
+        });
+
+    consoleApp->addCommand("quit,exit", "exit the program", 
         [](const std::string& params)
         {
             consoleApp->doExitApp();
-        }});
+        });
 
-    consoleApp->addCommand({"open,launch", "open a website in the default browser", 
+    consoleApp->addCommand("open,launch", "open a website in the default browser", 
         [](const std::string& params)
         {
             if (params.size() > 0)
@@ -79,9 +128,9 @@ void initCommands()
                 // show useage
                 std::cout << "Usage: open <url>" << std::endl;
             }
-        }});
+        });
 
-    consoleApp->addCommand({"ping", "ping a website",
+    consoleApp->addCommand("ping", "ping a website",
         [](const std::string& params)
         {
             try
@@ -96,7 +145,29 @@ void initCommands()
             {
                 std::cout << "Could not ping because '" << e.what() << "'" << std::endl;
             }
-        }});
+        });
+}
+
+void loadSession()
+{
+    boost::filesystem::path homefolder { utils::getUserFolder() };
+    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
+
+    if (boost::filesystem::exists(sessionfile))
+    {
+        std::ifstream i(sessionfile.string());
+        nlohmann::json j;
+        i >> j;
+
+        auto reddit = std::make_shared<RedditSession>(
+            j["accessToken"].get<std::string>(), 
+            j["refreshToken"].get<std::string>(), 
+            j["expiry"].get<double>());
+
+        consoleApp->setRedditSession(reddit);
+
+        std::cout << "loaded saved session" << std::endl;
+    }
 }
 
 } // namespace console
@@ -112,7 +183,9 @@ int main(int argc, char* argv[])
 
     Terminal terminal;
     consoleApp = std::unique_ptr<ConsoleApp>(new ConsoleApp(terminal));
+
     initCommands();
+    loadSession();
 
     try
     {
