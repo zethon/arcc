@@ -4,6 +4,9 @@ image:
  - Visual Studio 2017
 
 install:
+  ## Upgrade CMake
+  - choco upgrade cmake --version 3.10.1
+  - set path=C:\Program Files\CMake\bin;%path%
   #### Download, Build & Install Curl
   - curl -fsS -o curl-7.57.0.zip https://curl.haxx.se/download/curl-7.57.0.zip
   - 7z x curl-7.57.0.zip -oc:\src\lib > NUL
@@ -13,11 +16,10 @@ install:
 
 environment:
   BOOST_ROOT: C:\Libraries\boost_1_65_1
-  matrix:
-    - VS_VERSION: "Visual Studio 14 Win64"
-    - VS_VERSION: "Visual Studio 15 Win64"
 
 build_script:
+  - dir /s C:\Libraries\boost_1_65_1\*.lib
   - cd c:\projects\arcc
-  - cmake "-G%VS_VERSION%" -H. -B_builds -DCURL_INCLUDE_DIR=c:\src\lib\curl-7.57.0\builds\libcurl-vc14-x64-release-dll-ipv6-sspi-winssl\include -DCURL_LIBRARY=c:\src\lib\curl-7.57.0\builds\libcurl-vc14-x64-release-dll-ipv6-sspi-winssl\lib\libcurl.lib
+  - git submodule update --init --recursive
+  - cmake "-GVisual Studio 15 Win64" -H. -B_builds -DCURL_INCLUDE_DIR=c:\src\lib\curl-7.57.0\builds\libcurl-vc14-x64-release-dll-ipv6-sspi-winssl\include -DCURL_LIBRARY=c:\src\lib\curl-7.57.0\builds\libcurl-vc14-x64-release-dll-ipv6-sspi-winssl\lib\libcurl.lib -DBoost_DEBUG=ON -DBOOST_TOOLSET=msvc-14.1
   - cmake --build _builds --config "Debug"

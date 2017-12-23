@@ -1,13 +1,14 @@
 language: cpp
 
 before_install:
+  - eval "${MATRIX_EVAL}"
   - sudo wget -O boost_1_65_1.tar.gz http://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz/download
   - sudo tar xzvf boost_1_65_1.tar.gz > /dev/null
   - cd boost_1_65_1/
-  - sudo ./bootstrap.sh --prefix=/usr/local --with-libraries=test
-  - sudo ./b2 -d0
-  - sudo ./b2 -d0 --with-test install 
+  - sudo ./bootstrap.sh --prefix=/usr/local --with-libraries=thread,system,regex
+  - sudo ./b2 -d0 install 
   - cd ..
+
 
 matrix:
   include:
@@ -17,13 +18,13 @@ matrix:
           sources: 
             - ubuntu-toolchain-r-test
           packages:
-            - g++-5
-      env: GCC_VER="5" CXX=/usr/bin/g++-5 CC=/usr/bin/gcc-5
+            - g++-6
+      env: MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
     - os: osx
       osx_image: xcode8.3
 
 script:
-  - cmake .
+  - cmake . -DBoost_USE_STATIC_LIBS=ON 
   - cmake --build . -- -j3
 
 notifactions:

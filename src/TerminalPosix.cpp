@@ -1,9 +1,8 @@
 // Another Reddit Console Client
 // Copyright (c) 2017, Adalid Claure <aclaure@gmail.com>
 
-#include "Console.h"
+#include "Terminal.h"
 
-#include <iostream>
 #include <unistd.h>
 #include <termios.h>
 
@@ -12,7 +11,7 @@ namespace arcc
 namespace console
 {
 
-ConsoleHandler::ConsoleHandler()
+Terminal::Terminal()
 {
     // disable echo when a key is pressed and install
     // the keypressed handler
@@ -22,7 +21,7 @@ ConsoleHandler::ConsoleHandler()
     tcsetattr(STDIN_FILENO, TCSANOW, &t);
 }
 
-ConsoleHandler::~ConsoleHandler()
+Terminal::~Terminal()
 {
     // now restore the default behavior
     termios t;
@@ -54,11 +53,11 @@ std::pair<bool, char> getChar()
     return std::make_pair(bSuccess, retchar);
 }
 
-void ConsoleHandler::run()
+std::string Terminal::getLine()
 {
-    bool done = false;
+    reset();
 
-    // TODO: refactor to get rid of the `done` bool
+    bool done = false;
     while (!done)
     {
         const auto retpair = getChar();
@@ -67,30 +66,29 @@ void ConsoleHandler::run()
             switch (retpair.second)
             {
                 default:
-                    onChar(retpair.second);
+                {
+                    privateDoChar(retpair.second);
+                }
                 break;
 
-                case 0x0A:
-                    // the idea here is to return true if we're done entering a command(?)
-                    done = onEnter(); 
+                case 0x0A: // enter
+                    done = true;
                 break;
 
                 case 0x7f:
                 case 0x08:
-                    onBackSpace();
+                    privateDoBackspace();
                 break;
             }
         }
         else
         {
+            _commandLine.clear();
             done = true;
         }
     }
-}
 
-void ConsoleHandler::echoBackspace()
-{
-    std::cout << "\b \b" << std::flush;
+    return _commandLine;
 }
 
 } // namespace console

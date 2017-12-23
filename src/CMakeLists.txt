@@ -2,20 +2,27 @@ project(arcc)
 
 set(SOURCE_FILES
     arcc.cpp
+    Reddit.cpp
     WebClient.cpp
 )
 
 set(HEADER_FILES
     arcc.h
     core.h
-    Console.h
+    Reddit.h
+    Terminal.h
     WebClient.h
 )
 
 if (WIN32)
-    list(APPEND SOURCE_FILES ConsoleWindows.cpp)
+    set(CMAKE_EXE_LINKER_FLAGS "/NODEFAULTLIB:library")
+    list(APPEND SOURCE_FILES TerminalWindows.cpp)
 elseif (UNIX)
-    list(APPEND SOURCE_FILES ConsolePosix.cpp)
+    list(APPEND SOURCE_FILES TerminalPosix.cpp)
+endif()
+
+if (APPLE)
+    set(EXTRA_LIBS ${APP_SERVICES_LIBRARY} ${CORE_SERVICES_LIBRARY})
 endif()
 
 add_executable(${PROJECT_NAME}
@@ -24,4 +31,7 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    ${CURL_LIBRARIES})
+    ${CURL_LIBRARIES}
+    ${EXTRA_LIBS}
+    simple-web-server
+)

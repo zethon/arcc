@@ -6,11 +6,20 @@
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 #include <boost/spirit/include/qi.hpp>
+#include <boost/format.hpp>
 
-#include "libs/cxxopts.hpp"
+#ifdef _WINDOWS
+#include <windows.h>
+#include <shellapi.h>
+#elif defined(__APPLE__)
+#include <CoreFoundation/CFBundle.h>
+#include <ApplicationServices/ApplicationServices.h>
+#endif
+
+#include <cxxopts.hpp>
 
 #include "core.h"
-#include "Console.h"
+#include "Terminal.h"
 #include "WebClient.h"
 
 #include "arcc.h"
@@ -21,98 +30,89 @@ namespace arcc
 namespace console
 {
 
+void openBrowser(const std::string& url_str)
+{
+#ifdef _WINDOWS
+   ShellExecute(0, 0, url_str.c_str(), 0, 0, SW_SHOWNORMAL);
+#elif defined(__APPLE__)
+    // only works with `http://` prepended
+    CFURLRef url = CFURLCreateWithBytes (
+        NULL,                        // allocator
+        (UInt8*)url_str.c_str(),     // URLBytes
+        url_str.length(),            // length
+        kCFStringEncodingASCII,      // encoding
+        NULL                         // baseURL
+    );
+    
+    LSOpenCFURLRef(url,0);
+    CFRelease(url);
+#else
+    throw NotImplementedException();
+#endif
+}
+
 using ConsoleAppPtr = std::unique_ptr<ConsoleApp>;
 ConsoleAppPtr consoleApp;
 
-bool executeCommand(const std::string&);
-
-class ConsoleState
+void login()
 {
-    console::ConsoleHandler&    _terminalRef;
-    std::string                 _commandLine;
-    std::string::size_type      _currentPosition = 0;
-    bool                        _doExit = false;
+    // auto& terminal = consoleApp->getTerminal();
 
-public:        
-    ConsoleState(console::ConsoleHandler& terminal)
-        : _terminalRef(terminal)
-    {
-        std::cout << "> " << std::flush; // initial prompt
-    }
+    const std::string oauth2url = 
+        (boost::format("https://ssl.reddit.com/api/v1/authorize?client_id=%1%&response_type=code&state=%2%&redirect_uri=%3%&duration=permanent&scope=%4%")
+        % REDDIT_CLIENT_ID
+        % REDDIT_RANDOM_STRING
+        % REDDIT_REDIRECT_URL
+        % REDDIT_SCOPE).str();
 
-    void doChar(char c)
-    {
-        _commandLine.insert(_currentPosition, 1, c);
-        std::cout << c << std::flush;
-
-        _currentPosition += 1;
-    }
-
-    void setDoExit(bool val)
-    {
-        _doExit = val;
-    }
-
-    bool doEnter()
-    {
-        std::cout << std::endl;
-
-        executeCommand(_commandLine); // could set _doExit=true
-
-        _commandLine.clear();
-        _currentPosition = 0;
-
-        if (!_doExit)
-        {
-            std::cout << "> " << std::flush;
-        }
-
-        return _doExit;
-    }    
-
-    void doBackSpace()
-    {
-        if (_currentPosition > 0)
-        {
-            _terminalRef.echoBackspace();
-            _commandLine.erase(_currentPosition, 1);
-            _currentPosition--;
-        }
-    } 
-
-    void doDelete()
-    {
-        std::cout << "ConsoleState::doDelete()" << std::endl;
-    }     
-};
-
-bool executeCommand(const std::string& rawcmd)
-{
-    bool success = false; // assume failure!
-
-    std::string params;
-    std::string cmd{rawcmd};
-    
-    boost::algorithm::trim(cmd);
-
-    auto firstspace = cmd.find(' ');
-    if (firstspace != std::string::npos)
-    {
-        params	= cmd.substr(firstspace + 1);
-        cmd	= cmd.substr(0, firstspace);
-    }
-
-    consoleApp->exec(cmd, params);
-
-    return success;
+    openBrowser(oauth2url);
+    consoleApp->getHttpServer().start();
 }
 
 void initCommands()
 {
+    consoleApp->addCommand({"whoami", "whoami", [](const std::string& params)
+    {
+        auto reddit = consoleApp->getRedditSession();
+        reddit->doRequest("/api/v1/me");
+    }});
+
+    consoleApp->addCommand({"login", "login", [](const std::string& params)
+    {
+        login();
+    }});
+
     consoleApp->addCommand({"quit,exit", "exit the program", 
         [](const std::string& params)
         {
-            consoleApp->invokeExitHandler();
+            consoleApp->doExitApp();
+        }});
+
+    consoleApp->addCommand({"open,launch", "open a website in the default browser", 
+        [](const std::string& params)
+        {
+            if (params.size() > 0)
+            {
+                std::vector<std::string> strings;
+                boost::split(strings, params, boost::is_any_of(" "));
+                
+                std::string url = strings.at(0);
+
+                // TODO: Apple's `CFURLRef` will want a properly formatted URL, so if the user enters
+                // www.google.com, that will not be good enough. This is a naive solution to take 
+                // what the user entered and turn it into a proper URL. Improve this.
+                if (!boost::starts_with(url,"http://") && !boost::starts_with(url,"https://"))
+                {
+                    url = "http://" + url;
+                }
+
+                openBrowser(url);
+            }
+            else
+            {
+                // show useage
+                std::cout << "Usage: open <url>" << std::endl;
+            }
         }});
 
     consoleApp->addCommand({"ping", "ping a website",
@@ -144,22 +144,13 @@ int main(int argc, char* argv[])
     std::cout <<  APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;
 
-    consoleApp = std::unique_ptr<ConsoleApp>(new ConsoleApp());
+    Terminal terminal;
+    consoleApp = std::unique_ptr<ConsoleApp>(new ConsoleApp(terminal));
     initCommands();
-
-    ConsoleHandler terminal;
-    ConsoleState conStat(terminal);
-
-    consoleApp->setExitHandler([&conStat]() { conStat.setDoExit(true); });
-
-    terminal.setCharHandler(boost::bind(&ConsoleState::doChar, &conStat, _1));
-    terminal.setEnterHandler(boost::bind(&ConsoleState::doEnter, &conStat));
-    terminal.setBackSpaceHandler(boost::bind(&ConsoleState::doBackSpace, &conStat));
-    terminal.setDeleteHandler(boost::bind(&ConsoleState::doDelete, &conStat));
 
     try
     {
-        terminal.run();
+        consoleApp->run();
     }
     catch (const std::exception& ex)
     {

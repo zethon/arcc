@@ -9,7 +9,8 @@
 
 #include "WebClient.h"
 
-const unsigned int DEFAULT_MAX_REDIRECTS = 5;
+const unsigned int  DEFAULT_MAX_REDIRECTS = 5;
+const std::string   DEFAULT_USERAGENT = "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0";
 
 namespace arcc
 {
@@ -62,23 +63,18 @@ WebClient::WebClient()
     curl_easy_setopt(_curl, CURLOPT_COOKIEFILE, "");
 
     // SSL CONFIG: since PEM is default, we needn't set it for PEM
-    curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    // curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
-#ifdef _WINDOWS
-    // need to disable this otherwise SSL does not work on Windows 7    
-    curl_easy_setopt(_curl, CURLOPT_SSL_ENABLE_ALPN, 0);
-#endif
-    
     // tell libcurl to redirect a post with a post after a 301, 302 or 303
     curl_easy_setopt(_curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
 
     // disable all curl's signal handling
     curl_easy_setopt(_curl, CURLOPT_NOSIGNAL, 1L);
 
-#ifdef _DEBUG
-   curl_easy_setopt(_curl, CURLOPT_VERBOSE, 1);
-   curl_easy_setopt(_curl, CURLOPT_DEBUGFUNCTION, trace);
-#endif        
+#ifdef _WINDOWS
+    // need to disable this otherwise SSL does not work on Windows 7    
+    curl_easy_setopt(_curl, CURLOPT_SSL_ENABLE_ALPN, 0);
+#endif    
 }
 
 WebClient::~WebClient()
@@ -152,5 +148,21 @@ auto WebClient::doRequest(const std::string& url, const std::string& payload, We
 
    return retval;
 }
+
+void WebClient::setTrace(bool trace)
+{
+    if (trace)
+    {
+        curl_easy_setopt(_curl, CURLOPT_VERBOSE, 1);
+        // curl_easy_setopt(_curl, CURLOPT_DEBUGFUNCTION, trace);
+    }
+    else
+    {
+        curl_easy_setopt(_curl, CURLOPT_VERBOSE, 0);
+        // curl_easy_setopt(_curl, CURLOPT_DEBUGFUNCTION, nullptr);
+    }
+}
+
+
 
 } // namespace arcc
