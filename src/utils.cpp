@@ -3,7 +3,7 @@
 
 #include "utils.h"
 
-#include <exception>
+#include <stdexcept>
 
 #ifdef _WINDOWS
 #   include <windows.h>
@@ -28,6 +28,19 @@ public:
         // nothing to do
     }
 };
+
+std::string getOsString()
+{
+#ifdef _WINDOWS
+    return "windows";
+#elif defined(__APPLE__)    
+    return "macos";
+#elif defined(__linux__)
+    return "linux";
+#else
+    return "unknown"
+#endif
+}
 
 std::string getUserFolder()
 {

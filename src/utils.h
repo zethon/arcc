@@ -8,6 +8,8 @@
 namespace utils
 {
 
+std::string getOsString();
+
 std::string getUserFolder();
 
 void openBrowser(const std::string& url_str);

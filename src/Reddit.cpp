@@ -5,10 +5,9 @@
 
 #include <json.hpp>
 
-#include "Reddit.h"
+#include "core.h"
 #include "utils.h"
-
-const std::string DEFAULT_USERAGENT = "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0";
+#include "Reddit.h"
 
 namespace arcc
 {
@@ -93,10 +92,13 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
         _expiry(expiry),
         _lastRefresh(std::chrono::system_clock::now())
 {
-    _webclient.setUserAgent(DEFAULT_USERAGENT);
-    _webclient.setHeader("Authorization: bearer " + _accessToken);
+    const std::string userAgent = (boost::format("%1%:%2%:v%3% (by /u/wolosocu)") 
+        % utils::getOsString() 
+        % APP_NAME 
+        % VERSION).str();
 
-    // _commandMap.insert(std::make_par())
+    _webclient.setUserAgent(userAgent);
+    _webclient.setHeader("Authorization: bearer " + _accessToken);
 }
 
 std::string RedditSession::doRequest(const std::string& endpoint, WebClient::Method method)
