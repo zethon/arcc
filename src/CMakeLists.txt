@@ -35,8 +35,6 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     ${CURL_LIBRARIES}
     ${EXTRA_LIBS}
-    ${Boost_FILESYSTEM_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY}
-    ${Boost_THREAD_LIBRARY}
+    ${Boost_LIBRARIES}
     simple-web-server
 )

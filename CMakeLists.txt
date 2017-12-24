@@ -55,7 +55,7 @@ if (MSVC)
 endif()
 
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost COMPONENTS system thread filesystem REQUIRED) 
+find_package(Boost COMPONENTS system thread filesystem program_options REQUIRED) 
 include_directories(${Boost_INCLUDE_DIRS}) 
 
 add_subdirectory(Simple-Web-Server)
