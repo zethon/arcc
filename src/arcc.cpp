@@ -8,6 +8,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/program_options.hpp>
 
 #include <cxxopts.hpp>
 
@@ -42,10 +43,19 @@ void whoami()
     }
 }
 
+void list(const std::string& params)
+{
+    namespace po = boost::program_options;
+    po::options_description listopts("fsdf");
+
+
+    std::cout << "list" << std::endl;
+}
+
 void initCommands()
 {
+    consoleApp->addCommand("list", "list stuff", std::bind(list, std::placeholders::_1));
     consoleApp->addCommand("whoami", "whoami", [](const std::string&) { whoami(); });
-
     consoleApp->addCommand("login", "login", [](const std::string& params)
         {
             if (!consoleApp->getRedditSession())
