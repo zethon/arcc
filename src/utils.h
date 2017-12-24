@@ -14,4 +14,6 @@ std::string getUserFolder();
 
 void openBrowser(const std::string& url_str);
 
+std::vector<std::string> tokenize(const std::string& input);
+
 } // namespace

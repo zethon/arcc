@@ -45,11 +45,31 @@ void whoami()
 
 void list(const std::string& params)
 {
+    unsigned int limit = 5;
+
+    std::string address;
+    unsigned int port;    
+
     namespace po = boost::program_options;
-    po::options_description listopts("fsdf");
+    po::options_description desc("listOptions");
 
+    desc.add_options()
+        ("address", po::value<std::string>(&address))
+        ("port",    po::value<unsigned int>(&port));
 
-    std::cout << "list" << std::endl;
+    auto temp = utils::tokenize("list " + params);
+    for (const auto& s : temp)
+    {
+        std::cout << "[" << s << "]" << std::endl;
+    }
+
+    po::variables_map vm;
+    po::store(po::command_line_parser(temp).options(desc).run(), vm);
+    po::notify(vm);
+
+  // Output.
+  std::cout << "address = " << address << "\n"
+               "port = " << port << std::endl;
 }
 
 void initCommands()
