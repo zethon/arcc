@@ -45,7 +45,7 @@ void whoami()
 
 void list(const std::string& params)
 {
-    unsigned int limit = 5;
+    // unsigned int limit = 5;
 
     std::string address;
     unsigned int port;    
@@ -101,16 +101,16 @@ void initCommands()
                     out << j;
                     out.close();
 
-                    std::cout << "login successful (/◔ ◡ ◔)/" << std::endl;
+                    std::cout << "login successful ヽ(´▽`)/" << std::endl;
                 }
                 else
                 {
-                    std::cout << "login denied D:" << std::endl;
+                    std::cout << "login denied (╯°□°）╯︵ ┻━┻" << std::endl;
                 }
             }
             else
             {
-                std::cout << "you are already logged in" << std::endl;
+                std::cout << "you are already logged in (/◔ ◡ ◔)/" << std::endl;
             }
         });
 
@@ -128,11 +128,11 @@ void initCommands()
                 // delete our session object
                 consoleApp->resetSession();
 
-                std::cout << "you have logged out =C" << std::endl;
+                std::cout << "you have logged out (•̀o•́)ง" << std::endl;
             }
             else
             {
-                std::cout << "you are not logged in" << std::endl;
+                std::cout << "you are not logged in (•_•)" << std::endl;
             }
         });
 

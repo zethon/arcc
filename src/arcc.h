@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <json.hpp>
+#include <rang.hpp>
 
 #include "Reddit.h"
 #include "Terminal.h"
@@ -45,9 +46,13 @@ class ConsoleApp final
     bool                            _doExit;
     RedditSessionPtr                _reddit;
 
+    std::string                     _location;
+
 public:
     ConsoleApp(Terminal& t)
-        : _terminal(t), _doExit(false)
+        : _terminal(t), 
+          _doExit(false), 
+          _location("/")
     {
     }
 
@@ -104,7 +109,7 @@ public:
     {
         while (!_doExit)
         {
-            std::cout << "> " << std::flush; // initial prompt
+            printPrompt();
             std::string line = _terminal.getLine();
             exec(line);
         }
@@ -127,9 +132,23 @@ public:
     }
 
     void resetSession() { _reddit.reset(); }
+    bool isLoggedIn() const { return _reddit != nullptr; }
 
     RedditSessionPtr getRedditSession() { return _reddit; }
     void setRedditSession(RedditSessionPtr val) { _reddit = val; }
+
+private:
+    void printPrompt() const
+    {
+        std::cout 
+            << (isLoggedIn() ? rang::fg::green : rang::fg::red)
+            << '$'
+            << _location
+            << rang::fg::reset
+            << "> ";
+
+        std::cout << std::flush;
+    }    
 };
 
 } // namespace console
