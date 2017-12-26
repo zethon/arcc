@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <functional>
-#include <boost/tokenizer.hpp>
 
 #ifdef _WINDOWS
 #   include <windows.h>
@@ -84,30 +83,6 @@ void openBrowser(const std::string& url_str)
 #else
     throw NotImplementedException();
 #endif
-}
-
-// https://stackoverflow.com/questions/18378798/use-boost-program-options-to-parse-an-arbitrary-string
-/// @brief Tokenize a string.  The tokens will be separated by each non-quoted
-///        space or equal character.  Empty tokens are removed.
-///
-/// @param input The string to tokenize.
-///
-/// @return Vector of tokens.
-std::vector<std::string> tokenize(const std::string& input)
-{
-  typedef boost::escaped_list_separator<char> separator_type;
-  separator_type separator("\\",    // The escape characters.
-                           "= ",    // The separator characters.
-                           "\"\'"); // The quote characters.
-
-  // Tokenize the intput.
-  boost::tokenizer<separator_type> tokens(input, separator);
-
-  // Copy non-empty tokens from the tokenizer into the result.
-  std::vector<std::string> result;
-  std::copy_if(tokens.begin(), tokens.end(), std::back_inserter(result), 
-          [](const std::string& s) { return !s.empty(); });
-  return result;
 }
 
 } // namespace

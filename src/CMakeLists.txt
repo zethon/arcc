@@ -4,6 +4,7 @@ set(SOURCE_FILES
     arcc.cpp
     Reddit.cpp
     utils.cpp
+    SimpleArgs.cpp
     WebClient.cpp
 )
 
@@ -13,6 +14,7 @@ set(HEADER_FILES
     Reddit.h
     Terminal.h
     utils.h
+    SimpleArgs.h
     WebClient.h
 )
 

@@ -8,7 +8,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/program_options.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <cxxopts.hpp>
 
@@ -16,6 +16,7 @@
 #include "Terminal.h"
 #include "WebClient.h"
 #include "utils.h"
+#include "SimpleArgs.h"
 
 #include "arcc.h"
 
@@ -45,31 +46,31 @@ void whoami()
 
 void list(const std::string& params)
 {
-    // unsigned int limit = 5;
+    SimpleArgs args { params };
+    args.parse();
 
-    std::string address;
-    unsigned int port;    
+    unsigned int limit = 5;
+    std::string listType = "new";
 
-    namespace po = boost::program_options;
-    po::options_description desc("listOptions");
-
-    desc.add_options()
-        ("address", po::value<std::string>(&address))
-        ("port",    po::value<unsigned int>(&port));
-
-    auto temp = utils::tokenize("list " + params);
-    for (const auto& s : temp)
+    if (args.getPositionalCount() > 0)
     {
-        std::cout << "[" << s << "]" << std::endl;
+        listType = args.getPositional(0);
     }
 
-    po::variables_map vm;
-    po::store(po::command_line_parser(temp).options(desc).run(), vm);
-    po::notify(vm);
+    if (args.hasArgument("limit"))
+    {
+        auto limitStr = args.getArgument("limit");
+        try
+        {
+            limit = boost::lexical_cast<unsigned int>(limitStr);
+        }
+        catch (const boost::bad_lexical_cast&)
+        {
+        }
+    }
 
-  // Output.
-  std::cout << "address = " << address << "\n"
-               "port = " << port << std::endl;
+    std::cout << "list type  : " << listType << std::endl;
+    std::cout << "limit count: " << limit << std::endl;
 }
 
 void initCommands()
