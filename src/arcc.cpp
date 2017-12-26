@@ -26,6 +26,9 @@ namespace arcc
 namespace console
 {
 
+// forward decl
+void saveSession();
+
 using ConsoleAppPtr = std::unique_ptr<ConsoleApp>;
 ConsoleAppPtr consoleApp;
 
@@ -144,21 +147,7 @@ void initCommands()
                 if (login.loggedIn())
                 {
                     consoleApp->setRedditSession(login.getRedditSession());
-
-                    boost::filesystem::path homefolder { utils::getUserFolder() };
-                    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
-
-                    nlohmann::json j;
-
-                    auto reddit = consoleApp->getRedditSession();
-                    j["accessToken"] = reddit->accessToken();
-                    j["refreshToken"] = reddit->refreshToken();
-                    j["expiry"] = reddit->expiry();
-
-                    std::ofstream out(sessionfile.string());
-                    out << j;
-                    out.close();
-
+                    saveSession();
                     std::cout << "login successful ヽ(´▽`)/" << std::endl;
                 }
                 else
@@ -243,6 +232,29 @@ void initCommands()
                 std::cout << "Could not ping because '" << e.what() << "'" << std::endl;
             }
         });
+    consoleApp->addCommand("time", "ping a website",
+        [](const std::string& params)
+        {
+            std::cout << std::time(nullptr) << std::endl;
+        });
+}
+
+void saveSession()
+{
+    boost::filesystem::path homefolder { utils::getUserFolder() };
+    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
+
+    nlohmann::json j;
+
+    auto reddit = consoleApp->getRedditSession();
+    j["accessToken"] = reddit->accessToken();
+    j["refreshToken"] = reddit->refreshToken();
+    j["expiry"] = reddit->expiry();
+    j["time"] = std::time(nullptr);
+
+    std::ofstream out(sessionfile.string());
+    out << j;
+    out.close();
 }
 
 void loadSession()
@@ -261,7 +273,8 @@ void loadSession()
             auto reddit = std::make_shared<RedditSession>(
                 j["accessToken"].get<std::string>(), 
                 j["refreshToken"].get<std::string>(), 
-                j["expiry"].get<double>());
+                j["expiry"].get<double>(),
+                j["time"].get<time_t>());
 
             consoleApp->setRedditSession(reddit);
 

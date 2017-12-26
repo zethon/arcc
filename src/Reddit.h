@@ -55,22 +55,27 @@ public:
 
 class RedditSession final
 {
-    using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
+    std::function<void(void)>   _refreshCallback;
 
-    const std::string requestUrl = "https://oauth.reddit.com";
+    const std::string           requestUrl = "https://oauth.reddit.com";
 
-    std::string     _accessToken;
-    std::string     _refreshToken;
+    std::string                 _accessToken;
+    std::string                 _refreshToken;
     
-    double          _expiry;            // number of seconds until the session needs refresh
-    TimePoint       _lastRefresh;       // keep track so we know when to refresh our token
+    double                      _expiry;            // number of seconds until the session needs refresh
+    time_t                      _lastRefresh;        // keep track so we know when to refresh our token
 
-    WebClient       _webclient;         // our "connection" to www.reddit.com
+    WebClient                   _webclient;         // our "connection" to www.reddit.com
 
 public:
     using Params = std::map<std::string, std::string>;
 
-    RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
+    RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry)
+        : RedditSession(accessToken, refreshToken, expiry, 0)
+    {
+    }
+    
+    RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh);
 
     std::string accessToken() const { return _accessToken; }
     std::string refreshToken() const { return _refreshToken; }
