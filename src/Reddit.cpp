@@ -65,14 +65,13 @@ void OAuth2Login::start()
 
             if (_loggedIn)
             {
-                stream << "<h1>Login Successful!</h1>";
-                stream << "<p>You are now logged in to <b>Reddit</b> through <b>arcc</b> and may close this browser.";
+                stream << R"HTML(<!DOCTYPE html><html><head> <title>RTV OAuth2 Helper</title> <!-- style borrowed from http://bettermotherfuckingwebsite.com/ --> <style type="text/css"> body { margin:40px auto; max-width:650px; line-height:1.6; font-size:18px; font-family:Arial, Helvetica, sans-serif; color:#444; padding:0 10px; } h1, h2, h3 { line-height:1.2 } #footer { position: absolute; bottom: 0px; width: 100%; font-size:14px; } </style></head><body> <h1 style="color: green">Access Granted</h1><hr> <p><span style="font-weight: bold">Another Reddit Console Client</span> will now log in, you can close this window.</p> <div id="footer">View the <a href="https://github.com/zethon/arcc">Documentation</a></div></body></html>)HTML";
             }
             else
             {
-                stream << "<h1>ERROR!</h1>";
-                stream << "<big>reason:</big> <b><font style='font-family:monospace;'>" << failedReason << "</font></b>";
-                stream << "<p>You need to authorize <b>arcc</b> to use <b>Reddit</b>. You can try again by typing <b><i>login</i></b> in <b>arcc</b>";
+                stream << R"HTML(<!DOCTYPE html><html><head> <title>RTV OAuth2 Helper</title> <!-- style borrowed from http://bettermotherfuckingwebsite.com/ --> <style type="text/css"> body { margin:40px auto; max-width:650px; line-height:1.6; font-size:18px; font-family:Arial, Helvetica, sans-serif; color:#444; padding:0 10px; } h1, h2, h3 { line-height:1.2 } #footer { position: absolute; bottom: 0px; width: 100%; font-size:14px; } </style></head><body> <h1 style="color: red">Access Denied</h1><hr> <p><span style="font-weight: bold">Another Reddit Console Client</span> could not log you in because:</p><pre>)HTML";
+                stream << failedReason;
+                stream << R"HTML(</pre><div id="footer">View the <a href="https://github.com/zethon/arcc">Documentation</a></div></body></html>)HTML";
             }
 
             response->write(stream);
