@@ -114,13 +114,13 @@ public:
         }
     }
 
-    std::string doReddit(const std::string& endpoint)
+    std::string doRedditGet(const std::string& endpoint, const RedditSession::Params& params = RedditSession::Params{})
     {
         std::string retval;
 
         if (_reddit)
         {
-            retval = _reddit->doRequest(endpoint);
+            retval = _reddit->doGetRequest(endpoint, params);
         }
         else
         {

@@ -86,6 +86,26 @@ void OAuth2Login::start()
     _server.start();
 }
 
+std::string buildQueryParamString(const RedditSession::Params& params)
+{
+    std::string retval;
+
+    if (params.size() > 0)
+    {
+        retval.append("?");
+
+        for (auto& param : params)
+        {
+            if (param.second.size() > 0)
+            {
+                retval += param.first + "=" + param.second + "&";
+            }
+        }
+    }
+
+    return retval;
+}
+
 RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry)
     : _accessToken(accessToken), 
         _refreshToken(refreshToken), 
@@ -101,13 +121,12 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
     _webclient.setHeader("Authorization: bearer " + _accessToken);
 }
 
-std::string RedditSession::doRequest(const std::string& endpoint, WebClient::Method method)
+std::string RedditSession::doGetRequest(const std::string& endpoint, const RedditSession::Params& params)
 {
     refreshToken();
 
-    std::string endpointUrl = requestUrl + endpoint;
-
-    auto result = _webclient.doRequest(endpointUrl, std::string(), method);
+    std::string endpointUrl = requestUrl + endpoint + buildQueryParamString(params);
+    auto result = _webclient.doRequest(endpointUrl);
     return result.data;
 }
 
@@ -120,7 +139,7 @@ void RedditSession::doRefreshToken()
 
         _lastRefresh = std::chrono::system_clock::now();
     }
-}   
+}
 
 
 } // namespace arcc

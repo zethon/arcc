@@ -68,13 +68,15 @@ class RedditSession final
     WebClient       _webclient;         // our "connection" to www.reddit.com
 
 public:
+    using Params = std::map<std::string, std::string>;
+
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
 
     std::string accessToken() const { return _accessToken; }
     std::string refreshToken() const { return _refreshToken; }
     double expiry() const { return _expiry; }
 
-    std::string doRequest(const std::string& endpoint, WebClient::Method method = WebClient::Method::GET);
+    std::string doGetRequest(const std::string& endpoint, const RedditSession::Params& params = RedditSession::Params{});
 
 private:
     void doRefreshToken();   

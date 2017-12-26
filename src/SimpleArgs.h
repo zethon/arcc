@@ -12,13 +12,16 @@
 namespace arcc
 {
 
+///
+/// A simple parser that seperates positional and named arguments
+///
 class SimpleArgs
 {
-    std::string                         _original;
-    std::vector<std::string>            _tokenVector;
+    std::string                                 _original;
+    std::vector<std::string>                    _tokenVector;
 
-    std::vector<unsigned int>           _positionals;
-    std::map<std::string, unsigned int> _named;
+    std::vector<unsigned int>                   _positionals;
+    std::map<boost::string_view, unsigned int>  _named;
     
 public:
     SimpleArgs(const std::string& val)
@@ -28,12 +31,15 @@ public:
 
     void parse(const std::string& = std::string());
 
-    unsigned int getPositionalCount() const { return _positionals.size(); }
-    std::string getPositional(unsigned int index) { return _tokenVector.at(_positionals.at(index)); }
+    unsigned int getPositionalCount() const;
+    std::string getPositional(unsigned int index) const;
     
-    unsigned int getNamedCount() const { return _named.size(); }
-    std::string getArgument(const std::string& name) { return _tokenVector.at(_named.at(name)); }
-    bool hasArgument(const std::string& name) { return _named.find(name) != _named.end(); }
+    unsigned int getNamedCount() const;
+    std::string getNamedArgument(const boost::string_view& name) const;
+    bool hasArgument(const std::string& name) const;
+
+    unsigned int getTokenCount() const;
+    std::string getToken(unsigned int index) const;
 };
 
 } // namespace

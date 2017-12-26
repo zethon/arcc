@@ -3,6 +3,7 @@
 
 #include "SimpleArgs.h"
 
+#include <regex>
 #include <vector>
 
 #include <boost/tokenizer.hpp>
@@ -37,18 +38,73 @@ std::vector<std::string> tokenizeArgs(const std::string& input)
 
 void SimpleArgs::parse(const std::string& original)
 {
+    const std::regex dashReg { R"(^\-{1,2}[^\-])" };
+
     if (original.size() > 0)
     {
         _original = original;
     }
 
     _tokenVector = tokenizeArgs(_original);
-    
+    std::smatch regmatches;
+
     for (unsigned int i = 0; i < (unsigned int)_tokenVector.size(); i++)
     {
-        // const std::string& token = _tokenVector.at(i);
-        // if (boost::starts_with(token, "-") ||)
+        const std::string& token = _tokenVector.at(i);
+
+        if (std::regex_search(token, regmatches, dashReg) && (i < _tokenVector.size() - 1))
+        {
+            boost::string_view key = token;
+
+            // remove '-' and possibly '--'
+            key.remove_prefix(1);
+            if (key.at(0) == '-')
+            {
+                key.remove_prefix(1);
+            }
+
+            _named.insert(std::make_pair(key, ++i));
+        }
+        else
+        {
+            _positionals.push_back(i);
+        }
     }
+}
+
+unsigned int SimpleArgs::getPositionalCount() const 
+{
+    return _positionals.size();
+}
+
+std::string SimpleArgs::getPositional(unsigned int index) const 
+{
+    return _tokenVector.at(_positionals.at(index));
+}
+
+unsigned int SimpleArgs::getNamedCount() const 
+{ 
+    return _named.size(); 
+}
+
+std::string SimpleArgs::getNamedArgument(const boost::string_view& name) const 
+{ 
+    return _tokenVector.at(_named.at(name)); 
+}
+
+bool SimpleArgs::hasArgument(const std::string& name) const 
+{ 
+    return _named.find(name) != _named.end(); 
+}
+
+unsigned SimpleArgs::getTokenCount() const
+{
+    return _tokenVector.size();
+}
+
+std::string SimpleArgs::getToken(unsigned int index) const
+{
+    return _tokenVector.at(index);
 }
 
 } // namespace

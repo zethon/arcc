@@ -29,9 +29,21 @@ namespace console
 using ConsoleAppPtr = std::unique_ptr<ConsoleApp>;
 ConsoleAppPtr consoleApp;
 
+void printError(const std::string& error)
+{
+    std::cout 
+        << rang::fg::red
+        << rang::style::bold
+        << "error: " 
+        << rang::fg::reset
+        << rang::style::reset
+        << error
+        << std::endl;
+}
+
 void whoami()
 {
-    auto jsontext = consoleApp->doReddit("/api/v1/me");
+    auto jsontext = consoleApp->doRedditGet("/api/v1/me");
 
     if (jsontext.size() > 0)
     {
@@ -44,33 +56,78 @@ void whoami()
     }
 }
 
-void list(const std::string& params)
+void list(const std::string& cmdParams)
 {
-    SimpleArgs args { params };
+    static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
+
+    SimpleArgs args { cmdParams };
     args.parse();
 
     unsigned int limit = 5;
-    std::string listType = "new";
+    std::string listType = "hot";
 
     if (args.getPositionalCount() > 0)
     {
         listType = args.getPositional(0);
+        if (std::find(std::begin(validTypes), std::end(validTypes), listType) == std::end(validTypes))
+        {
+            printError("invalid list type '" + listType + "'");
+            return;
+        }
     }
 
     if (args.hasArgument("limit"))
     {
-        auto limitStr = args.getArgument("limit");
+        auto limitStr = args.getNamedArgument("limit");
         try
         {
             limit = boost::lexical_cast<unsigned int>(limitStr);
         }
         catch (const boost::bad_lexical_cast&)
         {
+            printError("parameter 'limit' has invalid value '" + limitStr + "'");
+            return;
         }
     }
 
-    std::cout << "list type  : " << listType << std::endl;
-    std::cout << "limit count: " << limit << std::endl;
+    RedditSession::Params params;
+    params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
+
+    auto jsontext = consoleApp->doRedditGet("/" + listType, params);
+
+    unsigned int idx = 0;
+    auto jreply = nlohmann::json::parse(jsontext);
+    for (auto& child : jreply["data"]["children"])
+    {
+        std::cout 
+            << rang::style::bold
+            << ++idx
+            << ". "
+            << child["data"]["title"].get<std::string>()
+            << rang::style::reset
+            << '\n'
+            << rang::fg::blue
+            << rang::style::underline
+            << child["data"]["url"].get<std::string>()
+            << rang::style::reset
+            << '\n'
+            << rang::fg::reset
+            << child["data"]["score"].get<int>() 
+            << " pts • "
+            << child["data"]["created"].get<int>() << " hr"
+            << " - "
+            << child["data"]["num_comments"].get<int>() << " comments"
+            << '\n'
+            << rang::fg::green
+            << child["data"]["author"].get<std::string>()
+            << ' '
+            << rang::fg::yellow
+            << child["data"]["subreddit_name_prefixed"].get<std::string>()
+            << rang::fg::reset
+            << std::endl;
+
+            std::cout << std::endl;
+    }
 }
 
 void initCommands()
@@ -137,7 +194,7 @@ void initCommands()
             }
         });
 
-    consoleApp->addCommand("quit,exit", "exit the program", 
+    consoleApp->addCommand("q,quit,exit", "exit the program", 
         [](const std::string& params)
         {
             consoleApp->doExitApp();
