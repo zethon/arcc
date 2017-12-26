@@ -68,6 +68,7 @@ void list(const std::string& cmdParams)
 
     unsigned int limit = 5;
     std::string listType = "hot";
+    std::string subReddit;
 
     if (args.getPositionalCount() > 0)
     {
@@ -77,6 +78,11 @@ void list(const std::string& cmdParams)
             printError("invalid list type '" + listType + "'");
             return;
         }
+    }
+
+    if (args.hasArgument("sub"))
+    {
+        subReddit = args.getNamedArgument("sub");
     }
 
     if (args.hasArgument("limit"))
@@ -96,40 +102,42 @@ void list(const std::string& cmdParams)
     RedditSession::Params params;
     params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
 
-    auto jsontext = consoleApp->doRedditGet("/" + listType, params);
-
-    unsigned int idx = 0;
-    auto jreply = nlohmann::json::parse(jsontext);
-    for (auto& child : jreply["data"]["children"])
+    auto jsontext = consoleApp->doRedditGet(subReddit + "/" + listType, params);
+    if (jsontext.size() > 0)
     {
-        std::cout 
-            << rang::style::bold
-            << ++idx
-            << ". "
-            << child["data"]["title"].get<std::string>()
-            << rang::style::reset
-            << '\n'
-            << rang::fg::blue
-            << rang::style::underline
-            << child["data"]["url"].get<std::string>()
-            << rang::style::reset
-            << '\n'
-            << rang::fg::reset
-            << child["data"]["score"].get<int>() 
-            << " pts • "
-            << child["data"]["created"].get<int>() << " hr"
-            << " - "
-            << child["data"]["num_comments"].get<int>() << " comments"
-            << '\n'
-            << rang::fg::green
-            << child["data"]["author"].get<std::string>()
-            << ' '
-            << rang::fg::yellow
-            << child["data"]["subreddit_name_prefixed"].get<std::string>()
-            << rang::fg::reset
-            << std::endl;
+        unsigned int idx = 0;
+        auto jreply = nlohmann::json::parse(jsontext);
+        for (auto& child : jreply["data"]["children"])
+        {
+            std::cout 
+                << rang::style::bold
+                << ++idx
+                << ". "
+                << child["data"]["title"].get<std::string>()
+                << rang::style::reset
+                << '\n'
+                << rang::fg::blue
+                << rang::style::underline
+                << child["data"]["url"].get<std::string>()
+                << rang::style::reset
+                << '\n'
+                << rang::fg::reset
+                << child["data"]["score"].get<int>() 
+                << " pts • "
+                << child["data"]["created"].get<int>() << " hr"
+                << " - "
+                << child["data"]["num_comments"].get<int>() << " comments"
+                << '\n'
+                << rang::fg::green
+                << child["data"]["author"].get<std::string>()
+                << ' '
+                << rang::fg::yellow
+                << child["data"]["subreddit_name_prefixed"].get<std::string>()
+                << rang::fg::reset
+                << std::endl;
 
-            std::cout << std::endl;
+                std::cout << std::endl;
+        }
     }
 }
 
