@@ -105,6 +105,11 @@ std::string buildQueryParamString(const RedditSession::Params& params)
     return retval;
 }
 
+RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry)
+    : RedditSession(accessToken, refreshToken, expiry, 0)
+{
+}
+
 RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh)
     : _accessToken(accessToken), 
         _refreshToken(refreshToken), 

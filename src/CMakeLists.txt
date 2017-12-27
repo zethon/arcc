@@ -2,6 +2,7 @@ project(arcc)
 
 set(SOURCE_FILES
     arcc.cpp
+    ConsoleApp.cpp
     Reddit.cpp
     utils.cpp
     SimpleArgs.cpp
@@ -9,7 +10,7 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
-    arcc.h
+    ConsoleApp.h
     core.h
     Reddit.h
     Terminal.h

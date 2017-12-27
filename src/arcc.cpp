@@ -11,6 +11,8 @@
 #include <boost/lexical_cast.hpp>
 
 #include <cxxopts.hpp>
+#include <rang.hpp>
+#include <json.hpp>
 
 #include "core.h"
 #include "Terminal.h"
@@ -18,7 +20,7 @@
 #include "utils.h"
 #include "SimpleArgs.h"
 
-#include "arcc.h"
+#include "ConsoleApp.h"
 
 namespace arcc
 {
