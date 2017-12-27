@@ -44,6 +44,17 @@ void printError(const std::string& error)
         << std::endl;
 }
 
+void printStatus(const std::string& status)
+{
+    std::cout 
+        << rang::fg::magenta
+        << rang::style::bold
+        << status
+        << rang::fg::reset
+        << rang::style::reset
+        << std::endl;
+}
+
 void whoami()
 {
     auto jsontext = consoleApp->doRedditGet("/api/v1/me");
@@ -155,7 +166,6 @@ void initCommands()
                 if (login.loggedIn())
                 {
                     consoleApp->setRedditSession(login.getRedditSession());
-                    saveSession();
                     std::cout << "login successful ヽ(´▽`)/" << std::endl;
                 }
                 else
@@ -247,50 +257,6 @@ void initCommands()
         });
 }
 
-void saveSession()
-{
-    boost::filesystem::path homefolder { utils::getUserFolder() };
-    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
-
-    nlohmann::json j;
-
-    auto reddit = consoleApp->getRedditSession();
-    j["accessToken"] = reddit->accessToken();
-    j["refreshToken"] = reddit->refreshToken();
-    j["expiry"] = reddit->expiry();
-    j["time"] = std::time(nullptr);
-
-    std::ofstream out(sessionfile.string());
-    out << j;
-    out.close();
-}
-
-void loadSession()
-{
-    boost::filesystem::path homefolder { utils::getUserFolder() };
-    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
-
-    if (boost::filesystem::exists(sessionfile))
-    {
-        std::ifstream i(sessionfile.string());
-        nlohmann::json j;
-        i >> j;
-
-        if (j.find("accessToken") != j.end() && j.find("refreshToken") != j.end() && j.find("expiry") != j.end())
-        {
-            auto reddit = std::make_shared<RedditSession>(
-                j["accessToken"].get<std::string>(), 
-                j["refreshToken"].get<std::string>(), 
-                j["expiry"].get<double>(),
-                j["time"].get<time_t>());
-
-            consoleApp->setRedditSession(reddit);
-
-            std::cout << "loaded saved session" << std::endl;
-        }
-    }
-}
-
 } // namespace console
 } // namespace arcc
 
@@ -306,7 +272,11 @@ int main(int argc, char* argv[])
     consoleApp = std::unique_ptr<ConsoleApp>(new ConsoleApp(terminal));
 
     initCommands();
-    loadSession();
+
+    if (consoleApp->loadSession())
+    {
+        printStatus("saved session restored");
+    }
 
     try
     {

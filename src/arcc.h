@@ -134,7 +134,52 @@ public:
     bool isLoggedIn() const { return _reddit != nullptr; }
 
     RedditSessionPtr getRedditSession() { return _reddit; }
-    void setRedditSession(RedditSessionPtr val) { _reddit = val; }
+    void setRedditSession(RedditSessionPtr val) 
+    { 
+        _reddit = val; 
+        saveSession();
+    }
+
+    bool loadSession()
+    {
+        boost::filesystem::path homefolder { utils::getUserFolder() };
+        boost::filesystem::path sessionfile = homefolder / ".arcc_session";
+
+        if (boost::filesystem::exists(sessionfile))
+        {
+            std::ifstream i(sessionfile.string());
+            nlohmann::json j;
+            i >> j;
+
+            if (j.find("accessToken") != j.end() && j.find("refreshToken") != j.end() && j.find("expiry") != j.end())
+            {
+                _reddit = std::make_shared<RedditSession>(
+                    j["accessToken"].get<std::string>(), 
+                    j["refreshToken"].get<std::string>(), 
+                    j["expiry"].get<double>(),
+                    j["time"].get<time_t>());
+            }
+        }
+
+        return _reddit != nullptr;
+    }
+
+    void saveSession()
+    {
+        boost::filesystem::path homefolder { utils::getUserFolder() };
+        boost::filesystem::path sessionfile = homefolder / ".arcc_session";
+
+        nlohmann::json j;
+
+        j["accessToken"] = _reddit->accessToken();
+        j["refreshToken"] = _reddit->refreshToken();
+        j["expiry"] = _reddit->expiry();
+        j["time"] = std::time(nullptr);
+
+        std::ofstream out(sessionfile.string());
+        out << j;
+        out.close();
+    }
 
 private:
     void printPrompt() const
