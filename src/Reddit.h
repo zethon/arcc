@@ -79,6 +79,11 @@ public:
     std::string refreshToken() const { return _refreshToken; }
     double expiry() const { return _expiry; }
 
+    void setRefreshCallback(std::function<void(void)> cb)
+    {
+        _refreshCallback = cb;
+    }
+
 private:
     void doRefreshToken();   
 };

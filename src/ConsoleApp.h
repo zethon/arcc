@@ -54,6 +54,10 @@ public:
     std::string doRedditGet(const std::string& endpoint);
     std::string doRedditGet(const std::string& endpoint, const RedditSession::Params& params);
 
+    // these will automatically prepred `_location` to the endpoint
+    std::string doSubRedditGet(const std::string& endpoint);
+    std::string doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params);
+
     Terminal& getTerminal() { return _terminal; }
 
     void addCommand(const std::string& n, const std::string& hlp, ConsoleCommand::Handler hdr)
@@ -72,7 +76,8 @@ public:
     RedditSessionPtr getRedditSession() { return _reddit; }
     void setRedditSession(RedditSessionPtr val) 
     { 
-        _reddit = val; 
+        _reddit = val;
+        _reddit->setRefreshCallback(std::bind(&ConsoleApp::saveSession, this)); 
         saveSession();
     }
 

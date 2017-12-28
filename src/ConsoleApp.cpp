@@ -93,6 +93,27 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const RedditSes
     return retval;
 }
 
+std::string ConsoleApp::doSubRedditGet(const std::string& endpoint)
+{
+    return doRedditGet(endpoint, RedditSession::Params{});
+}
+
+std::string ConsoleApp::doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params)
+{
+    std::string retval;
+
+    if (_reddit)
+    {
+        retval = _reddit->doGetRequest(_location + endpoint, params);
+    }
+    else
+    {
+        std::cout << "you must be logged in first. type `login` to sign into reddit" << std::endl;
+    }
+
+    return retval;
+}
+
 bool ConsoleApp::loadSession()
 {
     boost::filesystem::path homefolder { utils::getUserFolder() };
@@ -106,11 +127,11 @@ bool ConsoleApp::loadSession()
 
         if (j.find("accessToken") != j.end() && j.find("refreshToken") != j.end() && j.find("expiry") != j.end())
         {
-            _reddit = std::make_shared<RedditSession>(
+            setRedditSession(std::make_shared<RedditSession>(
                 j["accessToken"].get<std::string>(), 
                 j["refreshToken"].get<std::string>(), 
                 j["expiry"].get<double>(),
-                j["time"].get<time_t>());
+                j["time"].get<time_t>()));
         }
     }
 

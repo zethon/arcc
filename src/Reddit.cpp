@@ -163,6 +163,11 @@ void RedditSession::doRefreshToken()
             _webclient.setHeader("Authorization: bearer " + _accessToken);
 
             _lastRefresh = std::time(nullptr);
+
+            if (_refreshCallback)
+            {
+                _refreshCallback();
+            }
         }
     }
 }
