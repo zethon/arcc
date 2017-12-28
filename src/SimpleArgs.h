@@ -27,6 +27,7 @@ public:
     SimpleArgs(const std::string& val)
         : _original(val)
     {
+        parse(_original);
     }
 
     void parse(const std::string& = std::string());

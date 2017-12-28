@@ -77,7 +77,6 @@ void list(const std::string& cmdParams)
     static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
 
     SimpleArgs args { cmdParams };
-    args.parse();
 
     unsigned int limit = 5;
     std::string listType = "hot";
@@ -115,7 +114,7 @@ void list(const std::string& cmdParams)
     RedditSession::Params params;
     params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
 
-    auto jsontext = consoleApp->doRedditGet(subReddit + "/" + listType, params);
+    auto jsontext = consoleApp->doSubRedditGet(subReddit + "/" + listType, params);
     if (jsontext.size() > 0)
     {
         unsigned int idx = 0;
@@ -154,8 +153,25 @@ void list(const std::string& cmdParams)
     }
 }
 
+void go(const std::string& params)
+{
+    SimpleArgs args { params };
+    if (args.getTokenCount() > 0)
+    {
+        if (!consoleApp->setLocation(args.getToken(0)))
+        {
+            printError("invalid subreddit '" + args.getToken(0) + "'");
+        }
+    }
+    else
+    {
+        printError("no subreddit specified");
+    }
+}
+
 void initCommands()
 {
+    consoleApp->addCommand("go", "go to a subreddit", std::bind(go, std::placeholders::_1));
     consoleApp->addCommand("list", "list stuff", std::bind(list, std::placeholders::_1));
     consoleApp->addCommand("whoami", "whoami", [](const std::string&) { whoami(); });
     consoleApp->addCommand("login", "login", [](const std::string& params)

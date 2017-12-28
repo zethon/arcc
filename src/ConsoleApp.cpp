@@ -24,6 +24,11 @@ ConsoleApp::ConsoleApp(Terminal& t)
 {
 }
 
+ConsoleApp::~ConsoleApp()
+{
+    this->saveSession();
+}
+
 void ConsoleApp::exec(const std::string& rawline)
 {
     bool executed = false;
@@ -70,6 +75,29 @@ void ConsoleApp::run()
         std::string line = _terminal.getLine();
         exec(line);
     }
+}
+
+bool ConsoleApp::setLocation(const std::string& location)
+{
+    bool retval = false;
+
+    if (location == "/")
+    {
+        _location.clear();
+        retval = true;
+    }
+    else
+    {
+        const std::regex subRegex { R"(^\/r\/[a-zA-Z0-9]+$)" };
+
+        if (std::regex_match(location, subRegex))
+        {
+            retval = true;
+            _location = location;
+        }
+    }
+    
+    return retval;
 }
 
 std::string ConsoleApp::doRedditGet(const std::string& endpoint)
@@ -132,6 +160,8 @@ bool ConsoleApp::loadSession()
                 j["refreshToken"].get<std::string>(), 
                 j["expiry"].get<double>(),
                 j["time"].get<time_t>()));
+
+                _location = j["location"].get<std::string>();
         }
     }
 
@@ -148,7 +178,8 @@ void ConsoleApp::saveSession()
     j["accessToken"] = _reddit->accessToken();
     j["refreshToken"] = _reddit->refreshToken();
     j["expiry"] = _reddit->expiry();
-    j["time"] = std::time(nullptr);
+    j["time"] = _reddit->lastRefresh();
+    j["location"] = _location;
 
     std::ofstream out(sessionfile.string());
     out << j;

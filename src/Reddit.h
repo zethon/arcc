@@ -78,6 +78,7 @@ public:
     std::string accessToken() const { return _accessToken; }
     std::string refreshToken() const { return _refreshToken; }
     double expiry() const { return _expiry; }
+    time_t lastRefresh() const { return _lastRefresh; }
 
     void setRefreshCallback(std::function<void(void)> cb)
     {

@@ -49,7 +49,7 @@ class ConsoleApp final
 
 public:
     ConsoleApp(Terminal& t);
-    ~ConsoleApp() = default;
+    ~ConsoleApp();
 
     std::string doRedditGet(const std::string& endpoint);
     std::string doRedditGet(const std::string& endpoint, const RedditSession::Params& params);
@@ -58,7 +58,8 @@ public:
     std::string doSubRedditGet(const std::string& endpoint);
     std::string doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params);
 
-    Terminal& getTerminal() { return _terminal; }
+    void exec(const std::string& rawline);
+    void run();
 
     void addCommand(const std::string& n, const std::string& hlp, ConsoleCommand::Handler hdr)
     {
@@ -67,8 +68,7 @@ public:
 
     void doExitApp() { _doExit = true; }
 
-    void exec(const std::string& rawline);
-    void run();
+    bool setLocation(const std::string&);
 
     void resetSession() { _reddit.reset(); }
     bool isLoggedIn() const { return _reddit != nullptr; }
