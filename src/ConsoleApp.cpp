@@ -26,7 +26,10 @@ ConsoleApp::ConsoleApp(Terminal& t)
 
 ConsoleApp::~ConsoleApp()
 {
-    this->saveSession();
+    if (_reddit)
+    {
+        saveSession();   
+    }
 }
 
 void ConsoleApp::exec(const std::string& rawline)
@@ -150,18 +153,27 @@ bool ConsoleApp::loadSession()
     if (boost::filesystem::exists(sessionfile))
     {
         std::ifstream i(sessionfile.string());
-        nlohmann::json j;
-        i >> j;
 
-        if (j.find("accessToken") != j.end() && j.find("refreshToken") != j.end() && j.find("expiry") != j.end())
+        try
         {
-            setRedditSession(std::make_shared<RedditSession>(
-                j["accessToken"].get<std::string>(), 
-                j["refreshToken"].get<std::string>(), 
-                j["expiry"].get<double>(),
-                j["time"].get<time_t>()));
+            nlohmann::json j;
+            i >> j;
 
-                _location = j["location"].get<std::string>();
+            if (j.find("accessToken") != j.end() && j.find("refreshToken") != j.end() && j.find("expiry") != j.end())
+            {
+                setRedditSession(std::make_shared<RedditSession>(
+                    j["accessToken"].get<std::string>(), 
+                    j["refreshToken"].get<std::string>(), 
+                    j["expiry"].get<double>(),
+                    j["time"].get<time_t>()));
+
+                    _location = j["location"].get<std::string>();
+            }
+        }
+        catch (const nlohmann::json::exception& )
+        {
+            // TODO: should warn the user here
+            resetSession();
         }
     }
 
@@ -183,6 +195,17 @@ void ConsoleApp::saveSession()
 
     std::ofstream out(sessionfile.string());
     out << j;
+    out.close();
+}
+
+void ConsoleApp::resetSession()
+{
+    _reddit.reset(); 
+
+    boost::filesystem::path homefolder { utils::getUserFolder() };
+    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
+    std::ofstream out(sessionfile.string());
+    out << nlohmann::json{};
     out.close();
 }
 

@@ -69,8 +69,6 @@ public:
     void doExitApp() { _doExit = true; }
 
     bool setLocation(const std::string&);
-
-    void resetSession() { _reddit.reset(); }
     bool isLoggedIn() const { return _reddit != nullptr; }
 
     RedditSessionPtr getRedditSession() { return _reddit; }
@@ -83,6 +81,7 @@ public:
 
     bool loadSession();
     void saveSession();
+    void resetSession();
 
 private:
     void printPrompt() const;

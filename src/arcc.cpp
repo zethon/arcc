@@ -201,13 +201,6 @@ void initCommands()
         {
             if (consoleApp->getRedditSession() != nullptr)
             {
-                // write an empty session file
-                boost::filesystem::path homefolder { utils::getUserFolder() };
-                boost::filesystem::path sessionfile = homefolder / ".arcc_session";
-                std::ofstream out(sessionfile.string());
-                out << nlohmann::json{};
-                out.close();                
-
                 // delete our session object
                 consoleApp->resetSession();
 
