@@ -95,8 +95,22 @@ bool ConsoleApp::setLocation(const std::string& location)
 
         if (std::regex_match(location, subRegex))
         {
-            retval = true;
-            _location = location;
+            const std::string jstr = doSubRedditGet(location + "/about");
+            if (jstr.size() > 0)
+            {
+                try
+                {
+                    auto jreply = nlohmann::json::parse(jstr);
+                    if (jreply["data"]["created"].get<unsigned int>() > 0)
+                    {
+                        retval = true;
+                        _location = location;
+                    }
+                }
+                catch (const nlohmann::json::exception&)
+                {
+                }
+            }
         }
     }
     
