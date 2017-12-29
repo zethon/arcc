@@ -122,6 +122,7 @@ void list(const std::string& cmdParams)
         for (auto& child : jreply["data"]["children"])
         {
             std::cout 
+                << (child["data"]["stickied"].get<bool>() ? rang::fg::green : rang::fg::reset)
                 << rang::style::bold
                 << ++idx
                 << ". "
