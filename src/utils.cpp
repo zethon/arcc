@@ -85,4 +85,9 @@ void openBrowser(const std::string& url_str)
 #endif
 }
 
+std::string miniMoment(unsigned int stamp)
+{
+    return std::to_string(stamp);
+}
+
 } // namespace

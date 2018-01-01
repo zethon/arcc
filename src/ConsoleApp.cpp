@@ -55,8 +55,16 @@ void ConsoleApp::exec(const std::string& rawline)
         {
             if (alias == command)
             {
-                // TODO: optimize out the std::string()
-                c.handler_(std::string(params));
+                try
+                {
+                    // TODO: optimize out the std::string()
+                    c.handler_(std::string(params));
+                }
+                catch (const std::exception& ex)
+                {
+                    std::cout << ex.what() << std::endl;
+                }
+                
                 executed = true;
                 goto endloop;
             }

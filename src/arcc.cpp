@@ -117,12 +117,22 @@ void list(const std::string& cmdParams)
     auto jsontext = consoleApp->doSubRedditGet(subReddit + "/" + listType, params);
     if (jsontext.size() > 0)
     {
+        std::cout << std::endl;
+
         unsigned int idx = 0;
         auto jreply = nlohmann::json::parse(jsontext);
         for (auto& child : jreply["data"]["children"])
         {
+            if (child["data"]["stickied"].get<bool>())
+            {
+                std::cout << rang::fg::black << rang::bg::yellow;
+            }
+            else
+            {
+                std::cout << rang::fg::reset;
+            }
+
             std::cout 
-                << (child["data"]["stickied"].get<bool>() ? rang::fg::green : rang::fg::reset)
                 << rang::style::bold
                 << ++idx
                 << ". "
@@ -141,7 +151,7 @@ void list(const std::string& cmdParams)
                 << " - "
                 << child["data"]["num_comments"].get<int>() << " comments"
                 << '\n'
-                << rang::fg::green
+                << rang::fg::magenta
                 << child["data"]["author"].get<std::string>()
                 << ' '
                 << rang::fg::yellow
