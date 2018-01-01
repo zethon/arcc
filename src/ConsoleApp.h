@@ -48,6 +48,9 @@ class ConsoleApp final
     std::string                     _location;
 
 public:
+    static void printError(const std::string& error);
+    static void printStatus(const std::string& status);
+
     ConsoleApp(Terminal& t);
     ~ConsoleApp();
 

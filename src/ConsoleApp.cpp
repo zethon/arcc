@@ -17,6 +17,29 @@ namespace arcc
 namespace console
 {
 
+void ConsoleApp::printError(const std::string& error)
+{
+    std::cout 
+        << rang::fg::red
+        << rang::style::bold
+        << "error: " 
+        << rang::fg::reset
+        << rang::style::reset
+        << error
+        << std::endl;
+}
+
+void ConsoleApp::printStatus(const std::string& status)
+{
+    std::cout 
+        << rang::fg::magenta
+        << rang::style::bold
+        << status
+        << rang::fg::reset
+        << rang::style::reset
+        << std::endl;
+}
+
 ConsoleApp::ConsoleApp(Terminal& t)
     : _terminal(t), 
         _doExit(false), 

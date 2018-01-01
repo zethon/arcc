@@ -34,29 +34,6 @@ void saveSession();
 using ConsoleAppPtr = std::unique_ptr<ConsoleApp>;
 ConsoleAppPtr consoleApp;
 
-void printError(const std::string& error)
-{
-    std::cout 
-        << rang::fg::red
-        << rang::style::bold
-        << "error: " 
-        << rang::fg::reset
-        << rang::style::reset
-        << error
-        << std::endl;
-}
-
-void printStatus(const std::string& status)
-{
-    std::cout 
-        << rang::fg::magenta
-        << rang::style::bold
-        << status
-        << rang::fg::reset
-        << rang::style::reset
-        << std::endl;
-}
-
 void whoami()
 {
     auto jsontext = consoleApp->doRedditGet("/api/v1/me");
@@ -87,7 +64,7 @@ void list(const std::string& cmdParams)
         listType = args.getPositional(0);
         if (std::find(std::begin(validTypes), std::end(validTypes), listType) == std::end(validTypes))
         {
-            printError("invalid list type '" + listType + "'");
+            ConsoleApp::printError("invalid list type '" + listType + "'");
             return;
         }
     }
@@ -106,7 +83,7 @@ void list(const std::string& cmdParams)
         }
         catch (const boost::bad_lexical_cast&)
         {
-            printError("parameter 'limit' has invalid value '" + limitStr + "'");
+            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
             return;
         }
     }
@@ -171,12 +148,12 @@ void go(const std::string& params)
     {
         if (!consoleApp->setLocation(args.getToken(0)))
         {
-            printError("invalid subreddit '" + args.getToken(0) + "'");
+            ConsoleApp::printError("invalid subreddit '" + args.getToken(0) + "'");
         }
     }
     else
     {
-        printError("no subreddit specified");
+       ConsoleApp::printError("no subreddit specified");
     }
 }
 
@@ -297,7 +274,7 @@ int main(int argc, char* argv[])
 
     if (consoleApp->loadSession())
     {
-        printStatus("saved session restored");
+        ConsoleApp::printStatus("saved session restored");
     }
 
     try
