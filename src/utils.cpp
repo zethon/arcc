@@ -10,12 +10,15 @@
 #ifdef _WINDOWS
 #   include <windows.h>
 #   include <shellapi.h>
-#elif defined(__APPLE__)
-#   include <CoreFoundation/CFBundle.h>
-#   include <ApplicationServices/ApplicationServices.h>
+#else
 #   include <unistd.h>
 #   include <sys/types.h>
 #   include <pwd.h>
+#endif
+
+#ifdef __APPLE__
+#   include <CoreFoundation/CFBundle.h>
+#   include <ApplicationServices/ApplicationServices.h>
 #endif
 
 namespace utils
@@ -50,13 +53,9 @@ std::string getUserFolder()
 
 #ifdef _WINDOWS
     throw NotImplementedException();
-#elif defined(__APPLE__)    
+#else    
 struct passwd *pw = getpwuid(getuid());
 retval = pw->pw_dir;
-#elif defined(__linux__)
-    throw NotImplementedException();
-#else
-    throw NotImplementedException();
 #endif
 
     return retval;
