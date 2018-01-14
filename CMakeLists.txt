@@ -40,10 +40,12 @@ include_directories(${CURL_INCLUDE_DIR})
 
 if (MSVC)
 	add_definitions(
+        -D_CRT_SECURE_NO_WARNINGS
         -D_SCL_SECURE_NO_WARNINGS
         -DWIN32_LEAN_AND_MEAN
         -DCURL_STATICLIB
         -DNOMINMAX
+        -DBOOST_ALL_NO_LIB
     )
 
     list(APPEND CURL_LIBRARIES
