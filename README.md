@@ -27,12 +27,6 @@ Just install and run! 👍
 
 Coming soon! ⏳
 
-## Contact
-
-## Thanks
-
-
-
 ## Used Third Party Tools
 
 * `boost`<br/>
@@ -53,12 +47,11 @@ https://github.com/eidheim/Simple-Web-Server
 
 <!-- * `Lightweight C++ command line option parser`<br/>
 MIT License - https://github.com/jarro2783/cxxopts/blob/master/LICENSE<br/>
-https://github.com/jarro2783/cxxopts
-
+https://github.com/jarro2783/cxxopts -->
 
 * `rang`<br/>
 The Unlicense - https://github.com/agauniyal/rang/blob/master/LICENSE<br/>
-https://github.com/agauniyal/rang -->
+https://github.com/agauniyal/rang
 
 <!-- footnotes -->
 [travis-img]: https://travis-ci.org/zethon/arcc.svg?branch=master
