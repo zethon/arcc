@@ -68,11 +68,6 @@ set(JSON_BuildTests OFF CACHE BOOL "Build the unit tests")
 add_subdirectory(json)
 include_directories(json/src)
 
-# disable the example projects for cxxopts
-set(CXXOPTS_BUILD_EXAMPLES OFF CACHE BOOL "Set to ON to build examples")
-add_subdirectory(cxxopts)
-include_directories(cxxopts/include)
-
 add_subdirectory(rang)
 include_directories(rang/include)
 

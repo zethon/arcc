@@ -10,7 +10,6 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <cxxopts.hpp>
 #include <rang.hpp>
 #include <json.hpp>
 
