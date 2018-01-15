@@ -10,6 +10,7 @@
 #ifdef _WINDOWS
 #   include <windows.h>
 #   include <shellapi.h>
+#   include <Shlobj.h>
 #else
 #   include <unistd.h>
 #   include <sys/types.h>
@@ -52,7 +53,16 @@ std::string getUserFolder()
     std::string retval;
 
 #ifdef _WINDOWS
-    throw NotImplementedException();
+    WCHAR path[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, 0, path)))
+    {
+        std::wstring temp(path);
+        retval.assign(temp.begin(), temp.end());
+    }
+    else
+    {
+        throw std::runtime_error("could not retrieve user folder");
+    }
 #else    
 struct passwd *pw = getpwuid(getuid());
 retval = pw->pw_dir;

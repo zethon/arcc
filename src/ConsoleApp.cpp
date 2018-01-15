@@ -49,10 +49,6 @@ ConsoleApp::ConsoleApp(Terminal& t)
 
 ConsoleApp::~ConsoleApp()
 {
-    if (_reddit)
-    {
-        saveSession();   
-    }
 }
 
 void ConsoleApp::exec(const std::string& rawline)
@@ -108,6 +104,18 @@ void ConsoleApp::run()
         printPrompt();
         std::string line = _terminal.getLine();
         exec(line);
+    }
+
+    if (_reddit)
+    {
+        try
+        {
+            saveSession();
+        }
+        catch (const std::exception& ex)
+        {
+            printError(ex.what());
+        }
     }
 }
 
@@ -260,7 +268,7 @@ void ConsoleApp::printPrompt() const
         << (isLoggedIn() ? rang::fg::green : rang::fg::red)
         << '$'
         << _location
-        << rang::fg::reset
+        << rang::fg::gray
         << "> ";
 
     std::cout << std::flush;
