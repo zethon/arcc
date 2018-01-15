@@ -8,15 +8,19 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <cxxopts.hpp>
+#include <rang.hpp>
+#include <json.hpp>
 
 #include "core.h"
 #include "Terminal.h"
 #include "WebClient.h"
 #include "utils.h"
+#include "SimpleArgs.h"
 
-#include "arcc.h"
+#include "ConsoleApp.h"
 
 namespace arcc
 {
@@ -24,12 +28,15 @@ namespace arcc
 namespace console
 {
 
+// forward decl
+void saveSession();
+
 using ConsoleAppPtr = std::unique_ptr<ConsoleApp>;
 ConsoleAppPtr consoleApp;
 
 void whoami()
 {
-    auto jsontext = consoleApp->doReddit("/api/v1/me");
+    auto jsontext = consoleApp->doRedditGet("/api/v1/me");
 
     if (jsontext.size() > 0)
     {
@@ -42,10 +49,119 @@ void whoami()
     }
 }
 
+void list(const std::string& cmdParams)
+{
+    static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
+
+    SimpleArgs args { cmdParams };
+
+    unsigned int limit = 5;
+    std::string listType = "hot";
+    std::string subReddit;
+
+    if (args.getPositionalCount() > 0)
+    {
+        listType = args.getPositional(0);
+        if (std::find(std::begin(validTypes), std::end(validTypes), listType) == std::end(validTypes))
+        {
+            ConsoleApp::printError("invalid list type '" + listType + "'");
+            return;
+        }
+    }
+
+    if (args.hasArgument("sub"))
+    {
+        subReddit = args.getNamedArgument("sub");
+    }
+
+    if (args.hasArgument("limit"))
+    {
+        auto limitStr = args.getNamedArgument("limit");
+        try
+        {
+            limit = boost::lexical_cast<unsigned int>(limitStr);
+        }
+        catch (const boost::bad_lexical_cast&)
+        {
+            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
+            return;
+        }
+    }
+
+    RedditSession::Params params;
+    params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
+
+    auto jsontext = consoleApp->doSubRedditGet(subReddit + "/" + listType, params);
+    if (jsontext.size() > 0)
+    {
+        std::cout << std::endl;
+
+        unsigned int idx = 0;
+        auto jreply = nlohmann::json::parse(jsontext);
+        for (auto& child : jreply["data"]["children"])
+        {
+            if (child["data"]["stickied"].get<bool>())
+            {
+                std::cout << rang::fg::black << rang::bg::yellow;
+            }
+            else
+            {
+                std::cout << rang::fg::reset;
+            }
+
+            std::cout 
+                << rang::style::bold
+                << ++idx
+                << ". "
+                << child["data"]["title"].get<std::string>()
+                << rang::style::reset
+                << '\n'
+                << rang::fg::blue
+                << rang::style::underline
+                << child["data"]["url"].get<std::string>()
+                << rang::style::reset
+                << '\n'
+                << rang::fg::reset
+                << child["data"]["score"].get<int>() 
+                << " pts • "
+                << child["data"]["created"].get<int>() << " hr"
+                << " - "
+                << child["data"]["num_comments"].get<int>() << " comments"
+                << '\n'
+                << rang::fg::magenta
+                << child["data"]["author"].get<std::string>()
+                << ' '
+                << rang::fg::yellow
+                << child["data"]["subreddit_name_prefixed"].get<std::string>()
+                << rang::fg::reset
+                << std::endl;
+
+                std::cout << std::endl;
+        }
+    }
+}
+
+void go(const std::string& params)
+{
+    SimpleArgs args { params };
+    if (args.getTokenCount() > 0)
+    {
+        if (!consoleApp->setLocation(args.getToken(0)))
+        {
+            ConsoleApp::printError("invalid subreddit '" + args.getToken(0) + "'");
+        }
+    }
+    else
+    {
+       ConsoleApp::printError("no subreddit specified");
+    }
+}
+
 void initCommands()
 {
+    consoleApp->addCommand("go", "go to a subreddit", std::bind(go, std::placeholders::_1));
+    consoleApp->addCommand("list", "list stuff", std::bind(list, std::placeholders::_1));
     consoleApp->addCommand("whoami", "whoami", [](const std::string&) { whoami(); });
-
     consoleApp->addCommand("login", "login", [](const std::string& params)
         {
             if (!consoleApp->getRedditSession())
@@ -56,31 +172,16 @@ void initCommands()
                 if (login.loggedIn())
                 {
                     consoleApp->setRedditSession(login.getRedditSession());
-
-                    boost::filesystem::path homefolder { utils::getUserFolder() };
-                    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
-
-                    nlohmann::json j;
-
-                    auto reddit = consoleApp->getRedditSession();
-                    j["accessToken"] = reddit->accessToken();
-                    j["refreshToken"] = reddit->refreshToken();
-                    j["expiry"] = reddit->expiry();
-
-                    std::ofstream out(sessionfile.string());
-                    out << j;
-                    out.close();
-
-                    std::cout << "login successful (/◔ ◡ ◔)/" << std::endl;
+                    std::cout << "login successful ヽ(´▽`)/" << std::endl;
                 }
                 else
                 {
-                    std::cout << "login denied D:" << std::endl;
+                    std::cout << "login denied (╯°□°）╯︵ ┻━┻" << std::endl;
                 }
             }
             else
             {
-                std::cout << "you are already logged in" << std::endl;
+                std::cout << "you are already logged in (/◔ ◡ ◔)/" << std::endl;
             }
         });
 
@@ -88,25 +189,18 @@ void initCommands()
         {
             if (consoleApp->getRedditSession() != nullptr)
             {
-                // write an empty session file
-                boost::filesystem::path homefolder { utils::getUserFolder() };
-                boost::filesystem::path sessionfile = homefolder / ".arcc_session";
-                std::ofstream out(sessionfile.string());
-                out << nlohmann::json{};
-                out.close();                
-
                 // delete our session object
                 consoleApp->resetSession();
 
-                std::cout << "you have logged out =C" << std::endl;
+                std::cout << "you have logged out (•̀o•́)ง" << std::endl;
             }
             else
             {
-                std::cout << "you are not logged in" << std::endl;
+                std::cout << "you are not logged in (•_•)" << std::endl;
             }
         });
 
-    consoleApp->addCommand("quit,exit", "exit the program", 
+    consoleApp->addCommand("q,quit,exit", "exit the program", 
         [](const std::string& params)
         {
             consoleApp->doExitApp();
@@ -155,31 +249,11 @@ void initCommands()
                 std::cout << "Could not ping because '" << e.what() << "'" << std::endl;
             }
         });
-}
-
-void loadSession()
-{
-    boost::filesystem::path homefolder { utils::getUserFolder() };
-    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
-
-    if (boost::filesystem::exists(sessionfile))
-    {
-        std::ifstream i(sessionfile.string());
-        nlohmann::json j;
-        i >> j;
-
-        if (j.find("accessToken") != j.end() && j.find("refreshToken") != j.end() && j.find("expiry") != j.end())
+    consoleApp->addCommand("time", "ping a website",
+        [](const std::string& params)
         {
-            auto reddit = std::make_shared<RedditSession>(
-                j["accessToken"].get<std::string>(), 
-                j["refreshToken"].get<std::string>(), 
-                j["expiry"].get<double>());
-
-            consoleApp->setRedditSession(reddit);
-
-            std::cout << "loaded saved session" << std::endl;
-        }
-    }
+            std::cout << std::time(nullptr) << std::endl;
+        });
 }
 
 } // namespace console
@@ -197,7 +271,11 @@ int main(int argc, char* argv[])
     consoleApp = std::unique_ptr<ConsoleApp>(new ConsoleApp(terminal));
 
     initCommands();
-    loadSession();
+
+    if (consoleApp->loadSession())
+    {
+        ConsoleApp::printStatus("saved session restored");
+    }
 
     try
     {

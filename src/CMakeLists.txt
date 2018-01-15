@@ -2,17 +2,20 @@ project(arcc)
 
 set(SOURCE_FILES
     arcc.cpp
+    ConsoleApp.cpp
     Reddit.cpp
     utils.cpp
+    SimpleArgs.cpp
     WebClient.cpp
 )
 
 set(HEADER_FILES
-    arcc.h
+    ConsoleApp.h
     core.h
     Reddit.h
     Terminal.h
     utils.h
+    SimpleArgs.h
     WebClient.h
 )
 
@@ -35,8 +38,6 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     ${CURL_LIBRARIES}
     ${EXTRA_LIBS}
-    ${Boost_FILESYSTEM_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY}
-    ${Boost_THREAD_LIBRARY}
+    ${Boost_LIBRARIES}
     simple-web-server
 )

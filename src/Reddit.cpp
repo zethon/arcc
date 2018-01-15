@@ -42,7 +42,7 @@ void OAuth2Login::start()
                 
                 if (result.status == 200)
                 {
-                    auto jreply = nlohmann::json::parse(result.data);                    
+                    auto jreply = nlohmann::json::parse(result.data);
                     _reddit = std::make_shared<RedditSession>(jreply["access_token"], jreply["refresh_token"], jreply["expires_in"].get<double>());
 
                     _loggedIn = true;
@@ -85,11 +85,35 @@ void OAuth2Login::start()
     _server.start();
 }
 
+std::string buildQueryParamString(const RedditSession::Params& params)
+{
+    std::string retval;
+
+    if (params.size() > 0)
+    {
+        retval.append("?");
+
+        for (auto& param : params)
+        {
+            if (param.second.size() > 0)
+            {
+                retval += param.first + "=" + param.second + "&";
+            }
+        }
+    }
+
+    return retval;
+}
+
 RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry)
+    : RedditSession(accessToken, refreshToken, expiry, 0)
+{
+}
+
+RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh)
     : _accessToken(accessToken), 
         _refreshToken(refreshToken), 
-        _expiry(expiry),
-        _lastRefresh(std::chrono::system_clock::now())
+        _expiry(expiry)
 {
     const std::string userAgent = (boost::format("%1%:%2%:v%3% (by /u/wolosocu)") 
         % utils::getOsString() 
@@ -98,28 +122,55 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
 
     _webclient.setUserAgent(userAgent);
     _webclient.setHeader("Authorization: bearer " + _accessToken);
+
+    if (lastRefresh != 0)
+    {
+        _lastRefresh = lastRefresh;
+    }
+    else
+    {
+        _lastRefresh = std::time(nullptr);
+    }
 }
 
-std::string RedditSession::doRequest(const std::string& endpoint, WebClient::Method method)
+std::string RedditSession::doGetRequest(const std::string& endpoint, const RedditSession::Params& params)
 {
-    refreshToken();
+    doRefreshToken();
 
-    std::string endpointUrl = requestUrl + endpoint;
-
-    auto result = _webclient.doRequest(endpointUrl, std::string(), method);
+    std::string endpointUrl = requestUrl + endpoint + buildQueryParamString(params);
+    auto result = _webclient.doRequest(endpointUrl);
     return result.data;
 }
 
 void RedditSession::doRefreshToken()
 {
-    std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now()-_lastRefresh;
-    if (elapsed_seconds.count() > _expiry)
+    std::time_t elapsed_seconds = std::time(0) - _lastRefresh;
+    if (elapsed_seconds > _expiry)
     {
-        // send refresh request
+        WebClient client;
+        client.setBasicAuth(REDDIT_CLIENT_ID,"");
 
-        _lastRefresh = std::chrono::system_clock::now();
+        const std::string postData = (boost::format("grant_type=refresh_token&refresh_token=%1%") 
+            % _refreshToken).str();
+
+        auto result = client.doRequest("https://www.reddit.com/api/v1/access_token", postData, WebClient::Method::POST);
+
+        if (result.status == 200)
+        {
+            auto jreply = nlohmann::json::parse(result.data);
+
+            _accessToken = jreply["access_token"].get<std::string>();
+            _webclient.setHeader("Authorization: bearer " + _accessToken);
+
+            _lastRefresh = std::time(nullptr);
+
+            if (_refreshCallback)
+            {
+                _refreshCallback();
+            }
+        }
     }
-}   
+}
 
 
 } // namespace arcc
