@@ -13,11 +13,11 @@
 
 ## Introduction
 
-🔎 &nbsp; While searching for console clients for Reddit, I discovered that of the few tools that existed they were written in Python or Javascript. Variouis tools were required to download and run both, and getting any of them to work was difficult if not impossible. 
+🔎 &nbsp; While searching for console clients for Reddit, I discovered that of the few tools that existed, they were all written in either Python or Javascript. This required various tools to download and run, adding additional requirements and work to get any of them to work. And even once all the requirements were installed, some of them still didn't work!
 
-`arcc` is console app for reading Reddit. Unlike the others, this one is written in C++, so what does that mean?
+`arcc` is console app for reading Reddit written in C++. What does this mean?
 
-* **NO** 👎 &nbsp; Javascript modules to install!
+* **NO** 👎 &nbsp; Javascript, Python, ScriptLanguageOfTheDay modules to install!
 * **NO** 👎 &nbsp; `npm`, `brew`, `someotherthirdpartytool` to deal with!
 * **NO** 👎 &nbsp; BS!
 
