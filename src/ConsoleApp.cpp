@@ -179,7 +179,7 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const RedditSes
 
 std::string ConsoleApp::doSubRedditGet(const std::string& endpoint)
 {
-    return doRedditGet(endpoint, RedditSession::Params{});
+    return doSubRedditGet(endpoint, RedditSession::Params{});
 }
 
 std::string ConsoleApp::doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params)

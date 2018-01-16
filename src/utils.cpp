@@ -6,6 +6,11 @@
 #include <stdexcept>
 #include <algorithm>
 #include <functional>
+#include <ctime>
+#include <chrono>
+#include <cmath>
+#include <iostream>
+#include <sstream>
 
 #ifdef _WINDOWS
 #   include <windows.h>
@@ -96,7 +101,34 @@ void openBrowser(const std::string& url_str)
 
 std::string miniMoment(unsigned int stamp)
 {
-    return std::to_string(stamp);
+    std::stringstream os;
+
+    std::chrono::time_point<std::chrono::system_clock> p2 = std::chrono::system_clock::now();
+    auto nowt = std::chrono::duration_cast<std::chrono::seconds>(p2.time_since_epoch()).count();
+    auto duration = nowt - stamp;
+
+    if (duration < 60)
+    {
+        os << duration << "s";
+    }
+    else if (duration < (60 * 60))
+    {
+        os << std::ceil(duration / 60) << "m";
+    }
+    else if (duration < 60 * 60 * 24)
+    {
+        os << std::ceil(duration / (60 * 60)) << "h";
+    }
+    else if (duration < (60 * 60 * 24 * 365))
+    {
+        os << std::ceil(duration / (60 * 60 * 24)) << "d";
+    }
+    else
+    {
+        os << std::ceil(duration / (60 * 60 * 24 * 365)) << "y";
+    }
+    
+    return os.str();
 }
 
 } // namespace

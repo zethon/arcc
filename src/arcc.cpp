@@ -115,14 +115,14 @@ void list(const std::string& cmdParams)
                 << child["data"]["title"].get<std::string>()
                 << rang::style::reset
                 << '\n'
-                << rang::fg::blue
+                << rang::fg::cyan
                 << rang::style::underline
                 << child["data"]["url"].get<std::string>()
                 << rang::style::reset
                 << '\n'
-                << rang::fg::reset
+                << rang::fg::gray
                 << child["data"]["score"].get<int>() 
-                << " pts • "
+                << " pts - "
                 << child["data"]["created"].get<int>() << " hr"
                 << " - "
                 << child["data"]["num_comments"].get<int>() << " comments"
