@@ -122,8 +122,8 @@ void list(const std::string& cmdParams)
                 << '\n'
                 << rang::fg::gray
                 << child["data"]["score"].get<int>() 
-                << " pts - "
-                << child["data"]["created"].get<int>() << " hr"
+                << "pts - "
+                << utils::miniMoment(child["data"]["created_utc"].get<int>()) 
                 << " - "
                 << child["data"]["num_comments"].get<int>() << " comments"
                 << '\n'
