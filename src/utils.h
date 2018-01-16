@@ -15,4 +15,6 @@ std::string getUserFolder();
 
 void openBrowser(const std::string& url_str);
 
+std::string miniMoment(unsigned int stamp);
+
 } // namespace

@@ -10,7 +10,6 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <cxxopts.hpp>
 #include <rang.hpp>
 #include <json.hpp>
 
@@ -116,15 +115,15 @@ void list(const std::string& cmdParams)
                 << child["data"]["title"].get<std::string>()
                 << rang::style::reset
                 << '\n'
-                << rang::fg::blue
+                << rang::fg::cyan
                 << rang::style::underline
                 << child["data"]["url"].get<std::string>()
                 << rang::style::reset
                 << '\n'
-                << rang::fg::reset
+                << rang::fg::gray
                 << child["data"]["score"].get<int>() 
-                << " pts • "
-                << child["data"]["created"].get<int>() << " hr"
+                << "pts - "
+                << utils::miniMoment(child["data"]["created_utc"].get<int>()) 
                 << " - "
                 << child["data"]["num_comments"].get<int>() << " comments"
                 << '\n'

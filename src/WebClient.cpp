@@ -62,8 +62,9 @@ WebClient::WebClient()
     // start cookie engine
     curl_easy_setopt(_curl, CURLOPT_COOKIEFILE, "");
 
-    // SSL CONFIG: since PEM is default, we needn't set it for PEM
-    // curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    // TODO: peer verification is disabled for now, figure out how to enable
+    // it and optionally turn it on
+    curl_easy_setopt(_curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
     // tell libcurl to redirect a post with a post after a 301, 302 or 303
     curl_easy_setopt(_curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
