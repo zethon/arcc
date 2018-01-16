@@ -52,7 +52,7 @@ void SimpleArgs::parse(const std::string& original)
     {
         const std::string& token = _tokenVector.at(i);
 
-        if (std::regex_search(token, regmatches, dashReg) && (i < _tokenVector.size() - 1))
+        if (std::regex_search(token, regmatches, dashReg))
         {
             boost::string_view key = token;
 
@@ -63,7 +63,17 @@ void SimpleArgs::parse(const std::string& original)
                 key.remove_prefix(1);
             }
 
-            _named.insert(std::make_pair(key, ++i));
+             if (i < _tokenVector.size() - 1)
+             {
+                _named.insert(std::make_pair(key, ++i));
+             }
+             else
+             {
+                 // allow something like: myprogram --option=true --option2
+                 // so that `--option2` doesn't require a value but is still a 
+                 // named argument
+                 _named.insert(std::make_pair(key, -1));
+             }
         }
         else
         {
@@ -89,7 +99,12 @@ unsigned int SimpleArgs::getNamedCount() const
 
 std::string SimpleArgs::getNamedArgument(const boost::string_view& name) const 
 { 
-    return _tokenVector.at(_named.at(name)); 
+    if (_named.at(name) >= 0)
+    {
+        return _tokenVector.at(_named.at(name)); 
+    }
+
+    return std::string{};
 }
 
 bool SimpleArgs::hasArgument(const std::string& name) const 
