@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
 
 #pragma once
 
@@ -19,4 +19,4 @@
 
 #define APP_NAME                "arcc"
 #define APP_TITLE               APP_NAME " " VERSION
-#define COPYRIGHT               "Copyright (c) 2017, Adalid Claure <aclaure@gmail.com>"
+#define COPYRIGHT               "Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>"

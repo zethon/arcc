@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
 
 #include <iostream>
 #include <memory>
@@ -103,10 +103,23 @@ void list(const std::string& cmdParams)
             {
                 std::cout << rang::fg::black << rang::bg::yellow;
             }
-            else
+
+            std::string flairText;
+            try
             {
-                std::cout << rang::fg::reset;
+                flairText = child["data"]["link_flair_text"].get<std::string>();
             }
+            catch (const nlohmann::json::type_error&)
+            {
+                // swallow this
+            }
+
+            if (flairText.size() > 0)
+            {
+                flairText = "[" + flairText + "]";
+            }
+
+            std::cout << rang::bg::reset << rang::fg::reset << rang::style::reset;
 
             std::cout 
                 << rang::style::bold
@@ -122,7 +135,7 @@ void list(const std::string& cmdParams)
                 << '\n'
                 << rang::fg::gray
                 << child["data"]["score"].get<int>() 
-                << "pts - "
+                << " pts - "
                 << utils::miniMoment(child["data"]["created_utc"].get<int>()) 
                 << " - "
                 << child["data"]["num_comments"].get<int>() << " comments"
@@ -131,12 +144,26 @@ void list(const std::string& cmdParams)
                 << child["data"]["author"].get<std::string>()
                 << ' '
                 << rang::fg::yellow
-                << child["data"]["subreddit_name_prefixed"].get<std::string>()
+                << child["data"]["subreddit_name_prefixed"].get<std::string>();
+
+            if (flairText.size() > 0)
+            {
+                std::cout
+                    << ' '
+                    << rang::fg::red
+                    << flairText;
+            }
+
+            std::cout 
                 << rang::fg::reset
                 << std::endl;
 
+                
+
                 std::cout << std::endl;
         }
+
+        std::cout << rang::bg::reset << rang::fg::reset << rang::style::reset;
     }
 }
 
