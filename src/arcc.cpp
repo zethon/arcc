@@ -94,76 +94,81 @@ void list(const std::string& cmdParams)
     if (jsontext.size() > 0)
     {
         std::cout << std::endl;
+        const auto jreply = nlohmann::json::parse(jsontext);
 
-        unsigned int idx = 0;
-        auto jreply = nlohmann::json::parse(jsontext);
-        for (auto& child : jreply["data"]["children"])
+        if (args.hasArgument("json"))
         {
-            if (child["data"]["stickied"].get<bool>())
+            // roundtrip the JSON so we can get pretty indentation
+            std::cout << jreply.dump(4) << std::endl;
+        }
+        else
+        {
+            unsigned int idx = 0;
+            
+            for (auto& child : jreply["data"]["children"])
             {
-                std::cout << rang::fg::black << rang::bg::yellow;
-            }
+                if (child["data"]["stickied"].get<bool>())
+                {
+                    std::cout << rang::fg::black << rang::bg::yellow;
+                }
 
-            std::string flairText;
-            try
-            {
-                flairText = child["data"]["link_flair_text"].get<std::string>();
-            }
-            catch (const nlohmann::json::type_error&)
-            {
-                // swallow this
-            }
+                std::string flairText;
+                try
+                {
+                    flairText = child["data"]["link_flair_text"].get<std::string>();
+                }
+                catch (const nlohmann::json::type_error&)
+                {
+                    // swallow this
+                }
 
-            if (flairText.size() > 0)
-            {
-                flairText = "[" + flairText + "]";
+                if (flairText.size() > 0)
+                {
+                    flairText = "[" + flairText + "]";
+                }
+
+                std::cout << rang::bg::reset << rang::fg::reset << rang::style::reset;
+
+                std::cout 
+                    << rang::style::bold
+                    << ++idx
+                    << ". "
+                    << child["data"]["title"].get<std::string>()
+                    << rang::style::reset
+                    << '\n'
+                    << rang::fg::cyan
+                    << rang::style::underline
+                    << child["data"]["url"].get<std::string>()
+                    << rang::style::reset
+                    << '\n'
+                    << rang::fg::gray
+                    << child["data"]["score"].get<int>() 
+                    << " pts - "
+                    << utils::miniMoment(child["data"]["created_utc"].get<int>()) 
+                    << " - "
+                    << child["data"]["num_comments"].get<int>() << " comments"
+                    << '\n'
+                    << rang::fg::magenta
+                    << child["data"]["author"].get<std::string>()
+                    << ' '
+                    << rang::fg::yellow
+                    << child["data"]["subreddit_name_prefixed"].get<std::string>();
+
+                if (flairText.size() > 0)
+                {
+                    std::cout
+                        << ' '
+                        << rang::fg::red
+                        << flairText;
+                }
+
+                std::cout 
+                    << rang::fg::reset
+                    << std::endl;
             }
 
             std::cout << rang::bg::reset << rang::fg::reset << rang::style::reset;
-
-            std::cout 
-                << rang::style::bold
-                << ++idx
-                << ". "
-                << child["data"]["title"].get<std::string>()
-                << rang::style::reset
-                << '\n'
-                << rang::fg::cyan
-                << rang::style::underline
-                << child["data"]["url"].get<std::string>()
-                << rang::style::reset
-                << '\n'
-                << rang::fg::gray
-                << child["data"]["score"].get<int>() 
-                << " pts - "
-                << utils::miniMoment(child["data"]["created_utc"].get<int>()) 
-                << " - "
-                << child["data"]["num_comments"].get<int>() << " comments"
-                << '\n'
-                << rang::fg::magenta
-                << child["data"]["author"].get<std::string>()
-                << ' '
-                << rang::fg::yellow
-                << child["data"]["subreddit_name_prefixed"].get<std::string>();
-
-            if (flairText.size() > 0)
-            {
-                std::cout
-                    << ' '
-                    << rang::fg::red
-                    << flairText;
-            }
-
-            std::cout 
-                << rang::fg::reset
-                << std::endl;
-
-                
-
-                std::cout << std::endl;
         }
-
-        std::cout << rang::bg::reset << rang::fg::reset << rang::style::reset;
     }
 }
 
