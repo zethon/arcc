@@ -93,7 +93,6 @@ void list(const std::string& cmdParams)
     auto jsontext = consoleApp->doSubRedditGet(subReddit + "/" + listType, params);
     if (jsontext.size() > 0)
     {
-        std::cout << std::endl;
         const auto jreply = nlohmann::json::parse(jsontext);
 
         if (args.hasArgument("json"))
@@ -107,11 +106,6 @@ void list(const std::string& cmdParams)
             
             for (auto& child : jreply["data"]["children"])
             {
-                if (child["data"]["stickied"].get<bool>())
-                {
-                    std::cout << rang::fg::black << rang::bg::yellow;
-                }
-
                 std::string flairText;
                 try
                 {
@@ -127,7 +121,10 @@ void list(const std::string& cmdParams)
                     flairText = "[" + flairText + "]";
                 }
 
-                std::cout << rang::bg::reset << rang::fg::reset << rang::style::reset;
+                if (child["data"]["stickied"].get<bool>())
+                {
+                    std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
+                }                
 
                 std::cout 
                     << rang::style::bold
@@ -164,6 +161,7 @@ void list(const std::string& cmdParams)
 
                 std::cout 
                     << rang::fg::reset
+                    << std::endl 
                     << std::endl;
             }
 
