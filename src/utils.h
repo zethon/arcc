@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
 
 #pragma once
 
@@ -16,5 +16,14 @@ std::string getUserFolder();
 void openBrowser(const std::string& url_str);
 
 std::string miniMoment(unsigned int stamp);
+
+enum class Sentiment
+{
+    NEGATIVE,
+    POSITIVE,
+    NEUTRAL
+};
+
+std::string sentimentText(Sentiment s);
 
 } // namespace

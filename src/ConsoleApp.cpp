@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -134,7 +134,7 @@ bool ConsoleApp::setLocation(const std::string& location)
 
         if (std::regex_match(location, subRegex))
         {
-            const std::string jstr = doSubRedditGet(location + "/about");
+            const std::string jstr = doRedditGet(location + "/about");
             if (jstr.size() > 0)
             {
                 try

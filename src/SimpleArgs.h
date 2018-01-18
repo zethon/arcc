@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
 
 #pragma once
 
@@ -21,7 +21,7 @@ class SimpleArgs
     std::vector<std::string>                    _tokenVector;
 
     std::vector<unsigned int>                   _positionals;
-    std::map<boost::string_view, unsigned int>  _named;
+    std::map<boost::string_view, int>  _named;
     
 public:
     SimpleArgs(const std::string& val)

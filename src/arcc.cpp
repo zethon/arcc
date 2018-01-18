@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
 
 #include <iostream>
 #include <memory>
@@ -93,49 +93,79 @@ void list(const std::string& cmdParams)
     auto jsontext = consoleApp->doSubRedditGet(subReddit + "/" + listType, params);
     if (jsontext.size() > 0)
     {
-        std::cout << std::endl;
+        const auto jreply = nlohmann::json::parse(jsontext);
 
-        unsigned int idx = 0;
-        auto jreply = nlohmann::json::parse(jsontext);
-        for (auto& child : jreply["data"]["children"])
+        if (args.hasArgument("json"))
         {
-            if (child["data"]["stickied"].get<bool>())
+            // roundtrip the JSON so we can get pretty indentation
+            std::cout << jreply.dump(4) << std::endl;
+        }
+        else
+        {
+            unsigned int idx = 0;
+            
+            for (auto& child : jreply["data"]["children"])
             {
-                std::cout << rang::fg::black << rang::bg::yellow;
-            }
-            else
-            {
-                std::cout << rang::fg::reset;
+                std::string flairText;
+                try
+                {
+                    flairText = child["data"]["link_flair_text"].get<std::string>();
+                }
+                catch (const nlohmann::json::type_error&)
+                {
+                    // swallow this
+                }
+
+                if (flairText.size() > 0)
+                {
+                    flairText = "[" + flairText + "]";
+                }
+
+                if (child["data"]["stickied"].get<bool>())
+                {
+                    std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
+                }                
+
+                std::cout 
+                    << rang::style::bold
+                    << ++idx
+                    << ". "
+                    << child["data"]["title"].get<std::string>()
+                    << rang::style::reset
+                    << '\n'
+                    << rang::fg::cyan
+                    << rang::style::underline
+                    << child["data"]["url"].get<std::string>()
+                    << rang::style::reset
+                    << '\n'
+                    << rang::fg::gray
+                    << child["data"]["score"].get<int>() 
+                    << " pts - "
+                    << utils::miniMoment(child["data"]["created_utc"].get<int>()) 
+                    << " - "
+                    << child["data"]["num_comments"].get<int>() << " comments"
+                    << '\n'
+                    << rang::fg::magenta
+                    << child["data"]["author"].get<std::string>()
+                    << ' '
+                    << rang::fg::yellow
+                    << child["data"]["subreddit_name_prefixed"].get<std::string>();
+
+                if (flairText.size() > 0)
+                {
+                    std::cout
+                        << ' '
+                        << rang::fg::red
+                        << flairText;
+                }
+
+                std::cout 
+                    << rang::fg::reset
+                    << std::endl 
+                    << std::endl;
             }
 
-            std::cout 
-                << rang::style::bold
-                << ++idx
-                << ". "
-                << child["data"]["title"].get<std::string>()
-                << rang::style::reset
-                << '\n'
-                << rang::fg::cyan
-                << rang::style::underline
-                << child["data"]["url"].get<std::string>()
-                << rang::style::reset
-                << '\n'
-                << rang::fg::gray
-                << child["data"]["score"].get<int>() 
-                << "pts - "
-                << utils::miniMoment(child["data"]["created_utc"].get<int>()) 
-                << " - "
-                << child["data"]["num_comments"].get<int>() << " comments"
-                << '\n'
-                << rang::fg::magenta
-                << child["data"]["author"].get<std::string>()
-                << ' '
-                << rang::fg::yellow
-                << child["data"]["subreddit_name_prefixed"].get<std::string>()
-                << rang::fg::reset
-                << std::endl;
-
-                std::cout << std::endl;
+            std::cout << rang::bg::reset << rang::fg::reset << rang::style::reset;
         }
     }
 }
@@ -171,16 +201,16 @@ void initCommands()
                 if (login.loggedIn())
                 {
                     consoleApp->setRedditSession(login.getRedditSession());
-                    std::cout << "login successful ヽ(´▽`)/" << std::endl;
+                    std::cout << "login successful " << utils::sentimentText(utils::Sentiment::POSITIVE) << std::endl;
                 }
                 else
                 {
-                    std::cout << "login denied (╯°□°）╯︵ ┻━┻" << std::endl;
+                    std::cout << "login denied " << utils::sentimentText(utils::Sentiment::NEGATIVE) << std::endl;
                 }
             }
             else
             {
-                std::cout << "you are already logged in (/◔ ◡ ◔)/" << std::endl;
+                std::cout << "you are already logged in " << utils::sentimentText(utils::Sentiment::POSITIVE) << std::endl;
             }
         });
 
@@ -188,14 +218,17 @@ void initCommands()
         {
             if (consoleApp->getRedditSession() != nullptr)
             {
+                // set location to the root
+                consoleApp->setLocation("/");
+
                 // delete our session object
                 consoleApp->resetSession();
 
-                std::cout << "you have logged out (•̀o•́)ง" << std::endl;
+                std::cout << "you have logged out " << utils::sentimentText(utils::Sentiment::NEGATIVE) << std::endl;
             }
             else
             {
-                std::cout << "you are not logged in (•_•)" << std::endl;
+                std::cout << "you are not logged in " << utils::sentimentText(utils::Sentiment::NEUTRAL) << std::endl;
             }
         });
 
