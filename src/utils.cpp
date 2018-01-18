@@ -11,6 +11,7 @@
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include <random>
 
 #ifdef _WINDOWS
 #   include <windows.h>
@@ -129,6 +130,63 @@ std::string miniMoment(unsigned int stamp)
     }
     
     return os.str();
+}
+
+std::string sentimentText(Sentiment s)
+{
+    std::string retval;
+
+#ifdef _WINDOWS
+    std::vector<std::string> negEmojis = 
+        { ":(", "(•̀o•́)ง" };
+
+    std::vector<std::string> posEmojis = 
+        { "ヽ(´▽`)/", "(/◔ ◡ ◔)/" };
+
+    std::vector<std::string> neutralEmojis = 
+        { "(•_•)" };
+#else
+    std::vector<std::string> negEmojis = 
+        { "D8" };
+
+    std::vector<std::string> posEmojis = 
+        { "=)" };
+
+    std::vector<std::string> neutralEmojis = 
+        { ":-|" };
+#endif
+
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+
+    switch (s)
+    {
+        default:
+        break;        
+
+        case Sentiment::NEGATIVE:
+        {
+            std::uniform_int_distribution<> dis(0, negEmojis.size() - 1);
+            retval = negEmojis.at(dis(gen));
+        }
+        break;
+
+        case Sentiment::POSITIVE:
+        {
+            std::uniform_int_distribution<> dis(0, posEmojis.size() - 1);
+            retval = posEmojis.at(dis(gen));
+        }
+        break;
+
+        case Sentiment::NEUTRAL:
+        {
+            std::uniform_int_distribution<> dis(0, neutralEmojis.size() - 1);
+            retval = neutralEmojis.at(dis(gen));
+        }
+        break;
+    }
+
+    return retval;
 }
 
 } // namespace

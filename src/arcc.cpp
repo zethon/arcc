@@ -201,16 +201,16 @@ void initCommands()
                 if (login.loggedIn())
                 {
                     consoleApp->setRedditSession(login.getRedditSession());
-                    std::cout << "login successful ヽ(´▽`)/" << std::endl;
+                    std::cout << "login successful " << utils::sentimentText(utils::Sentiment::POSITIVE) << std::endl;
                 }
                 else
                 {
-                    std::cout << "login denied (╯°□°）╯︵ ┻━┻" << std::endl;
+                    std::cout << "login denied " << utils::sentimentText(utils::Sentiment::NEGATIVE) << std::endl;
                 }
             }
             else
             {
-                std::cout << "you are already logged in (/◔ ◡ ◔)/" << std::endl;
+                std::cout << "you are already logged in " << utils::sentimentText(utils::Sentiment::POSITIVE) << std::endl;
             }
         });
 
@@ -218,14 +218,17 @@ void initCommands()
         {
             if (consoleApp->getRedditSession() != nullptr)
             {
+                // set location to the root
+                consoleApp->setLocation("/");
+
                 // delete our session object
                 consoleApp->resetSession();
 
-                std::cout << "you have logged out (•̀o•́)ง" << std::endl;
+                std::cout << "you have logged out " << utils::sentimentText(utils::Sentiment::NEGATIVE) << std::endl;
             }
             else
             {
-                std::cout << "you are not logged in (•_•)" << std::endl;
+                std::cout << "you are not logged in " << utils::sentimentText(utils::Sentiment::NEUTRAL) << std::endl;
             }
         });
 

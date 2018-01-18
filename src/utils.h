@@ -17,4 +17,13 @@ void openBrowser(const std::string& url_str);
 
 std::string miniMoment(unsigned int stamp);
 
+enum class Sentiment
+{
+    NEGATIVE,
+    POSITIVE,
+    NEUTRAL
+};
+
+std::string sentimentText(Sentiment s);
+
 } // namespace
