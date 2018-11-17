@@ -291,7 +291,7 @@ void initCommands()
 } // namespace console
 } // namespace arcc
 
-int main(int argc, char* argv[])
+int main(int, char*[])
 {
     using namespace arcc;
     using namespace arcc::console;
