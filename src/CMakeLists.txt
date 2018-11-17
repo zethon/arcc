@@ -36,8 +36,7 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    ${CURL_LIBRARIES}
+    ${CONAN_LIBS}
     ${EXTRA_LIBS}
-    ${Boost_LIBRARIES}
     simple-web-server
 )
