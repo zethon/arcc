@@ -7,6 +7,14 @@ set(CMAKE_CXX_STANDARD 17)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(NO_OUTPUT_DIRS KEEP_RPATHS)
 
+# Global definitions
+add_definitions(
+    -DCURL_STATICLIB
+    -DBOOST_TEST_NO_LIB
+    -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
+)
+
+
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
 
     add_compile_options(

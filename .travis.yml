@@ -57,7 +57,7 @@ script:
   - cd build
   - conan install .. --build missing
   - cmake ..
-  - cmake --build .. --config "${CONFIG}" -- -j3 
+  - cmake --build . --config "${CONFIG}" -- -j3 
   
 notifactions:
   email:
