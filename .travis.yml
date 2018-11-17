@@ -52,9 +52,12 @@ matrix:
             - ubuntu-toolchain-r-test
 
 script:
-  - cmake . -DBoost_USE_STATIC_LIBS=ON 
-  - cmake --build . -- -j3
-
+  - git submodule update --init --recursive
+  - mkdir build
+  - cd build
+  - conan install .. --build missing
+  - cmake --build .. --config "${CONFIG}" -- -j3 
+  
 notifactions:
   email:
     recipients:
