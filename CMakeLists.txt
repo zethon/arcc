@@ -14,7 +14,6 @@ add_definitions(
     -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 )
 
-
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
 
     add_compile_options(
@@ -85,6 +84,7 @@ if (MSVC)
     add_compile_options(
         # treat warnings as errors
         /WX
+        /wd4996
     )
 endif(MSVC)
 
