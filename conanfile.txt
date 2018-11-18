@@ -24,6 +24,8 @@ boost:without_thread=False
 boost:without_filesystem=False
 boost:without_program_options=False
 boost:without_system=False
+boost:without_stacktrace=False
+
 boost:without_math=False
 boost:without_wave=False
 boost:without_container=False
@@ -46,8 +48,7 @@ boost:without_chrono=False
 boost:without_date_time=False
 boost:without_atomic=False
 boost:without_graph_parallel=False
-boost:without_python=False
-boost:without_stacktrace=False
+boost:without_python=True
 boost:without_type_erasure=False
 
 [generators]
