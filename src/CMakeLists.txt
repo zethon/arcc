@@ -40,3 +40,9 @@ target_link_libraries(${PROJECT_NAME}
     ${EXTRA_LIBS}
     simple-web-server
 )
+
+target_compile_definitions(
+    ${PROJECT_NAME}
+    PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
+)

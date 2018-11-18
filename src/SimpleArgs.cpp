@@ -82,7 +82,7 @@ void SimpleArgs::parse(const std::string& original)
     }
 }
 
-unsigned int SimpleArgs::getPositionalCount() const 
+std::size_t SimpleArgs::getPositionalCount() const 
 {
     return _positionals.size();
 }
@@ -92,7 +92,7 @@ std::string SimpleArgs::getPositional(unsigned int index) const
     return _tokenVector.at(_positionals.at(index));
 }
 
-unsigned int SimpleArgs::getNamedCount() const 
+std::size_t SimpleArgs::getNamedCount() const 
 { 
     return _named.size(); 
 }
@@ -112,7 +112,7 @@ bool SimpleArgs::hasArgument(const std::string& name) const
     return _named.find(name) != _named.end(); 
 }
 
-unsigned SimpleArgs::getTokenCount() const
+std::size_t SimpleArgs::getTokenCount() const
 {
     return _tokenVector.size();
 }
