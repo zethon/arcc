@@ -75,7 +75,7 @@ script:
   - git submodule update --init --recursive
   - mkdir build
   - cd build
-  - conan install .. --build missing
+  - conan install .. --build missing -s cppstd=17
   - cmake ..
   - cmake --build . --config "${CONFIG}" -- -j3 
   
