@@ -4,7 +4,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
+
 #include <rang.hpp>
 
 #include "Terminal.h"

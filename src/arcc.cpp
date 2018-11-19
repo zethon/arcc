@@ -10,8 +10,9 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include <rang.hpp>
-#include <json.hpp>
 
 #include "core.h"
 #include "Terminal.h"
