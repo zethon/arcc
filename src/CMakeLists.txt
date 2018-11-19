@@ -36,8 +36,13 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    ${CURL_LIBRARIES}
+    ${CONAN_LIBS}
     ${EXTRA_LIBS}
-    ${Boost_LIBRARIES}
     simple-web-server
+)
+
+target_compile_definitions(
+    ${PROJECT_NAME}
+    PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
 )

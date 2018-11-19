@@ -1,21 +1,32 @@
-cmake_minimum_required(VERSION 3.0)
-
 project(arcc)
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_MACOSX_RPATH 1)
 
-if (UNIX)
-    if (APPLE)
-         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -stdlib=libc++ -ffunction-sections -fdata-sections -ftemplate-depth-256 -Wno-inconsistent-missing-override")
-         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -Wl,-dead_strip")
+cmake_minimum_required(VERSION 3.0)
+set(CMAKE_CXX_STANDARD 17)
 
-         FIND_LIBRARY(APP_SERVICES_LIBRARY ApplicationServices)
-         FIND_LIBRARY(CORE_SERVICES_LIBRARY CoreFoundation)
-    endif (APPLE)
-endif (UNIX)
+# initialize conan libs
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(NO_OUTPUT_DIRS KEEP_RPATHS)
+
+# Global definitions
+add_definitions(
+    -DCURL_STATICLIB
+    -DBOOST_TEST_NO_LIB
+    -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
+)
 
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
+
     add_compile_options(
+        # remove dead code
+        -ffunction-sections
+        -fdata-sections
+
+        # enforced errors
+        -Werror=format
+        -Werror=trigraphs
+        -Werror=missing-braces
+        -Werror=parentheses
+        -Werror=return-type
         -Werror=sign-compare
         -Werror=unused-macros
         -Werror=unused-function
@@ -23,42 +34,63 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
         -Werror=unused-value
         -Werror=unused-variable
         -Werror=empty-body
+        -Werror=reorder
+        -Werror=switch
+        -Werror=int-conversion
         -Werror=uninitialized
+        -Werror=char-subscripts
+        $<$<COMPILE_LANGUAGE:CXX>:-Werror=non-virtual-dtor>
+
+        # disabled errors/warnings
+        -Wno-error=date-time
     )
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
+
     add_compile_options(
+        $<$<COMPILE_LANGUAGE:CXX>:-stdlib=libc++>
+
+        -Wno-\#pragma-messages
+        -Wno-unused-local-typedef
+        -Werror=tautological-compare
+        -Werror=four-char-constants
+        -Werror=constant-conversion
         -Werror=bool-conversion
         -Werror=enum-conversion
-        -Werror=tautological-compare
+        -Werror=deprecated-declarations
+        -Werror=return-stack-address
+
+        $<$<COMPILE_LANGUAGE:CXX>:-Werror=overloaded-virtual>
+        $<$<COMPILE_LANGUAGE:CXX>:-Werror=unused-private-field>
+        $<$<COMPILE_LANGUAGE:CXX>:-Werror=mismatched-tags>
     )
 endif()
-
-find_package(CURL REQUIRED)
-include_directories(${CURL_INCLUDE_DIR})
 
 if (MSVC)
-	add_definitions(
-        -D_CRT_SECURE_NO_WARNINGS
+    add_definitions(
+        -DWIN32
+        -D_WIN32
+        -D_WINDOWS
+        -DNOMINMAX
         -D_SCL_SECURE_NO_WARNINGS
         -DWIN32_LEAN_AND_MEAN
-        -DCURL_STATICLIB
-        -DNOMINMAX
-        -DBOOST_ALL_NO_LIB
+
+        # use this to supress the boost generated "warning C4996"
+        # on Windows
+        -D_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING
     )
 
-    list(APPEND CURL_LIBRARIES
-        "Crypt32.lib"
-        "Ws2_32.lib"
+    add_compile_options(
+        # treat warnings as errors
+        /WX
+        /wd4996
     )
+endif(MSVC)
 
-    SET(CMAKE_EXE_LINKER_FLAGS "/NODEFAULTLIB:library")
-endif()
-
-set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost COMPONENTS system thread filesystem program_options REQUIRED) 
-include_directories(${Boost_INCLUDE_DIRS}) 
+if (APPLE)
+    set(CMAKE_MACOSX_RPATH 1)
+endif(APPLE)
 
 add_subdirectory(Simple-Web-Server)
 include_directories(Simple-Web-Server)

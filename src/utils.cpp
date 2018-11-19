@@ -166,21 +166,21 @@ std::string sentimentText(Sentiment s)
 
         case Sentiment::NEGATIVE:
         {
-            std::uniform_int_distribution<> dis(0, negEmojis.size() - 1);
+            std::uniform_int_distribution<> dis(0, static_cast<int>(negEmojis.size() - 1));
             retval = negEmojis.at(dis(gen));
         }
         break;
 
         case Sentiment::POSITIVE:
         {
-            std::uniform_int_distribution<> dis(0, posEmojis.size() - 1);
+            std::uniform_int_distribution<> dis(0, static_cast<int>(posEmojis.size() - 1));
             retval = posEmojis.at(dis(gen));
         }
         break;
 
         case Sentiment::NEUTRAL:
         {
-            std::uniform_int_distribution<> dis(0, neutralEmojis.size() - 1);
+            std::uniform_int_distribution<> dis(0, static_cast<int>(neutralEmojis.size() - 1));
             retval = neutralEmojis.at(dis(gen));
         }
         break;

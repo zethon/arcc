@@ -1,32 +1,84 @@
 language: cpp
 
-before_install:
-  - eval "${MATRIX_EVAL}"
-  - sudo wget -O boost_1_65_1.tar.gz http://sourceforge.net/projects/boost/files/boost/1.65.1/boost_1_65_1.tar.gz/download
-  - sudo tar xzvf boost_1_65_1.tar.gz > /dev/null
-  - cd boost_1_65_1/
-  - sudo ./bootstrap.sh --prefix=/usr/local --with-libraries=thread,system,regex,filesystem,program_options
-  - sudo ./b2 -d0 install 
-  - cd ..
+install:
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      export CC=${CC_COMPILER}
+      export CXX=${CXX_COMPILER}
 
+      # Install conan and make sure that it uses Python3, otherwise we will get a
+      # cert failure when trying to download curl
+      sudo pip install conan
+      alias python=python3
+
+      # Since we are using GCC7 we need to update `ld`. The default version, 2.24, will
+      # fail to link the generated object files. There seems to be no other easier way
+      # to update "ld", so we pull down binutils, build it and then link the resulting
+      # executable to the system's path
+      pushd .
+      cd ..
+      mkdir binutils
+      cd binutils
+      wget http://ftp.gnu.org/gnu/binutils/binutils-2.30.tar.gz
+      tar -xf binutils-2.30.tar.gz
+      mkdir binutils-build
+      cd binutils-build
+      ../binutils-2.30/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
+      make
+      sudo make install
+      cd ..
+      sudo rm -f /usr/bin/ld
+      sudo ln -s binutils-build/ld/ld-new /usr/bin/ld
+      popd      
+    fi
+
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update
+      brew install conan
+      brew install qt5
+      brew link --force qt5
+    fi
+
+  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
 
 matrix:
   include:
+    - os: osx
+      osx_image: xcode10
+      compiler: clang
+      env: CONFIG=Release
+    - os: osx
+      osx_image: xcode10
+      compiler: clang
+      env: CONFIG=Debug
     - os: linux
+      dist: trusty
+      sudo: required
+      compiler: gcc
+      language: python
+      python: "3.6"
+      env:
+        - CC_COMPILER=gcc-7
+        - CXX_COMPILER=g++-7
+        - CONFIG=RelWithDebInfo
       addons:
         apt:
-          sources: 
-            - ubuntu-toolchain-r-test
           packages:
-            - g++-6
-      env: MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
-    - os: osx
-      osx_image: xcode8.3
+            - gcc-7
+            - g++-7
+            - build-essential
+          sources:
+            - ubuntu-toolchain-r-test
 
 script:
-  - cmake . -DBoost_USE_STATIC_LIBS=ON 
-  - cmake --build . -- -j3
-
+  - git submodule update --init --recursive
+  - mkdir build
+  - cd build
+  - conan install .. --build missing -s cppstd=17
+  - cmake ..
+  - cmake --build . --config "${CONFIG}" -- -j3 
+  
 notifactions:
   email:
     recipients:

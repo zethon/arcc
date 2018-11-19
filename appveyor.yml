@@ -1,25 +1,26 @@
-version: 0.1.{build}
+version: 0.7.7-{build}-{branch}
 
 image: 
  - Visual Studio 2017
 
-install:
-  ## Upgrade CMake
-  - choco upgrade cmake --version 3.10.1
-  - set path=C:\Program Files\CMake\bin;%path%
-  #### Download, Build & Install Curl
-  - curl -fsS -o curl-7.57.0.zip https://curl.haxx.se/download/curl-7.57.0.zip
-  - 7z x curl-7.57.0.zip -oc:\src\lib > NUL
-  - cd c:\src\lib\curl-7.57.0\winbuild
-  - '"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64'
-  - nmake /f Makefile.vc mode=dll VC=14 DEBUG=no 
-
 environment:
-  BOOST_ROOT: C:\Libraries\boost_1_65_1
+  matrix:
+    - CONFIG: Release
+    - CONFIG: RelWithDebInfo
+
+install:
+  - echo "Downloading conan..."
+  - set PATH=%PATH%;%PYTHON%/Scripts/
+  - pip.exe install conan
+  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
 
 build_script:
-  - dir /s C:\Libraries\boost_1_65_1\*.lib
-  - cd c:\projects\arcc
   - git submodule update --init --recursive
-  - cmake "-GVisual Studio 15 Win64" -H. -B_builds -DCURL_INCLUDE_DIR=c:\src\lib\curl-7.57.0\builds\libcurl-vc14-x64-release-dll-ipv6-sspi-winssl\include -DCURL_LIBRARY=c:\src\lib\curl-7.57.0\builds\libcurl-vc14-x64-release-dll-ipv6-sspi-winssl\lib\libcurl.lib -DBoost_DEBUG=ON -DBOOST_TOOLSET=msvc-14.1
-  - cmake --build _builds --config "Debug"
+  - mkdir build
+  - cd build
+  - conan install .. --build missing
+  - cmake .. "-GVisual Studio 15 2017 Win64"
+  - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
+
+# test_script:
+#   - ctest -VV -C "%CONFIG%"

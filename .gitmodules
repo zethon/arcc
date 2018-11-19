@@ -1,9 +1,9 @@
-[submodule "Simple-Web-Server"]
-	path = Simple-Web-Server
-	url = https://github.com/eidheim/Simple-Web-Server.git
 [submodule "json"]
 	path = json
 	url = https://github.com/nlohmann/json.git
 [submodule "rang"]
 	path = rang
 	url = https://github.com/agauniyal/rang.git
+[submodule "Simple-Web-Server"]
+	path = Simple-Web-Server
+	url = https://gitlab.com/eidheim/Simple-Web-Server.git

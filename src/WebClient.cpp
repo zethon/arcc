@@ -26,7 +26,11 @@ static size_t CURLwriter(char *data, size_t size, size_t nmemb, std::string *wri
     return size * nmemb;
 }
 
-int trace(CURL *handle, curl_infotype type, unsigned char *data, size_t size, void *userp)
+int trace([[maybe_unused]] CURL *handle,
+    [[maybe_unused]]curl_infotype type,
+    unsigned char *data,
+    [[maybe_unused]]size_t size,
+    [[maybe_unused]]void *userp)
 {
    std::cout << data << std::endl;
    return 1;

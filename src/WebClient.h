@@ -14,8 +14,6 @@ namespace arcc
 class WebClientError : public std::runtime_error
 {
 
-long _status = -1;
-
 public:
     using std::runtime_error::runtime_error;
 };
