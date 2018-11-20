@@ -4,7 +4,7 @@
 #
 # macOS:
 # 
-#   $ conan install .. --build missing
+#   $ conan install .. --build missing -s cppstd=17
 #
 # Linux:
 #
@@ -15,6 +15,7 @@ boost/1.68.0@conan/stable
 libcurl/7.61.1@bincrafters/stable
 spdlog/1.2.1@bincrafters/stable
 fmt/5.2.1@bincrafters/stable
+jsonformoderncpp/3.4.0@vthiery/stable
 
 [options]
 spdlog:fmt_external=True

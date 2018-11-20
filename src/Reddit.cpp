@@ -3,7 +3,7 @@
 
 #include <ctime>
 
-#include <json.hpp>
+#include <nlohmann/json.hpp>
 
 #include "core.h"
 #include "utils.h"

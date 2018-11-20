@@ -95,11 +95,6 @@ endif(APPLE)
 add_subdirectory(Simple-Web-Server)
 include_directories(Simple-Web-Server)
 
-# disable the unit tests for json project
-set(JSON_BuildTests OFF CACHE BOOL "Build the unit tests")
-add_subdirectory(json)
-include_directories(json/src)
-
 add_subdirectory(rang)
 include_directories(rang/include)
 
