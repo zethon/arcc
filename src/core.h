@@ -12,11 +12,12 @@
 #define __EXPAND__(x)           __STRINGIFY__(x)
 
 #define VERSION_MAJOR			0
-#define	VERSION_MINOR			0
-#define VERSION_BUILD			1
-#define VERSION					__EXPAND__(VERSION_MAJOR) "." __EXPAND__(VERSION_MINOR) "." __EXPAND__(VERSION_BUILD)
+#define	VERSION_MINOR			1
+#define VERSION_PATCH			1
+#define VERSION					__EXPAND__(VERSION_MAJOR) "." __EXPAND__(VERSION_MINOR) "." __EXPAND__(VERSION_PATCH)
 #define BUILDTIMESTAMP	        __DATE__ " " __TIME__
 
-#define APP_NAME                "arcc"
-#define APP_TITLE               APP_NAME " " VERSION
+#define APP_NAME_LONG           "Another Reddit Console Client"
+#define APP_DOMAIN              "arcc"
+#define APP_TITLE               APP_NAME_LONG " " VERSION
 #define COPYRIGHT               "Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>"

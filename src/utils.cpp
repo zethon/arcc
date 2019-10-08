@@ -141,22 +141,22 @@ std::string sentimentText(Sentiment s)
 
 #ifdef _WINDOWS
     std::vector<std::string> negEmojis = 
-        { ":(", "(•̀o•́)ง" };
+        { "D8", ":(", "D:" };
+
+    std::vector<std::string> posEmojis = 
+        { "=)", ":D", ":)" };
+
+    std::vector<std::string> neutralEmojis = 
+        { ":-|", "-_-" };
+#else
+    std::vector<std::string> negEmojis = 
+        { "(╯°□°）╯︵ ┻━┻", "(•̀o•́)ง" };
 
     std::vector<std::string> posEmojis = 
         { "ヽ(´▽`)/", "(/◔ ◡ ◔)/" };
 
     std::vector<std::string> neutralEmojis = 
         { "(•_•)" };
-#else
-    std::vector<std::string> negEmojis = 
-        { "D8" };
-
-    std::vector<std::string> posEmojis = 
-        { "=)" };
-
-    std::vector<std::string> neutralEmojis = 
-        { ":-|" };
 #endif
 
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
@@ -169,21 +169,21 @@ std::string sentimentText(Sentiment s)
 
         case Sentiment::NEGATIVE:
         {
-            std::uniform_int_distribution<> dis(0, static_cast<int>(negEmojis.size() - 1));
+            std::uniform_int_distribution<> dis(0, static_cast<int>(negEmojis.size()) - 1);
             retval = negEmojis.at(dis(gen));
         }
         break;
 
         case Sentiment::POSITIVE:
         {
-            std::uniform_int_distribution<> dis(0, static_cast<int>(posEmojis.size() - 1));
+            std::uniform_int_distribution<> dis(0, static_cast<int>(posEmojis.size()) - 1);
             retval = posEmojis.at(dis(gen));
         }
         break;
 
         case Sentiment::NEUTRAL:
         {
-            std::uniform_int_distribution<> dis(0, static_cast<int>(neutralEmojis.size() - 1));
+            std::uniform_int_distribution<> dis(0, static_cast<int>(neutralEmojis.size()) - 1);
             retval = neutralEmojis.at(dis(gen));
         }
         break;

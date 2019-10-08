@@ -38,7 +38,7 @@ std::vector<std::string> tokenizeArgs(const std::string& input)
 
 void SimpleArgs::parse(const std::string& original)
 {
-    const std::regex dashReg { R"(^\-{1,2}[^\-])" };
+    const static std::regex dashReg { R"(^\-{1,2}[^\-])" };
 
     if (original.size() > 0)
     {
