@@ -91,6 +91,10 @@ public:
     std::vector<nlohmann::json>& getLastObjects() { return _lastObjects; }
 
 private:
+    void whoami();
+    void list(const std::string& params);
+    void go(const std::string& params);
+
     void printPrompt() const;
 };
 

@@ -3,6 +3,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -10,6 +11,7 @@
 
 #include "Terminal.h"
 #include "utils.h"
+#include "SimpleArgs.h"
 
 #include "ConsoleApp.h"
 
@@ -41,11 +43,17 @@ void ConsoleApp::printStatus(const std::string& status)
         << std::endl;
 }
 
+//          ConsoleApp
+// *********************************
+
 ConsoleApp::ConsoleApp(Terminal& t)
     : _terminal(t), 
         _doExit(false), 
         _location("/")
 {
+    addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
+    addCommand("go", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
+    addCommand("list", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
 }
 
 ConsoleApp::~ConsoleApp()
@@ -78,7 +86,7 @@ void ConsoleApp::exec(const std::string& rawline)
                 try
                 {
                     // TODO: optimize out the std::string()
-                    c.handler_(std::string(params));
+                    c.handler_(params);
                 }
                 catch (const std::exception& ex)
                 {
@@ -104,7 +112,15 @@ void ConsoleApp::run()
     {
         printPrompt();
         std::string line = _terminal.getLine();
-        exec(line);
+        
+        if (line.size() > 0)
+        {
+            exec(line);
+        }
+        else
+        {
+            std::cout << std::endl;
+        }
     }
 
     if (_reddit)
@@ -274,6 +290,170 @@ void ConsoleApp::printPrompt() const
 
     std::cout << std::flush;
 }  
+
+void ConsoleApp::list(const std::string& cmdParams)
+{
+    static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
+
+    SimpleArgs args { cmdParams };
+
+    unsigned int limit = 5;
+    std::string listType = "hot";
+    std::string subReddit;
+
+    if (args.getPositionalCount() > 0)
+    {
+        listType = args.getPositional(0);
+        if (std::find(std::begin(validTypes), std::end(validTypes), listType) == std::end(validTypes))
+        {
+            ConsoleApp::printError("invalid list type '" + listType + "'");
+            return;
+        }
+    }
+
+    if (args.hasArgument("sub"))
+    {
+        subReddit = args.getNamedArgument("sub");
+    }
+
+    if (args.hasArgument("limit"))
+    {
+        auto limitStr = args.getNamedArgument("limit");
+        try
+        {
+            limit = boost::lexical_cast<unsigned int>(limitStr);
+        }
+        catch (const boost::bad_lexical_cast&)
+        {
+            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
+            return;
+        }
+    }
+
+    RedditSession::Params params;
+    params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
+
+    auto jsontext = doSubRedditGet(subReddit + "/" + listType, params);
+    if (jsontext.size() > 0)
+    {
+        const auto jreply = nlohmann::json::parse(jsontext);
+
+        if (args.hasArgument("json"))
+        {
+            // roundtrip the JSON so we can get pretty indentation
+            std::cout << jreply.dump(4) << std::endl;
+        }
+        else
+        {
+            unsigned int idx = 0;
+
+            auto& lastObjects = getLastObjects();
+            lastObjects.clear();
+            
+            for (const auto& child : jreply["data"]["children"])
+            {
+                std::string flairText;
+                try
+                {
+                    flairText = child["data"]["link_flair_text"].get<std::string>();
+                }
+                catch (const nlohmann::json::type_error&)
+                {
+                    // swallow this
+                }
+
+                if (flairText.size() > 0)
+                {
+                    flairText = "[" + flairText + "]";
+                }
+
+                if (child["data"]["stickied"].get<bool>())
+                {
+                    std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
+                }                
+
+                std::cout 
+                    << rang::style::bold
+                    << ++idx
+                    << ". "
+                    << child["data"]["title"].get<std::string>()
+                    << rang::style::reset
+                    << '\n'
+                    << rang::fg::cyan
+                    << rang::style::underline
+                    << child["data"]["url"].get<std::string>()
+                    << rang::style::reset
+                    << '\n'
+                    << rang::fg::gray
+                    << child["data"]["score"].get<int>() 
+                    << " pts - "
+                    << utils::miniMoment(child["data"]["created_utc"].get<std::uint32_t>())
+                    << " - "
+                    << child["data"]["num_comments"].get<int>() << " comments"
+                    << '\n'
+                    << rang::fg::magenta
+                    << child["data"]["author"].get<std::string>()
+                    << ' '
+                    << rang::fg::yellow
+                    << child["data"]["subreddit_name_prefixed"].get<std::string>();
+
+                if (flairText.size() > 0)
+                {
+                    std::cout
+                        << ' '
+                        << rang::fg::red
+                        << flairText;
+                }
+
+                std::cout
+                    << rang::fg::reset
+                    << rang::bg::reset
+                    << rang::style::reset
+                    << '\n'
+                    << std::endl;
+
+                lastObjects.push_back(child);
+            }
+        }
+    }
+}
+
+void ConsoleApp::whoami()
+{
+    auto jsontext = doRedditGet("/api/v1/me");
+
+    if (jsontext.size() > 0)
+    {
+        auto jreply = nlohmann::json::parse(jsontext);
+
+        std::cout << "username: " << jreply["name"].get<std::string>() << std::endl;
+
+        std::time_t joined = jreply["created"].get<std::time_t>();
+        std::cout << "joined  : " << std::asctime(std::localtime(&joined));
+    }
+}
+
+void ConsoleApp::go(const std::string& params)
+{
+    SimpleArgs args { params };
+    if (args.getTokenCount() > 0)
+    {
+        auto location = args.getToken(0);
+        if (!boost::istarts_with(location, "/r/"))
+        {
+            location = "/r/" + location;
+        }
+
+        if (!setLocation(location))
+        {
+            ConsoleApp::printError("invalid subreddit '" + args.getToken(0) + "'");
+        }
+    }
+    else
+    {
+       ConsoleApp::printError("no subreddit specified");
+    }
+}
 
 } // namespace console
 } // namespace arcc

@@ -8,7 +8,6 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -34,175 +33,8 @@ void saveSession();
 using ConsoleAppPtr = std::unique_ptr<ConsoleApp>;
 ConsoleAppPtr consoleApp;
 
-void whoami()
-{
-    auto jsontext = consoleApp->doRedditGet("/api/v1/me");
-
-    if (jsontext.size() > 0)
-    {
-        auto jreply = nlohmann::json::parse(jsontext);
-
-        std::cout << "username: " << jreply["name"].get<std::string>() << std::endl;
-
-        std::time_t joined = jreply["created"].get<std::time_t>();
-        std::cout << "joined  : " << std::asctime(std::localtime(&joined));
-    }
-}
-
-void list(const std::string& cmdParams)
-{
-    static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
-
-    SimpleArgs args { cmdParams };
-
-    unsigned int limit = 5;
-    std::string listType = "hot";
-    std::string subReddit;
-
-    if (args.getPositionalCount() > 0)
-    {
-        listType = args.getPositional(0);
-        if (std::find(std::begin(validTypes), std::end(validTypes), listType) == std::end(validTypes))
-        {
-            ConsoleApp::printError("invalid list type '" + listType + "'");
-            return;
-        }
-    }
-
-    if (args.hasArgument("sub"))
-    {
-        subReddit = args.getNamedArgument("sub");
-    }
-
-    if (args.hasArgument("limit"))
-    {
-        auto limitStr = args.getNamedArgument("limit");
-        try
-        {
-            limit = boost::lexical_cast<unsigned int>(limitStr);
-        }
-        catch (const boost::bad_lexical_cast&)
-        {
-            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
-            return;
-        }
-    }
-
-    RedditSession::Params params;
-    params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
-
-    auto jsontext = consoleApp->doSubRedditGet(subReddit + "/" + listType, params);
-    if (jsontext.size() > 0)
-    {
-        const auto jreply = nlohmann::json::parse(jsontext);
-
-        if (args.hasArgument("json"))
-        {
-            // roundtrip the JSON so we can get pretty indentation
-            std::cout << jreply.dump(4) << std::endl;
-        }
-        else
-        {
-            unsigned int idx = 0;
-
-            auto& lastObjects = consoleApp->getLastObjects();
-            lastObjects.clear();
-            
-            for (const auto& child : jreply["data"]["children"])
-            {
-                std::string flairText;
-                try
-                {
-                    flairText = child["data"]["link_flair_text"].get<std::string>();
-                }
-                catch (const nlohmann::json::type_error&)
-                {
-                    // swallow this
-                }
-
-                if (flairText.size() > 0)
-                {
-                    flairText = "[" + flairText + "]";
-                }
-
-                if (child["data"]["stickied"].get<bool>())
-                {
-                    std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
-                }                
-
-                std::cout 
-                    << rang::style::bold
-                    << ++idx
-                    << ". "
-                    << child["data"]["title"].get<std::string>()
-                    << rang::style::reset
-                    << '\n'
-                    << rang::fg::cyan
-                    << rang::style::underline
-                    << child["data"]["url"].get<std::string>()
-                    << rang::style::reset
-                    << '\n'
-                    << rang::fg::gray
-                    << child["data"]["score"].get<int>() 
-                    << " pts - "
-                    << utils::miniMoment(child["data"]["created_utc"].get<int>()) 
-                    << " - "
-                    << child["data"]["num_comments"].get<int>() << " comments"
-                    << '\n'
-                    << rang::fg::magenta
-                    << child["data"]["author"].get<std::string>()
-                    << ' '
-                    << rang::fg::yellow
-                    << child["data"]["subreddit_name_prefixed"].get<std::string>();
-
-                if (flairText.size() > 0)
-                {
-                    std::cout
-                        << ' '
-                        << rang::fg::red
-                        << flairText;
-                }
-
-                std::cout
-                    << rang::fg::reset
-                    << rang::bg::reset
-                    << rang::style::reset
-                    << '\n'
-                    << std::endl;
-
-                lastObjects.push_back(child);
-            }
-        }
-    }
-}
-
-void go(const std::string& params)
-{
-    SimpleArgs args { params };
-    if (args.getTokenCount() > 0)
-    {
-        auto location = args.getToken(0);
-        if (!boost::istarts_with(location, "/r/"))
-        {
-            location = "/r/" + location;
-        }
-
-        if (!consoleApp->setLocation(location))
-        {
-            ConsoleApp::printError("invalid subreddit '" + args.getToken(0) + "'");
-        }
-    }
-    else
-    {
-       ConsoleApp::printError("no subreddit specified");
-    }
-}
-
 void initCommands()
 {
-    consoleApp->addCommand("go", "go to a subreddit", std::bind(go, std::placeholders::_1));
-    consoleApp->addCommand("list", "list stuff", std::bind(list, std::placeholders::_1));
-    consoleApp->addCommand("whoami", "whoami", [](const std::string&) { whoami(); });
     consoleApp->addCommand("login", "login", [](const std::string& params)
         {
             if (!consoleApp->getRedditSession())
@@ -245,7 +77,7 @@ void initCommands()
         });
 
     consoleApp->addCommand("q,quit,exit", "exit the program", 
-        [](const std::string& params)
+        [](const std::string&)
         {
             consoleApp->doExitApp();
         });
