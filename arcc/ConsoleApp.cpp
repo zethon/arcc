@@ -2,21 +2,24 @@
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
-
-#include <nlohmann/json.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <rang.hpp>
 
 #include "Terminal.h"
 #include "utils.h"
 #include "SimpleArgs.h"
-
 #include "ConsoleApp.h"
 
 namespace arcc
 {
+
+ConsoleCommand::ConsoleCommand(const std::string& n, const std::string& hlp, ConsoleCommand::Handler hdr)
+    : helpMessage_(hlp), handler_(hdr)
+{
+    boost::split(commandNames_, n, boost::is_any_of(","));
+}
 
 void ConsoleApp::printError(const std::string& error)
 {
@@ -41,9 +44,6 @@ void ConsoleApp::printStatus(const std::string& status)
         << std::endl;
 }
 
-//          ConsoleApp
-// *********************************
-
 ConsoleApp::ConsoleApp(Terminal& t)
     : _terminal(t), 
         _doExit(false), 
@@ -55,7 +55,7 @@ ConsoleApp::ConsoleApp(Terminal& t)
     addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
 
     addCommand("login", "login",
-        [this](const std::string& params)
+        [this](const std::string&)
         {
             if (!this->getRedditSession())
             {

@@ -1,13 +1,9 @@
 // Another Reddit Console Client
-// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #pragma once
 
-#include <string>
-#include <memory>
-
 #include <nlohmann/json.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include "Reddit.h"
 
@@ -27,11 +23,7 @@ struct ConsoleCommand
     std::string                 helpMessage_;
     Handler                     handler_;
 
-    ConsoleCommand(const std::string& n, const std::string& hlp, Handler hdr)
-        : helpMessage_(hlp), handler_(hdr)
-    {
-        boost::split(commandNames_, n, boost::is_any_of(","));
-    }
+    ConsoleCommand(const std::string& n, const std::string& hlp, Handler hdr);
 };
 
 using CommandHandler = ConsoleCommand::Handler;

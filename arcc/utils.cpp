@@ -32,15 +32,11 @@
 namespace utils
 {
 
-class NotImplementedException : public std::logic_error
-{
-public:
-    NotImplementedException()
+NotImplementedException::NotImplementedException()
     : std::logic_error("Function not yet implemented.")
-    {
-        // nothing to do
-    }
-};
+{
+    // nothing to do
+}
 
 std::string getOsString()
 {
@@ -87,14 +83,23 @@ void openBrowser(const std::string& url_str)
 #elif defined(__APPLE__)
     // only works with `http://` prepended
     CFURLRef url = CFURLCreateWithBytes (
-        NULL,                        // allocator
+        // allocator
+        nullptr,
+
+        // URLBytes
         (UInt8*)url_str.c_str(),     // URLBytes
-        url_str.length(),            // length
-        kCFStringEncodingASCII,      // encoding
-        NULL                         // baseURL
+
+        // length
+        static_cast<std::int32_t>(url_str.length()),
+
+        // encoding
+        kCFStringEncodingASCII,
+
+        // baseURL
+        nullptr
     );
 
-    LSOpenCFURLRef(url,0);
+    LSOpenCFURLRef(url, nullptr);
     CFRelease(url);
 #elif defined(__linux__)
     throw NotImplementedException();
@@ -165,26 +170,26 @@ std::string sentimentText(Sentiment s)
     switch (s)
     {
         default:
-        break;        
+        break;
 
         case Sentiment::NEGATIVE:
         {
             std::uniform_int_distribution<> dis(0, static_cast<int>(negEmojis.size()) - 1);
-            retval = negEmojis.at(dis(gen));
+            retval = negEmojis.at(static_cast<std::size_t>(dis(gen)));
         }
         break;
 
         case Sentiment::POSITIVE:
         {
             std::uniform_int_distribution<> dis(0, static_cast<int>(posEmojis.size()) - 1);
-            retval = posEmojis.at(dis(gen));
+            retval = posEmojis.at(static_cast<std::size_t>(dis(gen)));
         }
         break;
 
         case Sentiment::NEUTRAL:
         {
             std::uniform_int_distribution<> dis(0, static_cast<int>(neutralEmojis.size()) - 1);
-            retval = neutralEmojis.at(dis(gen));
+            retval = neutralEmojis.at(static_cast<std::size_t>(dis(gen)));
         }
         break;
     }

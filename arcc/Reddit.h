@@ -8,7 +8,6 @@
 #include <memory>
 
 #include <boost/format.hpp>
-
 #include <server_http.hpp>
 
 #include "Reddit.h"
