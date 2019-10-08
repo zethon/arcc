@@ -181,7 +181,7 @@ void go(const std::string& params)
     SimpleArgs args { params };
     if (args.getTokenCount() > 0)
     {
-        auto& location = args.getToken(0);
+        auto location = args.getToken(0);
         if (!boost::istarts_with(location, "/r/"))
         {
             location = "/r/" + location;
