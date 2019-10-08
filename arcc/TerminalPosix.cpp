@@ -8,8 +8,6 @@
 
 namespace arcc
 {
-namespace console
-{
 
 Terminal::Terminal()
 {
@@ -91,5 +89,4 @@ std::string Terminal::getLine()
     return _commandLine;
 }
 
-} // namespace console
 } // namespace arcc

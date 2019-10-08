@@ -17,8 +17,6 @@
 
 namespace arcc
 {
-namespace console
-{
 
 void ConsoleApp::printError(const std::string& error)
 {
@@ -52,8 +50,113 @@ ConsoleApp::ConsoleApp(Terminal& t)
         _location("/")
 {
     addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
-    addCommand("go", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
-    addCommand("list", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
+    addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
+    addCommand("list,l", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
+    addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
+
+    addCommand("login", "login",
+        [this](const std::string& params)
+        {
+            if (!this->getRedditSession())
+            {
+                OAuth2Login login;
+                login.start(); // will block until the login results are returned
+
+                if (login.loggedIn())
+                {
+                    this->setRedditSession(login.getRedditSession());
+                    std::cout << "login successful " << utils::sentimentText(utils::Sentiment::POSITIVE) << std::endl;
+                }
+                else
+                {
+                    std::cout << "login denied " << utils::sentimentText(utils::Sentiment::NEGATIVE) << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "you are already logged in " << utils::sentimentText(utils::Sentiment::POSITIVE) << std::endl;
+            }
+        });
+
+    addCommand("logout", "logout of the current session",
+        [this](const std::string&)
+        {
+            if (this->getRedditSession() != nullptr)
+            {
+                // set location to the root
+                this->setLocation("/");
+
+                // delete our session object
+                this->resetSession();
+
+                std::cout << "you have logged out " << utils::sentimentText(utils::Sentiment::NEGATIVE) << std::endl;
+            }
+            else
+            {
+                std::cout << "you are not logged in " << utils::sentimentText(utils::Sentiment::NEUTRAL) << std::endl;
+            }
+        });
+
+    addCommand("q,quit,exit", "exit the program",
+        [this](const std::string&)
+        {
+            this->doExitApp();
+        });
+
+    addCommand("about", "information about this arcc",
+        [](const std::string&) { utils::openBrowser("https://github.com/zethon/arcc"); });
+
+    addCommand("open,launch", "open a website in the default browser",
+        [](const std::string& params)
+        {
+            if (params.size() > 0)
+            {
+                std::vector<std::string> strings;
+                boost::split(strings, params, boost::is_any_of(" "));
+
+                std::string url = strings.at(0);
+
+                // TODO: Apple's `CFURLRef` will want a properly formatted URL, so if the user enters
+                // www.google.com, that will not be good enough. This is a naive solution to take
+                // what the user entered and turn it into a proper URL. Improve this.
+                if (!boost::starts_with(url,"http://") && !boost::starts_with(url,"https://"))
+                {
+                    url = "http://" + url;
+                }
+
+                utils::openBrowser(url);
+            }
+            else
+            {
+                // show useage
+                std::cout << "Usage: open <url>" << std::endl;
+            }
+        });
+
+#ifdef _DEBUG
+    addCommand("ping", "ping a website",
+        [](const std::string& params)
+        {
+            try
+            {
+                auto t_start = std::chrono::high_resolution_clock::now();
+                WebClient client;
+                auto result = client.doRequest(params);
+                auto t_end = std::chrono::high_resolution_clock::now();
+                std::cout << result.data.size() << " bytes in " << std::chrono::duration<double, std::milli>(t_end-t_start).count() << " ms\n";
+            }
+            catch (WebClientError& e)
+            {
+                std::cout << "Could not ping because '" << e.what() << "'" << std::endl;
+            }
+        });
+
+    addCommand("time", "print the current epoch time",
+        [](const std::string& params)
+        {
+            std::cout << std::time(nullptr) << std::endl;
+        });
+#endif
 }
 
 ConsoleApp::~ConsoleApp()
@@ -346,9 +449,7 @@ void ConsoleApp::list(const std::string& cmdParams)
         else
         {
             unsigned int idx = 0;
-
-            auto& lastObjects = getLastObjects();
-            lastObjects.clear();
+            _lastObjects.clear();
             
             for (const auto& child : jreply["data"]["children"])
             {
@@ -412,7 +513,7 @@ void ConsoleApp::list(const std::string& cmdParams)
                     << '\n'
                     << std::endl;
 
-                lastObjects.push_back(child);
+                _lastObjects.push_back(child);
             }
         }
     }
@@ -455,5 +556,50 @@ void ConsoleApp::go(const std::string& params)
     }
 }
 
-} // namespace console
+void ConsoleApp::view(const std::string& params)
+{
+    SimpleArgs args{ params };
+    if (args.getPositionalCount() > 0)
+    {
+        std::string url;
+
+        if (const auto & firstarg = args.getPositional(0); utils::isNumeric(firstarg))
+        {
+            auto index = std::stoul(firstarg);
+
+            if (index > 0 && index <= _lastObjects.size())
+            {
+                const auto& object = _lastObjects.at(index - 1);
+
+                if (args.hasArgument("comments") || args.hasArgument("c"))
+                {
+                    url = "https://www.reddit.com" + object["data"].value("permalink", "");
+                }
+                else if (args.hasArgument("url") || args.hasArgument("u"))
+                {
+                    url = object["data"].value("url", "");
+                }
+                else
+                {
+                    ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+                }
+
+                utils::openBrowser(url);
+            }
+            else
+            {
+                ConsoleApp::printError("index out of range!");
+            }
+        }
+        else
+        {
+            ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+        }
+    }
+    else
+    {
+        ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+    }
+}
+
 } // namespace arcc

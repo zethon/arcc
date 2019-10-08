@@ -17,9 +17,6 @@ namespace arcc
 class RedditSession;
 using RedditSessionPtr = std::shared_ptr<RedditSession>;
 
-namespace console
-{
-
 class Terminal;
 
 struct ConsoleCommand
@@ -88,15 +85,13 @@ public:
     void saveSession();
     void resetSession();
 
-    std::vector<nlohmann::json>& getLastObjects() { return _lastObjects; }
-
 private:
+    void printPrompt() const;
+
     void whoami();
     void list(const std::string& params);
     void go(const std::string& params);
-
-    void printPrompt() const;
+    void view(const std::string& params);
 };
 
-} // namespace console
 } // namespace arcc
