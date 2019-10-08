@@ -181,7 +181,13 @@ void go(const std::string& params)
     SimpleArgs args { params };
     if (args.getTokenCount() > 0)
     {
-        if (!consoleApp->setLocation(args.getToken(0)))
+        auto& location = args.getToken(0);
+        if (!boost::istarts_with(location, "/r/"))
+        {
+            location = "/r/" + location;
+        }
+
+        if (!consoleApp->setLocation(location))
         {
             ConsoleApp::printError("invalid subreddit '" + args.getToken(0) + "'");
         }
@@ -257,9 +263,9 @@ void initCommands()
                     auto index = std::stoul(firstarg);
                     const auto& lastObjects = consoleApp->getLastObjects();
 
-                    if (index <= lastObjects.size())
+                    if (index > 0 && index <= lastObjects.size())
                     {
-                        const auto& object = lastObjects.at(index);
+                        const auto& object = lastObjects.at(index - 1);
 
                         if (args.hasArgument("comments") || args.hasArgument("c"))
                         {
@@ -340,6 +346,9 @@ void initCommands()
         {
             std::cout << std::time(nullptr) << std::endl;
         });
+
+    consoleApp->addCommand("about", "information about this arcc",
+        [](const std::string&) { utils::openBrowser("https://github.com/zethon/arcc"); });
 }
 
 } // namespace console
