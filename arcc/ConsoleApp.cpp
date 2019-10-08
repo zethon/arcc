@@ -384,12 +384,26 @@ void ConsoleApp::resetSession()
 
 void ConsoleApp::printPrompt() const
 {
-    std::cout 
-        << (isLoggedIn() ? rang::fg::green : rang::fg::red)
-        << '$'
-        << _location
-        << rang::fg::gray
-        << "> ";
+    if (isLoggedIn())
+    {
+        std::cout
+            << rang::fg::cyan
+            << '$'
+            << _location
+            << rang::fg::reset
+            << "> ";
+    }
+    else
+    {
+        std::cout
+            << rang::style::bold
+            << rang::fg::red
+            << '$'
+            << _location
+            << rang::fg::reset
+            << rang::style::reset
+            << "> ";
+    }
 
     std::cout << std::flush;
 }  
