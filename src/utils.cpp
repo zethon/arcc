@@ -12,6 +12,7 @@
 #include <iostream>
 #include <sstream>
 #include <random>
+#include <cctype>
 
 #ifdef _WINDOWS
 #   include <windows.h>
@@ -79,6 +80,8 @@ retval = pw->pw_dir;
     
 void openBrowser(const std::string& url_str)
 {
+    if (url_str.empty()) return;
+
 #ifdef _WINDOWS
     ShellExecute(0, 0, url_str.c_str(), 0, 0, SW_SHOWNORMAL);
 #elif defined(__APPLE__)
@@ -187,6 +190,16 @@ std::string sentimentText(Sentiment s)
     }
 
     return retval;
+}
+
+bool isNumeric(const std::string_view& s)
+{
+    return !s.empty() 
+        && std::find_if(s.begin(), s.end(), 
+            [](char c) 
+            { 
+                return !std::isdigit(c); 
+            }) == s.end();
 }
 
 } // namespace

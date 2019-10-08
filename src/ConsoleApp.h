@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 
+#include <nlohmann/json.hpp>
 #include <boost/algorithm/string.hpp>
 
 #include "Reddit.h"
@@ -46,6 +47,7 @@ class ConsoleApp final
     RedditSessionPtr                _reddit;
 
     std::string                     _location;
+    std::vector<nlohmann::json>     _lastObjects;
 
 public:
     static void printError(const std::string& error);
@@ -85,6 +87,8 @@ public:
     bool loadSession();
     void saveSession();
     void resetSession();
+
+    std::vector<nlohmann::json>& getLastObjects() { return _lastObjects; }
 
 private:
     void printPrompt() const;

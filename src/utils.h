@@ -26,4 +26,6 @@ enum class Sentiment
 
 std::string sentimentText(Sentiment s);
 
+bool isNumeric(const std::string_view& s);
+
 } // namespace

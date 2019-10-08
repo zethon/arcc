@@ -104,8 +104,11 @@ void list(const std::string& cmdParams)
         else
         {
             unsigned int idx = 0;
+
+            auto& lastObjects = consoleApp->getLastObjects();
+            lastObjects.clear();
             
-            for (auto& child : jreply["data"]["children"])
+            for (const auto& child : jreply["data"]["children"])
             {
                 std::string flairText;
                 try
@@ -160,13 +163,15 @@ void list(const std::string& cmdParams)
                         << flairText;
                 }
 
-                std::cout 
+                std::cout
                     << rang::fg::reset
-                    << std::endl 
+                    << rang::bg::reset
+                    << rang::style::reset
+                    << '\n'
                     << std::endl;
-            }
 
-            std::cout << rang::bg::reset << rang::fg::reset << rang::style::reset;
+                lastObjects.push_back(child);
+            }
         }
     }
 }
@@ -239,7 +244,55 @@ void initCommands()
             consoleApp->doExitApp();
         });
 
-    consoleApp->addCommand("open,launch", "open a website in the default browser", 
+    consoleApp->addCommand("v,view", "view a listed item's link or comments",
+        [](const std::string& params)
+        {
+            SimpleArgs args{ params };
+            if (args.getPositionalCount() > 0)
+            {
+                std::string url;
+
+                if (const auto & firstarg = args.getPositional(0); utils::isNumeric(firstarg))
+                {
+                    auto index = std::stoul(firstarg);
+                    const auto& lastObjects = consoleApp->getLastObjects();
+
+                    if (index <= lastObjects.size())
+                    {
+                        const auto& object = lastObjects.at(index);
+
+                        if (args.hasArgument("comments") || args.hasArgument("c"))
+                        {
+                            url = "https://www.reddit.com" + object["data"].value("permalink", "");
+                        }
+                        else if (args.hasArgument("url") || args.hasArgument("u"))
+                        {
+                            url = object["data"].value("url", "");
+                        }
+                        else
+                        {
+                            ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+                        }
+
+                        utils::openBrowser(url);
+                    }
+                    else
+                    {
+                        ConsoleApp::printError("index out of range!");
+                    }
+                }
+                else
+                {
+                    ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+                }
+            }
+            else
+            {
+                ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+            }
+        });
+
+    consoleApp->addCommand("open,launch", "open a website in the default browser",
         [](const std::string& params)
         {
             if (params.size() > 0)
