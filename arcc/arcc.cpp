@@ -14,9 +14,7 @@ int main(int, char*[])
     std::cout <<  APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;
 
-    Terminal terminal;
-    auto consoleApp = std::unique_ptr<ConsoleApp>(new ConsoleApp(terminal));
-
+    auto consoleApp = std::unique_ptr<ConsoleApp>(new ConsoleApp());
     if (consoleApp->loadSession())
     {
         ConsoleApp::printStatus("saved session restored");

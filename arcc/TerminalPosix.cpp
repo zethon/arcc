@@ -53,40 +53,102 @@ std::pair<bool, char> getChar()
 
 std::string Terminal::getLine()
 {
-    reset();
-
     bool done = false;
+    _commandline.clear();
+
     while (!done)
     {
         const auto retpair = getChar();
-        if (retpair.first)
+        if (!retpair.first) break;
+
+        switch (retpair.second)
         {
-            switch (retpair.second)
-            {
-                default:
+            default:
+                if (auto op = onChar(retpair.second); 
+                    op == boost::none || !*op)
                 {
-                    privateDoChar(retpair.second);
+                    _commandline += retpair.second;
+                    std::cout << retpair.second << std::flush;
                 }
-                break;
+            break;
 
-                case 0x0A: // enter
+            case 0x0a: // enter
+                if (auto op = onEnter(); 
+                    op == boost::none || !*op)
+                {
                     done = true;
-                break;
+                }
+            break;
 
-                case 0x7f:
-                case 0x08:
-                    privateDoBackspace();
-                break;
+            case 0x7f:
+            case 0x08:
+                if (auto op = onBackspace(); 
+                    (op == boost::none || !*op) && _commandline.size() > 0)
+                {
+                    _commandline.resize(_commandline.size () - 1);
+                    backspace();
+                }
+            break;
+
+            case 72:
+                this->onHome();
+            break;
+
+            case 70:
+                this->onEnd();
+            break;
+
+            case 21: // CTRL-U
+                if (auto op = onClearLine(); 
+                    op == boost::none || !*op)
+                {
+                    backspaces(_commandline.size());
+                    _commandline.clear();
+                }
+            break;
+
+            case 23: // CTRL-W
+                this->onDeleteWord();
+            break;
+
+            case 0x1b: // ESC
+            {
+                if (std::cin.get() == '[')
+                {
+                    switch (std::cin.get())
+                    {
+                        default:
+                        break;
+
+                        case 'A':
+                            this->onUpArrow();
+                        break;
+
+                        case 'B':
+                            this->onDownArrow();
+                        break;
+
+                        case 'C':
+                            this->onRightArrow();
+                        break;
+
+                        case 'D':
+                            this->onLeftArrow();
+                        break;
+
+                    }
+                }
             }
-        }
-        else
-        {
-            _commandLine.clear();
-            done = true;
+            break;
         }
     }
 
-    return _commandLine;
+    return _commandline;
+}
+
+void Terminal::backspace()
+{
+    std::cout << "\b \b" << std::flush;
 }
 
 } // namespace arcc

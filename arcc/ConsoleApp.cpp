@@ -7,7 +7,6 @@
 
 #include <rang.hpp>
 
-#include "Terminal.h"
 #include "utils.h"
 #include "SimpleArgs.h"
 #include "ConsoleApp.h"
@@ -44,10 +43,45 @@ void ConsoleApp::printStatus(const std::string& status)
         << std::endl;
 }
 
-ConsoleApp::ConsoleApp(Terminal& t)
-    : _terminal(t), 
-        _doExit(false), 
-        _location("/")
+ConsoleApp::ConsoleApp()
+{
+    initTerminal();
+    initCommands();
+
+    boost::filesystem::path homefolder { utils::getUserFolder() };
+    boost::filesystem::path sessionfile = homefolder / ".arcc_history";
+    _history.setHistoryFile(sessionfile.string());
+}
+
+void ConsoleApp::initTerminal()
+{
+    _terminal.onUpArrow.connect(
+        [this]() 
+        { 
+            if (_history.up())
+            {
+                _terminal.clearLine();
+                const auto& newcmd = _history.getCurrent();
+                _terminal.setLine(newcmd);
+                std::cout << newcmd << std::flush;
+            }
+        });
+
+
+    _terminal.onDownArrow.connect(
+        [this]() 
+        { 
+            if (_history.down())
+            {
+                _terminal.clearLine();
+                const auto& newcmd = _history.getCurrent();
+                _terminal.setLine(newcmd);
+                std::cout << newcmd << std::flush;
+            }
+        });
+}
+
+void ConsoleApp::initCommands()
 {
     addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
     addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
@@ -133,7 +167,6 @@ ConsoleApp::ConsoleApp(Terminal& t)
             }
         });
 
-#ifdef _DEBUG
     addCommand("ping", "ping a website",
         [](const std::string& params)
         {
@@ -156,11 +189,6 @@ ConsoleApp::ConsoleApp(Terminal& t)
         {
             std::cout << std::time(nullptr) << std::endl;
         });
-#endif
-}
-
-ConsoleApp::~ConsoleApp()
-{
 }
 
 void ConsoleApp::exec(const std::string& rawline)
@@ -190,6 +218,7 @@ void ConsoleApp::exec(const std::string& rawline)
                 {
                     // TODO: optimize out the std::string()
                     c.handler_(params);
+                    _history.commit(rawline);
                 }
                 catch (const std::exception& ex)
                 {
@@ -406,7 +435,7 @@ void ConsoleApp::printPrompt() const
     }
 
     std::cout << std::flush;
-}  
+}
 
 void ConsoleApp::list(const std::string& cmdParams)
 {

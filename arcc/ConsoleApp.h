@@ -6,14 +6,14 @@
 #include <nlohmann/json.hpp>
 
 #include "Reddit.h"
+#include "Terminal.h"
+#include "CommandHistory.h"
 
 namespace arcc
 {
 
 class RedditSession;
 using RedditSessionPtr = std::shared_ptr<RedditSession>;
-
-class Terminal;
 
 struct ConsoleCommand
 {
@@ -30,20 +30,21 @@ using CommandHandler = ConsoleCommand::Handler;
 
 class ConsoleApp final
 {
-    Terminal&                       _terminal;
-    std::vector<ConsoleCommand>     _commands;
-    bool                            _doExit;
+    Terminal                        _terminal;
     RedditSessionPtr                _reddit;
+    CommandHistory                  _history;
 
-    std::string                     _location;
+    std::vector<ConsoleCommand>     _commands;
     std::vector<nlohmann::json>     _lastObjects;
+
+    bool                            _doExit = false;
+    std::string                     _location = "/";
 
 public:
     static void printError(const std::string& error);
     static void printStatus(const std::string& status);
 
-    ConsoleApp(Terminal& t);
-    ~ConsoleApp();
+    ConsoleApp();
 
     std::string doRedditGet(const std::string& endpoint);
     std::string doRedditGet(const std::string& endpoint, const RedditSession::Params& params);
@@ -79,6 +80,9 @@ public:
 
 private:
     void printPrompt() const;
+
+    void initCommands();
+    void initTerminal();
 
     void whoami();
     void list(const std::string& params);
