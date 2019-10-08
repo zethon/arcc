@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/operations.hpp>
