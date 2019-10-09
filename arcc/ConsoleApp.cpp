@@ -1,6 +1,8 @@
 // Another Reddit Console Client
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
+#include <iomanip>
+
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
@@ -16,8 +18,14 @@
 namespace arcc
 {
 
-ConsoleCommand::ConsoleCommand(const std::string& n, const std::string& hlp, ConsoleCommand::Handler hdr)
-    : helpMessage_(hlp), handler_(hdr)
+ConsoleCommand::ConsoleCommand(const std::string& n,
+                               const std::string& hlp,
+                               const std::string& usage,
+                               ConsoleCommand::Handler hdr)
+
+    : helpMessage_(hlp),
+      usage_(usage),
+      handler_(hdr)
 {
     boost::split(commandNames_, n, boost::is_any_of(","));
 }
@@ -86,19 +94,14 @@ void ConsoleApp::initTerminal()
 
 void ConsoleApp::initCommands()
 {
-    addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
+    addCommand("help", "enter help system", std::bind(&ConsoleApp::help, this, std::placeholders::_1));
     addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
     addCommand("list,l", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
     addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
     addCommand("set", "set the value of a setting", std::bind(&ConsoleApp::setCommand, this, std::placeholders::_1));
+    addCommand("settings", "settings options", std::bind(&ConsoleApp::settingsCommand, this, std::placeholders::_1));
 
-    addCommand("flush", "save the current settings to disk", 
-        [this](const std::string&) 
-        {
-            this->saveSettings();
-            ConsoleApp::printStatus("settings save");
-        });
-
+    addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
     addCommand("login", "login",
         [this](const std::string&)
         {
@@ -214,9 +217,7 @@ void ConsoleApp::initSettings()
     }
     else
     {
-        // create the config
-        _settings["list.limit.default"] = 5;
-
+        defaultSettings();
         saveSettings();
     }
 }
@@ -232,6 +233,15 @@ void ConsoleApp::saveSettings()
 
     out << _settings;
     out.close();
+}
+
+void ConsoleApp::defaultSettings()
+{
+    _settings.clear();
+
+    // create the default config
+    _settings["list.limit"] = 5;
+    _settings["list.type"] = "hot";
 }
 
 void ConsoleApp::exec(const std::string& rawline)
@@ -488,9 +498,13 @@ void ConsoleApp::list(const std::string& cmdParams)
 
     SimpleArgs args { cmdParams };
 
-    std::string listType = "hot";
     std::string subReddit;
+    if (args.hasArgument("sub"))
+    {
+        subReddit = args.getNamedArgument("sub");
+    }
 
+    std::string listType = "hot";
     if (args.getPositionalCount() > 0)
     {
         listType = args.getPositional(0);
@@ -500,10 +514,9 @@ void ConsoleApp::list(const std::string& cmdParams)
             return;
         }
     }
-
-    if (args.hasArgument("sub"))
+    else
     {
-        subReddit = args.getNamedArgument("sub");
+        listType = _settings.value("list.type", listType);
     }
 
     std::uint16_t limit = 5;
@@ -522,12 +535,15 @@ void ConsoleApp::list(const std::string& cmdParams)
     }
     else
     {
-        limit = _settings.value("list.limit.default", 5);
+        limit = _settings.value("list.limit", limit);
     }
 
     RedditSession::Params params;
     params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
 
+    ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}", 
+        limit, listType, (subReddit.empty() ? "all" : subReddit)));
+        
     auto jsontext = doSubRedditGet(subReddit + "/" + listType, params);
     if (jsontext.size() > 0)
     {
@@ -646,7 +662,7 @@ void ConsoleApp::go(const std::string& params)
     {
        ConsoleApp::printError("no subreddit specified");
     }
-}
+}   
 
 void ConsoleApp::view(const std::string& params)
 {
@@ -731,7 +747,69 @@ void ConsoleApp::setCommand(const std::string& params)
         _settings[result[0]] = result[1];
     }
 
-    ConsoleApp::printStatus(fmt::format("setting {} set to '{}'", result[0], result[1]));
+    saveSettings();
+    ConsoleApp::printStatus(fmt::format("setting '{}' set to '{}'", result[0], result[1]));
+}
+
+void ConsoleApp::settingsCommand(const std::string& params)
+{
+    static const std::string usage = "usage: settings [save|reset]";
+
+    arcc::SimpleArgs args{params};
+
+    if (args.getPositionalCount() != 1)
+    {
+        ConsoleApp::printError("usage: settings [save|reset]");
+        return;
+    }
+
+    const auto& command = args.getPositional(0);
+    
+    if (command == "list")
+    {
+        // find the longest key name for formatting
+        std::size_t maxsize = 0;
+        for (const auto& s : _settings.items())
+        {
+            maxsize = std::max(maxsize, s.key().size());
+        }
+
+        for (const auto& s : _settings.items())
+        {
+            std::cout
+                << std::left
+                << std::setw(static_cast<int>(maxsize))
+                << s.key()
+                << " = "
+                << s.value()
+                << '\n';
+        }
+    }
+    else if (command == "reset")
+    {
+        defaultSettings();
+        saveSettings();
+    }
+    else
+    {
+        ConsoleApp::printError("usage: settings [save|reset]");
+    }
+}
+
+void ConsoleApp::help(const std::string&)
+{
+    for (const auto& c : _commands)
+    {
+        std::cout
+            << std::left
+            << std::setw(15)
+            << c.commandNames_.at(0)
+            << " - "
+            << c.helpMessage_
+            << '\n';
+    }
+
+    std::cout << std::flush;
 }
 
 } // namespace arcc

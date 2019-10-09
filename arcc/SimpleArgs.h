@@ -21,7 +21,7 @@ class SimpleArgs
     std::vector<std::string>                    _tokenVector;
 
     std::vector<unsigned int>                   _positionals;
-    std::map<boost::string_view, int>  _named;
+    std::map<boost::string_view, int>           _named;
     
 public:
     SimpleArgs(const std::string& val)

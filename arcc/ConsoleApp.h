@@ -21,9 +21,13 @@ struct ConsoleCommand
 
     std::vector<std::string>    commandNames_;
     std::string                 helpMessage_;
+    std::string                 usage_;
     Handler                     handler_;
 
-    ConsoleCommand(const std::string& n, const std::string& hlp, Handler hdr);
+    ConsoleCommand(const std::string& n, const std::string& hlp, Handler hdr)
+        : ConsoleCommand(n, hlp, std::string{}, hdr) {}
+
+    ConsoleCommand(const std::string& n, const std::string& hlp, const std::string& usage, Handler hdr);
 };
 
 using CommandHandler = ConsoleCommand::Handler;
@@ -84,15 +88,19 @@ private:
 
     void initCommands();
     void initTerminal();
-    void initSettings();
 
+    void initSettings();
     void saveSettings();
+    void defaultSettings();
 
     void whoami();
     void list(const std::string& params);
     void go(const std::string& params);
     void view(const std::string& params);
+    void help(const std::string& params);
+
     void setCommand(const std::string& params);
+    void settingsCommand(const std::string& params);
 };
 
 } // namespace arcc
