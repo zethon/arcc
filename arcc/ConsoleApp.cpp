@@ -240,8 +240,9 @@ void ConsoleApp::defaultSettings()
     _settings.clear();
 
     // create the default config
-    _settings["list.limit"] = 5;
-    _settings["list.type"] = "hot";
+    _settings["command.list.limit"] = 5;
+    _settings["command.list.type"] = "hot";
+    _settings["command.view.type"] = "url";
 }
 
 void ConsoleApp::exec(const std::string& rawline)
@@ -516,7 +517,7 @@ void ConsoleApp::list(const std::string& cmdParams)
     }
     else
     {
-        listType = _settings.value("list.type", listType);
+        listType = _settings.value("command.list.type", listType);
     }
 
     std::uint16_t limit = 5;
@@ -535,7 +536,7 @@ void ConsoleApp::list(const std::string& cmdParams)
     }
     else
     {
-        limit = _settings.value("list.limit", limit);
+        limit = _settings.value("command.list.limit", limit);
     }
 
     RedditSession::Params params;
@@ -666,10 +667,12 @@ void ConsoleApp::go(const std::string& params)
 
 void ConsoleApp::view(const std::string& params)
 {
-    SimpleArgs args{ params };
-    if (args.getPositionalCount() > 0)
+    static const std::string usage = "usage: view <index> (-c,--comments | -u,--url)";
+
+    if (SimpleArgs args{ params }; args.getPositionalCount() > 0)
     {
         std::string url;
+        enum ViewType { UNKNOWN, COMMENTS, URL } viewType = UNKNOWN;
 
         if (const auto & firstarg = args.getPositional(0); utils::isNumeric(firstarg))
         {
@@ -681,17 +684,43 @@ void ConsoleApp::view(const std::string& params)
 
                 if (args.hasArgument("comments") || args.hasArgument("c"))
                 {
-                    url = "https://www.reddit.com" + object["data"].value("permalink", "");
+                    viewType = COMMENTS;
                 }
                 else if (args.hasArgument("url") || args.hasArgument("u"))
                 {
-                    url = object["data"].value("url", "");
+                    viewType = URL;
+                }
+                else if (args.getNamedCount() > 0)
+                {
+                    ConsoleApp::printError(usage);
+                    return;
                 }
                 else
                 {
-                    ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+                    if (_settings.value("command.view.type", "") == "comments")
+                    {
+                        viewType = COMMENTS;
+                    }
+                    else if (_settings.value("command.view.type", "") == "url")
+                    {
+                        viewType = URL;
+                    }
+                    else
+                    {
+                        ConsoleApp::printError(fmt::format("invalid 'command.view.type' settings. only 'comments' and 'url' allowed"));
+                        return;
+                    }
                 }
 
+                if (viewType == COMMENTS)
+                {
+                    url = "https://www.reddit.com" + object["data"].value("permalink", "");
+                }
+                else if (viewType == URL)
+                {
+                    url = object["data"].value("url", "");
+                }
+\
                 utils::openBrowser(url);
             }
             else
@@ -701,12 +730,12 @@ void ConsoleApp::view(const std::string& params)
         }
         else
         {
-            ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+            ConsoleApp::printError(usage);
         }
     }
     else
     {
-        ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+        ConsoleApp::printError(usage);
     }
 }
 
@@ -765,7 +794,7 @@ void ConsoleApp::settingsCommand(const std::string& params)
 
     const auto& command = args.getPositional(0);
     
-    if (command == "list")
+    if (command == "list" || command.empty())
     {
         // find the longest key name for formatting
         std::size_t maxsize = 0;
@@ -774,11 +803,12 @@ void ConsoleApp::settingsCommand(const std::string& params)
             maxsize = std::max(maxsize, s.key().size());
         }
 
+        ConsoleApp::printStatus(fmt::format("{} setting(s)", _settings.size()));
         for (const auto& s : _settings.items())
         {
             std::cout
                 << std::left
-                << std::setw(static_cast<int>(maxsize))
+                << std::setw(static_cast<int>(maxsize + 5))
                 << s.key()
                 << " = "
                 << s.value()
@@ -789,10 +819,6 @@ void ConsoleApp::settingsCommand(const std::string& params)
     {
         defaultSettings();
         saveSettings();
-    }
-    else
-    {
-        ConsoleApp::printError("usage: settings [save|reset]");
     }
 }
 
