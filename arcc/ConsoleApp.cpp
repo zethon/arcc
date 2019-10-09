@@ -62,6 +62,7 @@ ConsoleApp::ConsoleApp()
     boost::filesystem::path homefolder { utils::getUserFolder() };
     boost::filesystem::path sessionfile = homefolder / ".arcc_history";
     _history.setHistoryFile(sessionfile.string());
+    _history.loadHistory(false);
 }
 
 void ConsoleApp::initTerminal()
