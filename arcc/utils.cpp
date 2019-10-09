@@ -1,6 +1,9 @@
 // Another Reddit Console Client
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
+#include <boost/algorithm/string/predicate.hpp>
+#include <fmt/core.h>
+
 #include "utils.h"
 
 #include <stdexcept>
@@ -205,6 +208,32 @@ bool isNumeric(const std::string_view& s)
             { 
                 return !std::isdigit(c); 
             }) == s.end();
+}
+
+static const std::vector<std::string> boolStrings = { "true", "false", "on", "off" };
+
+bool isBoolean(const std::string_view s)
+{
+    return std::find_if(std::begin(boolStrings), std::end(boolStrings),
+        [s](const std::string& val) -> bool
+        {
+            return boost::iequals(val,s);
+        })
+        != std::end(boolStrings);
+}
+
+bool convertToBool(const std::string_view s)
+{
+    if (boost::iequals(s, "true") || boost::iequals(s, "on"))
+    {
+        return true;
+    }
+    else if(boost::iequals(s, "false") || boost::iequals(s, "off"))
+    {
+        return false;
+    }
+
+    throw std::runtime_error(fmt::format("invalid value '{}'", s));
 }
 
 } // namespace

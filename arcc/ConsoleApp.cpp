@@ -1,11 +1,15 @@
 // Another Reddit Console Client
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
+#include <iomanip>
+
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <rang.hpp>
+#include <fmt/core.h>
 
 #include "utils.h"
 #include "SimpleArgs.h"
@@ -14,8 +18,14 @@
 namespace arcc
 {
 
-ConsoleCommand::ConsoleCommand(const std::string& n, const std::string& hlp, ConsoleCommand::Handler hdr)
-    : helpMessage_(hlp), handler_(hdr)
+ConsoleCommand::ConsoleCommand(const std::string& n,
+                               const std::string& hlp,
+                               const std::string& usage,
+                               ConsoleCommand::Handler hdr)
+
+    : helpMessage_(hlp),
+      usage_(usage),
+      handler_(hdr)
 {
     boost::split(commandNames_, n, boost::is_any_of(","));
 }
@@ -46,11 +56,13 @@ void ConsoleApp::printStatus(const std::string& status)
 ConsoleApp::ConsoleApp()
 {
     initTerminal();
+    initSettings();
     initCommands();
 
     boost::filesystem::path homefolder { utils::getUserFolder() };
     boost::filesystem::path sessionfile = homefolder / ".arcc_history";
     _history.setHistoryFile(sessionfile.string());
+    _history.loadHistory(false);
 }
 
 void ConsoleApp::initTerminal()
@@ -83,11 +95,15 @@ void ConsoleApp::initTerminal()
 
 void ConsoleApp::initCommands()
 {
-    addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
+    addCommand("help", "enter help system", std::bind(&ConsoleApp::help, this, std::placeholders::_1));
     addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
-    addCommand("list,l", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
+    addCommand("list,l,ls", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
     addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
+    addCommand("set", "set the value of a setting", std::bind(&ConsoleApp::setCommand, this, std::placeholders::_1));
+    addCommand("settings", "settings options", std::bind(&ConsoleApp::settingsCommand, this, std::placeholders::_1));
+    addCommand("history", "command history options", std::bind(&ConsoleApp::history, this, std::placeholders::_1));
 
+    addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
     addCommand("login", "login",
         [this](const std::string&)
         {
@@ -185,10 +201,50 @@ void ConsoleApp::initCommands()
         });
 
     addCommand("time", "print the current epoch time",
-        [](const std::string& params)
+        [](const std::string&)
         {
             std::cout << std::time(nullptr) << std::endl;
         });
+}
+
+void ConsoleApp::initSettings()
+{
+    boost::filesystem::path homefolder{ utils::getUserFolder() };
+    boost::filesystem::path configfile = homefolder / ".arcc_config";
+    if (boost::filesystem::exists(configfile))
+    {
+        std::ifstream in(configfile.string());
+        in >> _settings;
+        in.close();
+    }
+    else
+    {
+        defaultSettings();
+        saveSettings();
+    }
+}
+
+void ConsoleApp::saveSettings()
+{
+    boost::filesystem::path homefolder{ utils::getUserFolder() };
+    boost::filesystem::path configfile = homefolder / ".arcc_config";
+
+    boost::filesystem::ofstream out;
+    out.open(configfile.string(),
+        boost::filesystem::ofstream::out | boost::filesystem::ofstream::trunc);
+
+    out << _settings;
+    out.close();
+}
+
+void ConsoleApp::defaultSettings()
+{
+    _settings.clear();
+
+    // create the default config
+    _settings["command.list.limit"] = 5;
+    _settings["command.list.type"] = "hot";
+    _settings["command.view.type"] = "url";
 }
 
 void ConsoleApp::exec(const std::string& rawline)
@@ -445,10 +501,13 @@ void ConsoleApp::list(const std::string& cmdParams)
 
     SimpleArgs args { cmdParams };
 
-    unsigned int limit = 5;
-    std::string listType = "hot";
     std::string subReddit;
+    if (args.hasArgument("sub"))
+    {
+        subReddit = args.getNamedArgument("sub");
+    }
 
+    std::string listType = "hot";
     if (args.getPositionalCount() > 0)
     {
         listType = args.getPositional(0);
@@ -458,12 +517,12 @@ void ConsoleApp::list(const std::string& cmdParams)
             return;
         }
     }
-
-    if (args.hasArgument("sub"))
+    else
     {
-        subReddit = args.getNamedArgument("sub");
+        listType = _settings.value("command.list.type", listType);
     }
 
+    std::uint16_t limit = 5;
     if (args.hasArgument("limit"))
     {
         auto limitStr = args.getNamedArgument("limit");
@@ -477,10 +536,17 @@ void ConsoleApp::list(const std::string& cmdParams)
             return;
         }
     }
+    else
+    {
+        limit = _settings.value("command.list.limit", limit);
+    }
 
     RedditSession::Params params;
     params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
 
+    ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}", 
+        limit, listType, (subReddit.empty() ? "all" : subReddit)));
+        
     auto jsontext = doSubRedditGet(subReddit + "/" + listType, params);
     if (jsontext.size() > 0)
     {
@@ -599,14 +665,16 @@ void ConsoleApp::go(const std::string& params)
     {
        ConsoleApp::printError("no subreddit specified");
     }
-}
+}   
 
 void ConsoleApp::view(const std::string& params)
 {
-    SimpleArgs args{ params };
-    if (args.getPositionalCount() > 0)
+    static const std::string usage = "usage: view <index> (-c,--comments | -u,--url)";
+
+    if (SimpleArgs args{ params }; args.getPositionalCount() > 0)
     {
         std::string url;
+        enum ViewType { UNKNOWN, COMMENTS, URL } viewType = UNKNOWN;
 
         if (const auto & firstarg = args.getPositional(0); utils::isNumeric(firstarg))
         {
@@ -618,17 +686,43 @@ void ConsoleApp::view(const std::string& params)
 
                 if (args.hasArgument("comments") || args.hasArgument("c"))
                 {
-                    url = "https://www.reddit.com" + object["data"].value("permalink", "");
+                    viewType = COMMENTS;
                 }
                 else if (args.hasArgument("url") || args.hasArgument("u"))
                 {
-                    url = object["data"].value("url", "");
+                    viewType = URL;
+                }
+                else if (args.getNamedCount() > 0)
+                {
+                    ConsoleApp::printError(usage);
+                    return;
                 }
                 else
                 {
-                    ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+                    if (_settings.value("command.view.type", "") == "comments")
+                    {
+                        viewType = COMMENTS;
+                    }
+                    else if (_settings.value("command.view.type", "") == "url")
+                    {
+                        viewType = URL;
+                    }
+                    else
+                    {
+                        ConsoleApp::printError(fmt::format("invalid 'command.view.type' settings. only 'comments' and 'url' allowed"));
+                        return;
+                    }
                 }
 
+                if (viewType == COMMENTS)
+                {
+                    url = "https://www.reddit.com" + object["data"].value("permalink", "");
+                }
+                else if (viewType == URL)
+                {
+                    url = object["data"].value("url", "");
+                }
+\
                 utils::openBrowser(url);
             }
             else
@@ -638,12 +732,156 @@ void ConsoleApp::view(const std::string& params)
         }
         else
         {
-            ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+            ConsoleApp::printError(usage);
         }
     }
     else
     {
-        ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
+        ConsoleApp::printError(usage);
+    }
+}
+
+void ConsoleApp::setCommand(const std::string& params)
+{
+    if (params.size() == 0)
+    {
+        ConsoleApp::printError("usage: set <setting>=<value>");
+        return;
+    }
+
+    using separator_type = boost::escaped_list_separator<char>;
+    separator_type separator("\\", "= ", "\"\'");
+
+    boost::tokenizer<separator_type> tokens(params, separator);
+
+    // copy to a vector for convienence
+    std::vector<std::string> result;
+    std::copy_if(tokens.begin(), tokens.end(), std::back_inserter(result),
+        [](const std::string& s) { return !s.empty(); });
+
+    if (result.size() != 2)
+    {
+        ConsoleApp::printError("usage: set <setting>=<value>");
+        return;
+    }
+
+    if (utils::isNumeric(result[1]))
+    {
+        _settings[result[0]] = std::stoul(result[1]);
+    }
+    else if (utils::isBoolean(result[1]))
+    {
+        _settings[result[0]] = utils::convertToBool(result[1]);
+    }
+    else
+    {
+        _settings[result[0]] = result[1];
+    }
+
+    saveSettings();
+    ConsoleApp::printStatus(fmt::format("setting '{}' set to '{}'", result[0], result[1]));
+}
+
+void ConsoleApp::settingsCommand(const std::string& params)
+{
+    static const std::string usage = "usage: settings [list]";
+
+    arcc::SimpleArgs args{params};
+
+    if (args.getPositionalCount() != 1)
+    {
+        ConsoleApp::printError(usage);
+        return;
+    }
+
+    const auto& command = args.getPositional(0);
+    
+    if (command == "list" || command.empty())
+    {
+        // find the longest key name for formatting
+        std::size_t maxsize = 0;
+        for (const auto& s : _settings.items())
+        {
+            maxsize = std::max(maxsize, s.key().size());
+        }
+
+        ConsoleApp::printStatus(fmt::format("{} setting(s)", _settings.size()));
+        for (const auto& s : _settings.items())
+        {
+            std::cout
+                << std::left
+                << std::setw(static_cast<int>(maxsize + 5))
+                << s.key()
+                << " = "
+                << s.value()
+                << '\n';
+        }
+    }
+    else if (command == "reset")
+    {
+        defaultSettings();
+        saveSettings();
+    }
+}
+
+void ConsoleApp::help(const std::string&)
+{
+    for (const auto& c : _commands)
+    {
+        std::cout
+            << std::left
+            << std::setw(15)
+            << c.commandNames_.at(0)
+            << " - "
+            << c.helpMessage_
+            << '\n';
+    }
+
+    std::cout << std::flush;
+}
+
+void ConsoleApp::history(const std::string& params)
+{
+    static const std::string usage = "usage: history [reset]";
+
+    arcc::SimpleArgs args{params};
+    if ((args.getPositionalCount() > 1)
+        || (args.getPositionalCount() == 1 && args.getPositional(0) != "reset"))
+    {
+        ConsoleApp::printError(usage);
+        return;
+    }
+
+    if (args.getPositionalCount() == 0)
+    {
+        std::uint16_t index = 0;
+        for (const auto& c : _history)
+        {
+            std::cout
+                << std::right
+                << std::setw(5)
+                << ++index
+                << std::left
+                << std::setw(5)
+                << ' '
+                << c
+                << '\n';
+        }
+
+        std::cout << std::flush;
+    }
+    else
+    {
+        boost::filesystem::path homefolder{ utils::getUserFolder() };
+        boost::filesystem::path configfile = homefolder / ".arcc_history";
+
+        boost::filesystem::ofstream out;
+        out.open(configfile.string(),
+            boost::filesystem::ofstream::out | boost::filesystem::ofstream::trunc);
+        out << std::endl;
+        out.close();
+
+        _history.clear();
     }
 }
 

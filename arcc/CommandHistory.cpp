@@ -68,7 +68,7 @@ void CommandHistory::commit(const std::string &command)
 
         if (!out.fail())
         {
-            out << command;
+            out << command << std::endl;
             out.close();
         }
     }

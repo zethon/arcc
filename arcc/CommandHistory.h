@@ -33,6 +33,9 @@ public:
     std::size_t size() const { return _buffer.size(); }
     std::string getCurrent() const;
 
+    decltype(_buffer.begin()) begin() { return _buffer.begin(); }
+    decltype(_buffer.end()) end() { return _buffer.end(); }
+
 };
 
 } // namespace arcc

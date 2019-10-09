@@ -30,9 +30,11 @@ void OAuth2Login::start()
             else
             {
                 auto codeIt = query_fields.find("code");
-                auto stateIt = query_fields.find("state");
 
+#ifndef NDEBUG
+                auto stateIt = query_fields.find("state");
                 assert(codeIt != query_fields.end() && stateIt != query_fields.end());
+#endif
 
                 WebClient client;
                 client.setBasicAuth(REDDIT_CLIENT_ID,"");
