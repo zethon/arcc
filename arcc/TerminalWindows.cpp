@@ -19,9 +19,7 @@ std::string Terminal::getLine()
     bool done { false };
     while (!done)
     {
-        const int c = _getch();
-
-        switch (c)
+        switch (const int c = _getch(); c)
         {
             default:
                 if (auto op = onChar(c);
@@ -74,6 +72,15 @@ std::string Terminal::getLine()
                     break;
                 }
             }
+            break;
+        
+            case 0x15: // CTRL-U
+                if (auto op = onClearLine();
+                    op == boost::none || !*op)
+                {
+                    backspaces(_commandline.size());
+                    _commandline.clear();
+                }
             break;
         }
     }
