@@ -420,6 +420,8 @@ void ConsoleApp::printPrompt() const
             << '$'
             << _location
             << rang::fg::reset
+            << rang::bg::reset
+            << rang::style::reset
             << "> ";
     }
     else
@@ -429,8 +431,8 @@ void ConsoleApp::printPrompt() const
             << rang::fg::red
             << '$'
             << _location
-            << rang::fg::reset
             << rang::style::reset
+            << rang::fg::reset
             << "> ";
     }
 

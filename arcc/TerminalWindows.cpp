@@ -8,15 +8,13 @@
 
 namespace arcc
 {
-namespace console
-{
 
 Terminal::Terminal() = default;
 Terminal::~Terminal() = default;
 
 std::string Terminal::getLine()
 {
-    reset();
+    _commandline.clear();
 
     bool done { false };
     while (!done)
@@ -26,37 +24,66 @@ std::string Terminal::getLine()
         switch (c)
         {
             default:
-                privateDoChar(c);
+                if (auto op = onChar(c);
+                    op == boost::none || !*op)
+                {
+                    _commandline += c;
+                    std::cout << static_cast<char>(c) << std::flush;
+                }
             break;
 
             case '\r':
-                done = true;
+                if (auto op = onEnter();
+                    op == boost::none || !*op)
+                {
+                    done = true;
+                }
             break;
 
             case '\b':
-                privateDoBackspace();
+                if (auto op = onBackspace();
+                    (op == boost::none || !*op) && _commandline.size() > 0)
+                {
+                    _commandline.resize(_commandline.size() - 1);
+                    backspace();
+                }
             break;
 
-            //case 0:
-            //case 0xe0:
-            //{
-            //    const int escchar = _getch();
-            //    switch (escchar)
-            //    {
-            //        default:
-            //        break;
+            case 0:
+            case 0xe0:
+            {
+                switch (_getch())
+                {
+                    default:
+                    break;
 
-            //        case 83:
-            //            onDelete();
-            //        break;
-            //    }
-            //}
-            //break;
+                    case 72:
+                        this->onUpArrow();
+                    break;
+
+                    case 80:
+                        this->onDownArrow();
+                    break;
+
+                    case 75:
+                        this->onLeftArrow();
+                    break;
+
+                    case 77:
+                        this->onRightArrow();
+                    break;
+                }
+            }
+            break;
         }
     }
 
-    return _commandLine;
+    return _commandline;
 }
 
-} // namespace console
+void Terminal::backspace()
+{
+    std::cout << "\b \b" << std::flush;
+}
+
 } // namespace arcc
