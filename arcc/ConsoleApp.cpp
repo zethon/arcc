@@ -97,7 +97,7 @@ void ConsoleApp::initCommands()
 {
     addCommand("help", "enter help system", std::bind(&ConsoleApp::help, this, std::placeholders::_1));
     addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
-    addCommand("list,l", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
+    addCommand("list,l,ls", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
     addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
     addCommand("set", "set the value of a setting", std::bind(&ConsoleApp::setCommand, this, std::placeholders::_1));
     addCommand("settings", "settings options", std::bind(&ConsoleApp::settingsCommand, this, std::placeholders::_1));
@@ -784,13 +784,13 @@ void ConsoleApp::setCommand(const std::string& params)
 
 void ConsoleApp::settingsCommand(const std::string& params)
 {
-    static const std::string usage = "usage: settings [save|reset]";
+    static const std::string usage = "usage: settings [list]";
 
     arcc::SimpleArgs args{params};
 
     if (args.getPositionalCount() != 1)
     {
-        ConsoleApp::printError("usage: settings [save|reset]");
+        ConsoleApp::printError(usage);
         return;
     }
 
