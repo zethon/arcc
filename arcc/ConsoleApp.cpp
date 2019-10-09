@@ -4,8 +4,10 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <rang.hpp>
+#include <fmt/core.h>
 
 #include "utils.h"
 #include "SimpleArgs.h"
@@ -46,6 +48,7 @@ void ConsoleApp::printStatus(const std::string& status)
 ConsoleApp::ConsoleApp()
 {
     initTerminal();
+    initSettings();
     initCommands();
 
     boost::filesystem::path homefolder { utils::getUserFolder() };
@@ -87,6 +90,14 @@ void ConsoleApp::initCommands()
     addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
     addCommand("list,l", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
     addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
+    addCommand("set", "set the value of a setting", std::bind(&ConsoleApp::setCommand, this, std::placeholders::_1));
+
+    addCommand("flush", "save the current settings to disk", 
+        [this](const std::string&) 
+        {
+            this->saveSettings();
+            ConsoleApp::printStatus("settings save");
+        });
 
     addCommand("login", "login",
         [this](const std::string&)
@@ -189,6 +200,38 @@ void ConsoleApp::initCommands()
         {
             std::cout << std::time(nullptr) << std::endl;
         });
+}
+
+void ConsoleApp::initSettings()
+{
+    boost::filesystem::path homefolder{ utils::getUserFolder() };
+    boost::filesystem::path configfile = homefolder / ".arcc_config";
+    if (boost::filesystem::exists(configfile))
+    {
+        std::ifstream in(configfile.string());
+        in >> _settings;
+        in.close();
+    }
+    else
+    {
+        // create the config
+        _settings["list.limit.default"] = 5;
+
+        saveSettings();
+    }
+}
+
+void ConsoleApp::saveSettings()
+{
+    boost::filesystem::path homefolder{ utils::getUserFolder() };
+    boost::filesystem::path configfile = homefolder / ".arcc_config";
+
+    boost::filesystem::ofstream out;
+    out.open(configfile.string(),
+        boost::filesystem::ofstream::out | boost::filesystem::ofstream::trunc);
+
+    out << _settings;
+    out.close();
 }
 
 void ConsoleApp::exec(const std::string& rawline)
@@ -445,7 +488,6 @@ void ConsoleApp::list(const std::string& cmdParams)
 
     SimpleArgs args { cmdParams };
 
-    unsigned int limit = 5;
     std::string listType = "hot";
     std::string subReddit;
 
@@ -464,6 +506,7 @@ void ConsoleApp::list(const std::string& cmdParams)
         subReddit = args.getNamedArgument("sub");
     }
 
+    std::uint16_t limit = 5;
     if (args.hasArgument("limit"))
     {
         auto limitStr = args.getNamedArgument("limit");
@@ -476,6 +519,10 @@ void ConsoleApp::list(const std::string& cmdParams)
             ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
             return;
         }
+    }
+    else
+    {
+        limit = _settings.value("list.limit.default", 5);
     }
 
     RedditSession::Params params;
@@ -645,6 +692,46 @@ void ConsoleApp::view(const std::string& params)
     {
         ConsoleApp::printError("usage: view <index> (-c,--comments | -u,--url)");
     }
+}
+
+void ConsoleApp::setCommand(const std::string& params)
+{
+    if (params.size() == 0)
+    {
+        ConsoleApp::printError("usage: set <setting>=<value>");
+        return;
+    }
+
+    using separator_type = boost::escaped_list_separator<char>;
+    separator_type separator("\\", "= ", "\"\'");
+
+    boost::tokenizer<separator_type> tokens(params, separator);
+
+    // copy to a vector for convienence
+    std::vector<std::string> result;
+    std::copy_if(tokens.begin(), tokens.end(), std::back_inserter(result),
+        [](const std::string& s) { return !s.empty(); });
+
+    if (result.size() != 2)
+    {
+        ConsoleApp::printError("usage: set <setting>=<value>");
+        return;
+    }
+
+    if (utils::isNumeric(result[1]))
+    {
+        _settings[result[0]] = std::stoul(result[1]);
+    }
+    else if (utils::isBoolean(result[1]))
+    {
+        _settings[result[0]] = utils::convertToBool(result[1]);
+    }
+    else
+    {
+        _settings[result[0]] = result[1];
+    }
+
+    ConsoleApp::printStatus(fmt::format("setting {} set to '{}'", result[0], result[1]));
 }
 
 } // namespace arcc

@@ -39,6 +39,7 @@ class ConsoleApp final
 
     bool                            _doExit = false;
     std::string                     _location = "/";
+    nlohmann::json                  _settings;
 
 public:
     static void printError(const std::string& error);
@@ -83,11 +84,15 @@ private:
 
     void initCommands();
     void initTerminal();
+    void initSettings();
+
+    void saveSettings();
 
     void whoami();
     void list(const std::string& params);
     void go(const std::string& params);
     void view(const std::string& params);
+    void setCommand(const std::string& params);
 };
 
 } // namespace arcc
