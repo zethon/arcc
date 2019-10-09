@@ -101,6 +101,7 @@ void ConsoleApp::initCommands()
     addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
     addCommand("set", "set the value of a setting", std::bind(&ConsoleApp::setCommand, this, std::placeholders::_1));
     addCommand("settings", "settings options", std::bind(&ConsoleApp::settingsCommand, this, std::placeholders::_1));
+    addCommand("history", "command history options", std::bind(&ConsoleApp::history, this, std::placeholders::_1));
 
     addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
     addCommand("login", "login",
@@ -200,7 +201,7 @@ void ConsoleApp::initCommands()
         });
 
     addCommand("time", "print the current epoch time",
-        [](const std::string& params)
+        [](const std::string&)
         {
             std::cout << std::time(nullptr) << std::endl;
         });
@@ -837,6 +838,51 @@ void ConsoleApp::help(const std::string&)
     }
 
     std::cout << std::flush;
+}
+
+void ConsoleApp::history(const std::string& params)
+{
+    static const std::string usage = "usage: history [reset]";
+
+    arcc::SimpleArgs args{params};
+    if ((args.getPositionalCount() > 1)
+        || (args.getPositionalCount() == 1 && args.getPositional(0) != "reset"))
+    {
+        ConsoleApp::printError(usage);
+        return;
+    }
+
+    if (args.getPositionalCount() == 0)
+    {
+        std::uint16_t index = 0;
+        for (const auto& c : _history)
+        {
+            std::cout
+                << std::right
+                << std::setw(5)
+                << ++index
+                << std::left
+                << std::setw(5)
+                << ' '
+                << c
+                << '\n';
+        }
+
+        std::cout << std::flush;
+    }
+    else
+    {
+        boost::filesystem::path homefolder{ utils::getUserFolder() };
+        boost::filesystem::path configfile = homefolder / ".arcc_history";
+
+        boost::filesystem::ofstream out;
+        out.open(configfile.string(),
+            boost::filesystem::ofstream::out | boost::filesystem::ofstream::trunc);
+        out << std::endl;
+        out.close();
+
+        _history.clear();
+    }
 }
 
 } // namespace arcc

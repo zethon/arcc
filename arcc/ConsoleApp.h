@@ -98,6 +98,7 @@ private:
     void go(const std::string& params);
     void view(const std::string& params);
     void help(const std::string& params);
+    void history(const std::string& params);
 
     void setCommand(const std::string& params);
     void settingsCommand(const std::string& params);
