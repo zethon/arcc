@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #include <ctime>
 
@@ -117,7 +117,7 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
 {
     const std::string userAgent = (boost::format("%1%:%2%:v%3% (by /u/wolosocu)") 
         % utils::getOsString() 
-        % APP_NAME 
+        % APP_TITLE 
         % VERSION).str();
 
     _webclient.setUserAgent(userAgent);

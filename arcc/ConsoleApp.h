@@ -1,26 +1,19 @@
 // Another Reddit Console Client
-// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #pragma once
 
-#include <string>
-#include <memory>
-
 #include <nlohmann/json.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include "Reddit.h"
+#include "Terminal.h"
+#include "CommandHistory.h"
 
 namespace arcc
 {
 
 class RedditSession;
 using RedditSessionPtr = std::shared_ptr<RedditSession>;
-
-namespace console
-{
-
-class Terminal;
 
 struct ConsoleCommand
 {
@@ -30,31 +23,28 @@ struct ConsoleCommand
     std::string                 helpMessage_;
     Handler                     handler_;
 
-    ConsoleCommand(const std::string& n, const std::string& hlp, Handler hdr)
-        : helpMessage_(hlp), handler_(hdr)
-    {
-        boost::split(commandNames_, n, boost::is_any_of(","));
-    }
+    ConsoleCommand(const std::string& n, const std::string& hlp, Handler hdr);
 };
 
 using CommandHandler = ConsoleCommand::Handler;
 
 class ConsoleApp final
 {
-    Terminal&                       _terminal;
-    std::vector<ConsoleCommand>     _commands;
-    bool                            _doExit;
+    Terminal                        _terminal;
     RedditSessionPtr                _reddit;
+    CommandHistory                  _history;
 
-    std::string                     _location;
+    std::vector<ConsoleCommand>     _commands;
     std::vector<nlohmann::json>     _lastObjects;
+
+    bool                            _doExit = false;
+    std::string                     _location = "/";
 
 public:
     static void printError(const std::string& error);
     static void printStatus(const std::string& status);
 
-    ConsoleApp(Terminal& t);
-    ~ConsoleApp();
+    ConsoleApp();
 
     std::string doRedditGet(const std::string& endpoint);
     std::string doRedditGet(const std::string& endpoint, const RedditSession::Params& params);
@@ -88,11 +78,16 @@ public:
     void saveSession();
     void resetSession();
 
-    std::vector<nlohmann::json>& getLastObjects() { return _lastObjects; }
-
 private:
     void printPrompt() const;
+
+    void initCommands();
+    void initTerminal();
+
+    void whoami();
+    void list(const std::string& params);
+    void go(const std::string& params);
+    void view(const std::string& params);
 };
 
-} // namespace console
 } // namespace arcc

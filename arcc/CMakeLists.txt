@@ -2,6 +2,7 @@ project(arcc)
 
 set(SOURCE_FILES
     arcc.cpp
+    CommandHistory.cpp
     ConsoleApp.cpp
     Reddit.cpp
     utils.cpp
@@ -10,6 +11,7 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
+    CommandHistory.h
     ConsoleApp.h
     core.h
     Reddit.h

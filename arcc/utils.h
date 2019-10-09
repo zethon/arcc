@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #pragma once
 
@@ -8,6 +8,13 @@
 
 namespace utils
 {
+
+class NotImplementedException : public std::logic_error
+{
+
+public:
+    NotImplementedException();
+};
 
 std::string getOsString();
 

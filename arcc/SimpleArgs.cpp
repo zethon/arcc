@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #include "SimpleArgs.h"
 
@@ -38,7 +38,7 @@ std::vector<std::string> tokenizeArgs(const std::string& input)
 
 void SimpleArgs::parse(const std::string& original)
 {
-    const std::regex dashReg { R"(^\-{1,2}[^\-])" };
+    const static std::regex dashReg { R"(^\-{1,2}[^\-])" };
 
     if (original.size() > 0)
     {

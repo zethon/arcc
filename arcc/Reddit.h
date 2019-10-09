@@ -1,5 +1,5 @@
 // Another Reddit Console Client
-// Copyright (c) 2017-2018, Adalid Claure <aclaure@gmail.com>
+// Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #pragma once
 
@@ -8,7 +8,6 @@
 #include <memory>
 
 #include <boost/format.hpp>
-
 #include <server_http.hpp>
 
 #include "Reddit.h"
