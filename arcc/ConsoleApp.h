@@ -39,7 +39,11 @@ class ConsoleApp final
     CommandHistory                  _history;
 
     std::vector<ConsoleCommand>     _commands;
+
+
     std::vector<nlohmann::json>     _lastObjects;
+    boost::optional<std::string>    _before;
+    boost::optional<std::string>    _after;
 
     bool                            _doExit = false;
     std::string                     _location = "/";
@@ -99,6 +103,8 @@ private:
     void view(const std::string& params);
     void help(const std::string& params);
     void history(const std::string& params);
+    void next(const std::string& params);
+    void previous(const std::string& params);
 
     void setCommand(const std::string& params);
     void settingsCommand(const std::string& params);

@@ -30,7 +30,11 @@ void CommandHistory::loadHistory(bool throwOnError)
 
     while (!std::getline(in, line).fail())
     {
-        if (!line.empty()) commit(line);
+        if (!line.empty())
+        {
+            _buffer.push_back(line);
+            _currentPos = _buffer.size();
+        }
     }
 
     in.close();

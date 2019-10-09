@@ -7,6 +7,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 #include <rang.hpp>
 #include <fmt/core.h>
@@ -96,12 +97,16 @@ void ConsoleApp::initTerminal()
 void ConsoleApp::initCommands()
 {
     addCommand("help", "enter help system", std::bind(&ConsoleApp::help, this, std::placeholders::_1));
-    addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
-    addCommand("list,l,ls", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
-    addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
     addCommand("set", "set the value of a setting", std::bind(&ConsoleApp::setCommand, this, std::placeholders::_1));
     addCommand("settings", "settings options", std::bind(&ConsoleApp::settingsCommand, this, std::placeholders::_1));
     addCommand("history", "command history options", std::bind(&ConsoleApp::history, this, std::placeholders::_1));
+
+    addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
+    addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
+
+    addCommand("list,l,ls", "list links and posts", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
+    addCommand("next,n", "go to the next page of links and posts", std::bind(&ConsoleApp::next, this, std::placeholders::_1));
+    addCommand("previous,p", "go to a previous page of links and posts", std::bind(&ConsoleApp::previous, this, std::placeholders::_1));
 
     addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
     addCommand("login", "login",
@@ -203,7 +208,10 @@ void ConsoleApp::initCommands()
     addCommand("time", "print the current epoch time",
         [](const std::string&)
         {
-            std::cout << std::time(nullptr) << std::endl;
+            auto t = std::time(nullptr);
+            auto tm = *std::localtime(&t);
+            std::cout << "time  : " << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << '\n';
+            std::cout << "epoch : " << t << std::endl;
         });
 }
 
@@ -497,8 +505,6 @@ void ConsoleApp::printPrompt() const
 
 void ConsoleApp::list(const std::string& cmdParams)
 {
-    static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
-
     SimpleArgs args { cmdParams };
 
     std::string subReddit;
@@ -510,10 +516,14 @@ void ConsoleApp::list(const std::string& cmdParams)
     std::string listType = "hot";
     if (args.getPositionalCount() > 0)
     {
+        static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
+
         listType = args.getPositional(0);
         if (std::find(std::begin(validTypes), std::end(validTypes), listType) == std::end(validTypes))
         {
-            ConsoleApp::printError("invalid list type '" + listType + "'");
+            ConsoleApp::printError(fmt::format("invalid list type '{}'", listType));
+            ConsoleApp::printStatus(fmt::format("valid values: {}",
+                boost::algorithm::join(validTypes,", ")));
             return;
         }
     }
@@ -544,25 +554,65 @@ void ConsoleApp::list(const std::string& cmdParams)
     RedditSession::Params params;
     params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
 
+    if (listType == "top" && args.hasArgument("t"))
+    {
+        static const std::vector<std::string> validTValues = {"hour", "day", "week", "month", "year", "all"};
+        const auto& tval = args.getNamedArgument("t");
+        if (std::find(std::begin(validTValues), std::end(validTValues), tval)
+                == std::end(validTValues))
+        {
+            ConsoleApp::printError(fmt::format("invalid t-value with 'top' param '{}'", tval));
+            ConsoleApp::printStatus(fmt::format("valid values: {}",
+                boost::algorithm::join(validTValues,", ")));
+            return;
+        }
+
+        params.insert_or_assign("t", tval);
+    }
+
     ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}", 
         limit, listType, (subReddit.empty() ? "all" : subReddit)));
         
     auto jsontext = doSubRedditGet(subReddit + "/" + listType, params);
     if (jsontext.size() > 0)
     {
-        const auto jreply = nlohmann::json::parse(jsontext);
+        _before.reset();
+        _after.reset();
+
+        const auto reply = nlohmann::json::parse(jsontext);
+
+        if (reply.find("data") == reply.end())
+        {
+            ConsoleApp::printError("the response was malformed");
+            return;
+        }
+
+        // convienence
+        const auto& data = reply["data"];
+
+        if (data.find("before") != data.end()
+            && !data["before"].is_null())
+        {
+            _before = data["before"];
+        }
+
+        if (data.find("after") != data.end()
+            && !data["after"].is_null())
+        {
+            _after = data["after"];
+        }
 
         if (args.hasArgument("json"))
         {
             // roundtrip the JSON so we can get pretty indentation
-            std::cout << jreply.dump(4) << std::endl;
+            std::cout << reply.dump(4) << std::endl;
         }
         else
         {
             unsigned int idx = 0;
             _lastObjects.clear();
             
-            for (const auto& child : jreply["data"]["children"])
+            for (const auto& child : reply["data"]["children"])
             {
                 std::string flairText;
                 try
@@ -882,6 +932,23 @@ void ConsoleApp::history(const std::string& params)
         out.close();
 
         _history.clear();
+    }
+}
+
+void ConsoleApp::next(const std::string&)
+{
+    if (_lastObjects.size() == 0)
+    {
+        ConsoleApp::printError("no items in cache");
+    }
+
+}
+
+void ConsoleApp::previous(const std::string&)
+{
+    if (_lastObjects.size() == 0)
+    {
+        ConsoleApp::printError("no items in cache");
     }
 }
 
