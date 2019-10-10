@@ -845,11 +845,11 @@ void ConsoleApp::list(const std::string& cmdParams)
 
     if (args.hasArgument("sub"))
     {
-        _listing.endpoint = args.getNamedArgument("sub");
+        _listing.subreddit = args.getNamedArgument("sub");
     }
     else
     {
-        _listing.endpoint = _location;
+        _listing.subreddit = _location;
     }
 
     if (args.getPositionalCount() > 0)
@@ -913,9 +913,9 @@ void ConsoleApp::list(const std::string& cmdParams)
 
     ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}",
         _listing.params.at("limit"), _listing.type,
-        (_listing.endpoint.empty() ? "/" : _listing.endpoint)));
+        (_listing.subreddit.empty() ? "/" : _listing.subreddit)));
 
-    auto jsontext = doSubRedditGet(_listing.endpoint + "/" + _listing.type, _listing.params);
+    auto jsontext = doSubRedditGet(_listing.subreddit + "/" + _listing.type, _listing.params);
     if (jsontext.size() > 0)
     {
         const auto reply = nlohmann::json::parse(jsontext);
@@ -959,7 +959,7 @@ void ConsoleApp::next(const std::string&)
     _listing.params.insert_or_assign("before", _listing.before);
     _listing.params.insert_or_assign("after", _listing.after);
 
-    auto jsontext = doSubRedditGet(_listing.endpoint + "/" + _listing.type, _listing.params);
+    auto jsontext = doSubRedditGet(_listing.subreddit + "/" + _listing.type, _listing.params);
     if (jsontext.size() > 0)
     {
         const auto reply = nlohmann::json::parse(jsontext);
@@ -1003,7 +1003,7 @@ void ConsoleApp::previous(const std::string&)
     _listing.params.insert_or_assign("before", _listing.before);
     _listing.params.insert_or_assign("after", _listing.after);
 
-    auto jsontext = doSubRedditGet(_listing.endpoint + "/" + _listing.type, _listing.params);
+    auto jsontext = doSubRedditGet(_listing.subreddit + "/" + _listing.type, _listing.params);
     if (jsontext.size() > 0)
     {
         const auto reply = nlohmann::json::parse(jsontext);
