@@ -135,18 +135,32 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
     }
 }
 
-std::string RedditSession::doGetRequest(const std::string& endpoint, const RedditSession::Params& params)
+auto RedditSession::doGetRequest(
+    const std::string& endpoint,
+    const RedditSession::Params& params,
+    bool verbose)
+    -> ResponsePair
 {
     doRefreshToken();
 
     std::string endpointUrl = requestUrl + endpoint + buildQueryParamString(params);
+    if (verbose)
+    {
+        std::cout << "request url: " << endpointUrl << std::endl;
+    }
+
     auto result = _webclient.doRequest(endpointUrl);
-    return result.data;
+    if (verbose)
+    {
+        std::cout << "response: " << result << std::endl;
+    }
+
+    return { result.data, endpointUrl };
 }
 
 void RedditSession::doRefreshToken()
 {
-    std::time_t elapsed_seconds = std::time(0) - _lastRefresh;
+    std::time_t elapsed_seconds = std::time(nullptr) - _lastRefresh;
     if (elapsed_seconds > _expiry)
     {
         WebClient client;

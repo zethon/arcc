@@ -24,14 +24,18 @@ struct Listing
 
     std::string                 before;
     std::string                 after;
-    bool                        dumpJson;
+
+    std::uint32_t               count;
+    std::uint32_t               limit;
+
     RedditSession::Params       params;
-    std::vector<nlohmann::json> results;
+    nlohmann::json              results;
+    bool                        verbose;
 
     std::string endpoint() const
     {
         std::string retval;
-        if (!subreddit.empty())
+        if (!subreddit.empty() && subreddit != "/")
         {
             if (!boost::starts_with(subreddit, "/r"))
             {
@@ -41,7 +45,13 @@ struct Listing
             retval.append(subreddit);
         }
 
-        retval.append("/" + type);
+        // some times a "/" can sneak into the subreddit
+        // name so check for it before creating a "//"
+        // which can be problematic
+        if (!boost::ends_with(retval, "/")) retval.append("/");
+
+        // now at `hot`, `new`, etc...
+        retval.append(type);
         return retval;
     }
 
@@ -53,7 +63,9 @@ struct Listing
         before.clear();
         after.clear();
         results.clear();
-        dumpJson = false;
+        verbose = false;
+        count = 0;
+        limit = 0;
     }
 };
 
@@ -99,7 +111,7 @@ public:
     std::string doRedditGet(const std::string& endpoint, const RedditSession::Params& params);
 
     // these will automatically prepred `_location` to the endpoint
-    std::string doSubRedditGet(const std::string& endpoint);
+    arcc::Listing doGetListing(const arcc::Listing& listing);
     std::string doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params);
 
     void exec(const std::string& rawline);
@@ -129,7 +141,7 @@ public:
 
 private:
     void printPrompt() const;
-    void printListing(const nlohmann::json reply, bool dumpJson);
+    void printListing(const arcc::Listing& listing);
 
     void initCommands();
     void initTerminal();

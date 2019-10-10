@@ -380,7 +380,7 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const RedditSes
 
     if (_reddit)
     {
-        retval = _reddit->doGetRequest(endpoint, params);
+        std::tie(retval, std::ignore) = _reddit->doGetRequest(endpoint, params);
     }
     else
     {
@@ -390,26 +390,112 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const RedditSes
     return retval;
 }
 
-std::string ConsoleApp::doSubRedditGet(const std::string& endpoint)
+arcc::Listing ConsoleApp::doGetListing(const arcc::Listing& listing)
 {
-    return doSubRedditGet(endpoint, RedditSession::Params{});
-}
-
-std::string ConsoleApp::doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params)
-{
-    std::string retval;
+    arcc::Listing retval;
 
     if (_reddit)
     {
-        retval = _reddit->doGetRequest(endpoint, params);
+        // there are a few params we want to specifically set
+        // so we create a copy
+        RedditSession::Params params = listing.params;
+
+        if (listing.before.empty())
+        {
+            params.erase("before");
+        }
+        else
+        {
+            params.insert_or_assign("before", listing.before);
+        }
+
+        if (listing.after.empty())
+        {
+            params.erase("after");
+        }
+        else
+        {
+            params.insert_or_assign("after", listing.after);
+        }
+
+        if (listing.limit == 0)
+        {
+            params.erase("limit");
+        }
+        else
+        {
+            params.insert_or_assign("limit", std::to_string(listing.limit));
+        }
+
+        if (listing.count == 0)
+        {
+            params.erase("count");
+        }
+        else
+        {
+            params.insert_or_assign("count", std::to_string(listing.count));
+        }
+
+        [[maybe_unused]] const auto& [retstr, url]
+            = _reddit->doGetRequest(listing.endpoint(), params, listing.verbose);
+
+        if (retstr.size() > 0)
+        {
+            const auto reply = nlohmann::json::parse(retstr);
+            if (reply.find("data") == reply.end())
+            {
+                throw std::runtime_error("the response was malformed");
+            }
+
+            // copy the passed in object
+            retval = listing;
+
+            // convienence
+            const auto& data = reply["data"];
+
+            if (data.find("before") != data.end()
+                && !data["before"].is_null())
+            {
+                retval.before = data["before"];
+            }
+
+            if (data.find("after") != data.end()
+                && !data["after"].is_null())
+            {
+                retval.after = data["after"];
+            }
+
+            retval.count = 1;
+            retval.results = std::move(reply);
+        }
+        else
+        {
+            throw std::runtime_error("the response was empty");
+        }
     }
     else
     {
-        std::cout << "you must be logged in first. type `login` to sign into reddit" << std::endl;
+        throw std::runtime_error("you must be logged in first. type `login` to sign into reddit");
     }
 
     return retval;
 }
+
+//std::string ConsoleApp::doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params)
+//{
+//    std::string retval;
+
+//    if (_reddit)
+//    {
+//        retval = _reddit->doGetRequest(endpoint, params);
+//    }
+//    else
+//    {
+//        std::cout << "you must be logged in first. type `login` to sign into reddit" << std::endl;
+//    }
+
+//    return retval;
+//}
 
 bool ConsoleApp::loadSession()
 {
@@ -758,82 +844,74 @@ void ConsoleApp::history(const std::string& params)
     }
 }
 
-void ConsoleApp::printListing(const nlohmann::json reply, bool dumpJson)
+void ConsoleApp::printListing(const arcc::Listing& listing)
 {
-    if (dumpJson)
-    {
-        // roundtrip the JSON so we can get pretty indentation
-        std::cout << reply.dump(4) << std::endl;
-    }
-    else
-    {
-        unsigned int idx = 0;
-        _lastObjects.clear();
+    unsigned int idx = 0;
+    _lastObjects.clear();
 
-        for (const auto& child : reply["data"]["children"])
+    for (const auto& child : listing.results["data"]["children"])
+    {
+        std::string flairText;
+        try
         {
-            std::string flairText;
-            try
-            {
-                flairText = child["data"]["link_flair_text"].get<std::string>();
-            }
-            catch (const nlohmann::json::type_error&)
-            {
-                // swallow this
-            }
-
-            if (flairText.size() > 0)
-            {
-                flairText = "[" + flairText + "]";
-            }
-
-            if (child["data"]["stickied"].get<bool>())
-            {
-                std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
-            }
-
-            std::cout
-                << rang::style::bold
-                << ++idx
-                << ". "
-                << child["data"]["title"].get<std::string>()
-                << rang::style::reset
-                << '\n'
-                << rang::fg::cyan
-                << rang::style::underline
-                << child["data"]["url"].get<std::string>()
-                << rang::style::reset
-                << '\n'
-                << rang::fg::gray
-                << child["data"]["score"].get<int>()
-                << " pts - "
-                << utils::miniMoment(child["data"]["created_utc"].get<std::uint32_t>())
-                << " - "
-                << child["data"]["num_comments"].get<int>() << " comments"
-                << '\n'
-                << rang::fg::magenta
-                << child["data"]["author"].get<std::string>()
-                << ' '
-                << rang::fg::yellow
-                << child["data"]["subreddit_name_prefixed"].get<std::string>();
-
-            if (flairText.size() > 0)
-            {
-                std::cout
-                    << ' '
-                    << rang::fg::red
-                    << flairText;
-            }
-
-            std::cout
-                << rang::fg::reset
-                << rang::bg::reset
-                << rang::style::reset
-                << '\n'
-                << std::endl;
-
-            _lastObjects.push_back(child);
+            flairText = child["data"]["link_flair_text"].get<std::string>();
         }
+        catch (const nlohmann::json::type_error&)
+        {
+            // swallow this
+        }
+
+        if (flairText.size() > 0)
+        {
+            flairText = "[" + flairText + "]";
+        }
+
+        if (child["data"]["stickied"].get<bool>())
+        {
+            std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
+        }
+
+        std::cout
+            << rang::style::bold
+            << ++idx
+            << ". "
+            << child["data"]["title"].get<std::string>()
+            << rang::style::reset
+            << '\n'
+            << rang::fg::cyan
+            << rang::style::underline
+            << child["data"]["url"].get<std::string>()
+            << rang::style::reset
+            << '\n'
+            << rang::fg::gray
+            << child["data"]["score"].get<int>()
+            << " pts - "
+            << utils::miniMoment(child["data"]["created_utc"].get<std::uint32_t>())
+            << " - "
+            << child["data"]["num_comments"].get<int>() << " comments"
+            << '\n'
+            << rang::fg::magenta
+            << child["data"]["author"].get<std::string>()
+            << ' '
+            << rang::fg::yellow
+            << child["data"]["subreddit_name_prefixed"].get<std::string>();
+
+        if (flairText.size() > 0)
+        {
+            std::cout
+                << ' '
+                << rang::fg::red
+                << flairText;
+        }
+
+        std::cout
+            << rang::fg::reset
+            << rang::bg::reset
+            << rang::style::reset
+            << '\n'
+            << std::endl;
+
+        _lastObjects.push_back(child);
     }
 }
 
@@ -876,21 +954,22 @@ void ConsoleApp::list(const std::string& cmdParams)
 
     if (args.hasArgument("limit"))
     {
-        auto limitStr = args.getNamedArgument("limit");
-        if (!utils::isNumeric(limitStr))
+        auto limitstr = args.getNamedArgument("limit");
+        if (!utils::isNumeric(limitstr))
         {
-            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
+            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitstr + "'");
             _listing.reset();
             return;
         }
 
-        _listing.params.insert_or_assign("limit", limitStr);
+        _listing.limit = static_cast<std::uint32_t>(std::stoul(limitstr));
     }
     else
     {
-        std::string temp = std::to_string(_settings.value("command.list.limit", 5));
-        _listing.params.insert_or_assign("limit", temp);
+        _listing.limit = _settings.value("command.list.limit", 5u);
     }
+
+    _listing.count = _listing.limit;
 
     if (_listing.type == "top" && args.hasArgument("t"))
     {
@@ -909,43 +988,17 @@ void ConsoleApp::list(const std::string& cmdParams)
         _listing.params.insert_or_assign("t", tval);
     }
 
-    _listing.dumpJson = args.hasArgument("json");
+    _listing.verbose = args.hasArgument("verbose");
 
     ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}",
-        _listing.params.at("limit"), _listing.type,
+        _listing.limit, _listing.type,
         (_listing.subreddit.empty() ? "/" : _listing.subreddit)));
 
-    auto jsontext = doSubRedditGet(_listing.subreddit + "/" + _listing.type, _listing.params);
-    if (jsontext.size() > 0)
+    auto temp = doGetListing(_listing);
+    if (!temp.results.is_null())
     {
-        const auto reply = nlohmann::json::parse(jsontext);
-
-        if (reply.find("data") == reply.end())
-        {
-            ConsoleApp::printError("the response was malformed");
-            return;
-        }
-
-        // convienence
-        const auto& data = reply["data"];
-
-        if (data.find("before") != data.end()
-            && !data["before"].is_null())
-        {
-            _listing.before = data["before"];
-        }
-
-        if (data.find("after") != data.end()
-            && !data["after"].is_null())
-        {
-            _listing.after = data["after"];
-        }
-
-        printListing(reply, _listing.dumpJson);
-    }
-    else
-    {
-        throw std::runtime_error("the response was empty");
+        _listing = std::move(temp);
+        printListing(_listing);
     }
 }
 
@@ -956,40 +1009,16 @@ void ConsoleApp::next(const std::string&)
         ConsoleApp::printError("no more posts");
     }
 
-    _listing.params.insert_or_assign("before", _listing.before);
-    _listing.params.insert_or_assign("after", _listing.after);
+    // `_listing.after` is set in the response so, we only
+    // need to clear `before` before submitting another
+    // request
+    _listing.before.clear();
 
-    auto jsontext = doSubRedditGet(_listing.subreddit + "/" + _listing.type, _listing.params);
-    if (jsontext.size() > 0)
+    auto temp = doGetListing(_listing);
+    if (!temp.results.is_null())
     {
-        const auto reply = nlohmann::json::parse(jsontext);
-
-        if (reply.find("data") == reply.end())
-        {
-            ConsoleApp::printError("the response was malformed");
-            return;
-        }
-
-        // convienence
-        const auto& data = reply["data"];
-
-        if (data.find("before") != data.end()
-            && !data["before"].is_null())
-        {
-            _listing.before = data["before"];
-        }
-
-        if (data.find("after") != data.end()
-            && !data["after"].is_null())
-        {
-            _listing.after = data["after"];
-        }
-
-        printListing(reply, _listing.dumpJson);
-    }
-    else
-    {
-        throw std::runtime_error("the response was empty");
+        _listing = std::move(temp);
+        printListing(_listing);
     }
 }
 
@@ -1000,38 +1029,13 @@ void ConsoleApp::previous(const std::string&)
         ConsoleApp::printError("no more previous posts");
     }
 
-    _listing.params.insert_or_assign("before", _listing.before);
-    _listing.params.insert_or_assign("after", _listing.after);
+    _listing.after.clear();
 
-    auto jsontext = doSubRedditGet(_listing.subreddit + "/" + _listing.type, _listing.params);
-    if (jsontext.size() > 0)
+    auto temp = doGetListing(_listing);
+    if (!temp.results.is_null())
     {
-        const auto reply = nlohmann::json::parse(jsontext);
-        if (reply.find("data") == reply.end())
-        {
-            throw std::runtime_error("the response was empty");
-        }
-
-        // convienence
-        const auto& data = reply["data"];
-
-        if (data.find("before") != data.end()
-            && !data["before"].is_null())
-        {
-            _listing.before = data["before"];
-        }
-
-        if (data.find("after") != data.end()
-            && !data["after"].is_null())
-        {
-            _listing.after = data["after"];
-        }
-
-        printListing(reply, _listing.dumpJson);
-    }
-    else
-    {
-        throw std::runtime_error("the response was empty");
+        _listing = std::move(temp);
+        printListing(_listing);
     }
 }
 
