@@ -15,6 +15,28 @@ namespace arcc
 class RedditSession;
 using RedditSessionPtr = std::shared_ptr<RedditSession>;
 
+struct Listing
+{
+    std::string                 endpoint;
+    std::string                 type;
+    std::string                 before;
+    std::string                 after;
+
+    RedditSession::Params       params;
+
+    std::vector<nlohmann::json> results;
+
+    void reset()
+    {
+        endpoint.clear();
+        type.clear();
+        params.clear();
+        before.clear();
+        after.clear();
+        results.clear();
+    }
+};
+
 struct ConsoleCommand
 {
     using Handler = std::function<void(const std::string&)>;
@@ -40,10 +62,8 @@ class ConsoleApp final
 
     std::vector<ConsoleCommand>     _commands;
 
-
+    Listing                         _listing;
     std::vector<nlohmann::json>     _lastObjects;
-    boost::optional<std::string>    _before;
-    boost::optional<std::string>    _after;
 
     bool                            _doExit = false;
     std::string                     _location = "/";

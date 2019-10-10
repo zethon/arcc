@@ -401,7 +401,7 @@ std::string ConsoleApp::doSubRedditGet(const std::string& endpoint, const Reddit
 
     if (_reddit)
     {
-        retval = _reddit->doGetRequest(_location + endpoint, params);
+        retval = _reddit->doGetRequest(endpoint, params);
     }
     else
     {
@@ -505,56 +505,60 @@ void ConsoleApp::printPrompt() const
 
 void ConsoleApp::list(const std::string& cmdParams)
 {
-    SimpleArgs args { cmdParams };
+    _listing.reset();
 
-    std::string subReddit;
+    SimpleArgs args{ cmdParams };
+
     if (args.hasArgument("sub"))
     {
-        subReddit = args.getNamedArgument("sub");
+        _listing.endpoint = args.getNamedArgument("sub");
+    }
+    else
+    {
+        _listing.endpoint = _location;
     }
 
-    std::string listType = "hot";
     if (args.getPositionalCount() > 0)
     {
         static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
 
-        listType = args.getPositional(0);
-        if (std::find(std::begin(validTypes), std::end(validTypes), listType) == std::end(validTypes))
+        auto temp = args.getPositional(0);
+        if (std::find(std::begin(validTypes), std::end(validTypes), temp) == std::end(validTypes))
         {
-            ConsoleApp::printError(fmt::format("invalid list type '{}'", listType));
+            ConsoleApp::printError(fmt::format("invalid list type '{}'", temp));
             ConsoleApp::printStatus(fmt::format("valid values: {}",
                 boost::algorithm::join(validTypes,", ")));
+
+            _listing.reset();
             return;
         }
+
+        _listing.type = temp;
     }
     else
     {
-        listType = _settings.value("command.list.type", listType);
+        _listing.type = _settings.value("command.list.type", "hot");
     }
 
-    std::uint16_t limit = 5;
     if (args.hasArgument("limit"))
     {
         auto limitStr = args.getNamedArgument("limit");
-        try
-        {
-            limit = boost::lexical_cast<unsigned int>(limitStr);
-        }
-        catch (const boost::bad_lexical_cast&)
+        if (!utils::isNumeric(limitStr))
         {
             ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
+            _listing.reset();
             return;
         }
+
+        _listing.params.insert_or_assign("limit", limitStr);
     }
     else
     {
-        limit = _settings.value("command.list.limit", limit);
+        std::string temp = std::to_string(_settings.value("command.list.limit", 5));
+        _listing.params.insert_or_assign("limit", temp);
     }
 
-    RedditSession::Params params;
-    params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
-
-    if (listType == "top" && args.hasArgument("t"))
+    if (_listing.type == "top" && args.hasArgument("t"))
     {
         static const std::vector<std::string> validTValues = {"hour", "day", "week", "month", "year", "all"};
         const auto& tval = args.getNamedArgument("t");
@@ -564,21 +568,20 @@ void ConsoleApp::list(const std::string& cmdParams)
             ConsoleApp::printError(fmt::format("invalid t-value with 'top' param '{}'", tval));
             ConsoleApp::printStatus(fmt::format("valid values: {}",
                 boost::algorithm::join(validTValues,", ")));
+            _listing.reset();
             return;
         }
 
-        params.insert_or_assign("t", tval);
+        _listing.params.insert_or_assign("t", tval);
     }
 
     ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}", 
-        limit, listType, (subReddit.empty() ? "all" : subReddit)));
+        _listing.params.at("limit"), _listing.type, 
+        (_listing.endpoint.empty() ? "/" : _listing.endpoint)));
         
-    auto jsontext = doSubRedditGet(subReddit + "/" + listType, params);
+    auto jsontext = doSubRedditGet(_listing.endpoint + "/" + _listing.type, _listing.params);
     if (jsontext.size() > 0)
     {
-        _before.reset();
-        _after.reset();
-
         const auto reply = nlohmann::json::parse(jsontext);
 
         if (reply.find("data") == reply.end())
@@ -593,13 +596,13 @@ void ConsoleApp::list(const std::string& cmdParams)
         if (data.find("before") != data.end()
             && !data["before"].is_null())
         {
-            _before = data["before"];
+            _listing.before = data["before"];
         }
 
         if (data.find("after") != data.end()
             && !data["after"].is_null())
         {
-            _after = data["after"];
+            _listing.after = data["after"];
         }
 
         if (args.hasArgument("json"))
