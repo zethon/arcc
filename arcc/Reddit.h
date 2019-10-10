@@ -88,4 +88,6 @@ private:
     void doRefreshToken();   
 };
 
+std::ostream & operator<<(std::ostream& os, const arcc::RedditSession::Params& params);
+
 } // namespace arcc

@@ -174,5 +174,24 @@ void RedditSession::doRefreshToken()
     }
 }
 
+std::ostream& operator<<(std::ostream& os, const RedditSession::Params& params)
+{
+    char prefix = '{';
+
+    for (const auto& [key, value] : params)
+    {
+        os << prefix
+           << "{ "
+           << key
+           << " = "
+           << value
+           << " }";
+
+        prefix = ',';
+    }
+
+    return os << '}';
+}
+
 
 } // namespace arcc
