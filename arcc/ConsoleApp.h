@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <boost/algorithm/string.hpp>
+
 #include <nlohmann/json.hpp>
 
 #include "Reddit.h"
@@ -17,19 +19,35 @@ using RedditSessionPtr = std::shared_ptr<RedditSession>;
 
 struct Listing
 {
-    std::string                 endpoint;
+    std::string                 subreddit;
     std::string                 type;
+
     std::string                 before;
     std::string                 after;
     bool                        dumpJson;
-
     RedditSession::Params       params;
-
     std::vector<nlohmann::json> results;
+
+    std::string endpoint() const
+    {
+        std::string retval;
+        if (!subreddit.empty())
+        {
+            if (!boost::starts_with(subreddit, "/r"))
+            {
+                retval.append("/r");
+            }
+
+            retval.append(subreddit);
+        }
+
+        retval.append("/" + type);
+        return retval;
+    }
 
     void reset()
     {
-        endpoint.clear();
+        subreddit.clear();
         type.clear();
         params.clear();
         before.clear();

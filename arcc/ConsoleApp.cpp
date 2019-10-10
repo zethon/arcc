@@ -286,7 +286,7 @@ void ConsoleApp::exec(const std::string& rawline)
                 }
                 catch (const std::exception& ex)
                 {
-                    std::cout << ex.what() << std::endl;
+                    ConsoleApp::printError(ex.what());
                 }
                 
                 executed = true;
@@ -943,6 +943,10 @@ void ConsoleApp::list(const std::string& cmdParams)
 
         printListing(reply, _listing.dumpJson);
     }
+    else
+    {
+        throw std::runtime_error("the response was empty");
+    }
 }
 
 void ConsoleApp::next(const std::string&)
@@ -983,6 +987,10 @@ void ConsoleApp::next(const std::string&)
 
         printListing(reply, _listing.dumpJson);
     }
+    else
+    {
+        throw std::runtime_error("the response was empty");
+    }
 }
 
 void ConsoleApp::previous(const std::string&)
@@ -999,11 +1007,9 @@ void ConsoleApp::previous(const std::string&)
     if (jsontext.size() > 0)
     {
         const auto reply = nlohmann::json::parse(jsontext);
-
         if (reply.find("data") == reply.end())
         {
-            ConsoleApp::printError("the response was malformed");
-            return;
+            throw std::runtime_error("the response was empty");
         }
 
         // convienence
@@ -1022,6 +1028,10 @@ void ConsoleApp::previous(const std::string&)
         }
 
         printListing(reply, _listing.dumpJson);
+    }
+    else
+    {
+        throw std::runtime_error("the response was empty");
     }
 }
 
