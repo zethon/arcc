@@ -21,6 +21,7 @@ struct Listing
     std::string                 type;
     std::string                 before;
     std::string                 after;
+    bool                        dumpJson;
 
     RedditSession::Params       params;
 
@@ -34,6 +35,7 @@ struct Listing
         before.clear();
         after.clear();
         results.clear();
+        dumpJson = false;
     }
 };
 
@@ -109,6 +111,7 @@ public:
 
 private:
     void printPrompt() const;
+    void printListing(const nlohmann::json reply, bool dumpJson);
 
     void initCommands();
     void initTerminal();

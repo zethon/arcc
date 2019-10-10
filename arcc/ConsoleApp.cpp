@@ -503,186 +503,6 @@ void ConsoleApp::printPrompt() const
     std::cout << std::flush;
 }
 
-void ConsoleApp::list(const std::string& cmdParams)
-{
-    _listing.reset();
-
-    SimpleArgs args{ cmdParams };
-
-    if (args.hasArgument("sub"))
-    {
-        _listing.endpoint = args.getNamedArgument("sub");
-    }
-    else
-    {
-        _listing.endpoint = _location;
-    }
-
-    if (args.getPositionalCount() > 0)
-    {
-        static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
-
-        auto temp = args.getPositional(0);
-        if (std::find(std::begin(validTypes), std::end(validTypes), temp) == std::end(validTypes))
-        {
-            ConsoleApp::printError(fmt::format("invalid list type '{}'", temp));
-            ConsoleApp::printStatus(fmt::format("valid values: {}",
-                boost::algorithm::join(validTypes,", ")));
-
-            _listing.reset();
-            return;
-        }
-
-        _listing.type = temp;
-    }
-    else
-    {
-        _listing.type = _settings.value("command.list.type", "hot");
-    }
-
-    if (args.hasArgument("limit"))
-    {
-        auto limitStr = args.getNamedArgument("limit");
-        if (!utils::isNumeric(limitStr))
-        {
-            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
-            _listing.reset();
-            return;
-        }
-
-        _listing.params.insert_or_assign("limit", limitStr);
-    }
-    else
-    {
-        std::string temp = std::to_string(_settings.value("command.list.limit", 5));
-        _listing.params.insert_or_assign("limit", temp);
-    }
-
-    if (_listing.type == "top" && args.hasArgument("t"))
-    {
-        static const std::vector<std::string> validTValues = {"hour", "day", "week", "month", "year", "all"};
-        const auto& tval = args.getNamedArgument("t");
-        if (std::find(std::begin(validTValues), std::end(validTValues), tval)
-                == std::end(validTValues))
-        {
-            ConsoleApp::printError(fmt::format("invalid t-value with 'top' param '{}'", tval));
-            ConsoleApp::printStatus(fmt::format("valid values: {}",
-                boost::algorithm::join(validTValues,", ")));
-            _listing.reset();
-            return;
-        }
-
-        _listing.params.insert_or_assign("t", tval);
-    }
-
-    ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}", 
-        _listing.params.at("limit"), _listing.type, 
-        (_listing.endpoint.empty() ? "/" : _listing.endpoint)));
-        
-    auto jsontext = doSubRedditGet(_listing.endpoint + "/" + _listing.type, _listing.params);
-    if (jsontext.size() > 0)
-    {
-        const auto reply = nlohmann::json::parse(jsontext);
-
-        if (reply.find("data") == reply.end())
-        {
-            ConsoleApp::printError("the response was malformed");
-            return;
-        }
-
-        // convienence
-        const auto& data = reply["data"];
-
-        if (data.find("before") != data.end()
-            && !data["before"].is_null())
-        {
-            _listing.before = data["before"];
-        }
-
-        if (data.find("after") != data.end()
-            && !data["after"].is_null())
-        {
-            _listing.after = data["after"];
-        }
-
-        if (args.hasArgument("json"))
-        {
-            // roundtrip the JSON so we can get pretty indentation
-            std::cout << reply.dump(4) << std::endl;
-        }
-        else
-        {
-            unsigned int idx = 0;
-            _lastObjects.clear();
-            
-            for (const auto& child : reply["data"]["children"])
-            {
-                std::string flairText;
-                try
-                {
-                    flairText = child["data"]["link_flair_text"].get<std::string>();
-                }
-                catch (const nlohmann::json::type_error&)
-                {
-                    // swallow this
-                }
-
-                if (flairText.size() > 0)
-                {
-                    flairText = "[" + flairText + "]";
-                }
-
-                if (child["data"]["stickied"].get<bool>())
-                {
-                    std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
-                }                
-
-                std::cout 
-                    << rang::style::bold
-                    << ++idx
-                    << ". "
-                    << child["data"]["title"].get<std::string>()
-                    << rang::style::reset
-                    << '\n'
-                    << rang::fg::cyan
-                    << rang::style::underline
-                    << child["data"]["url"].get<std::string>()
-                    << rang::style::reset
-                    << '\n'
-                    << rang::fg::gray
-                    << child["data"]["score"].get<int>() 
-                    << " pts - "
-                    << utils::miniMoment(child["data"]["created_utc"].get<std::uint32_t>())
-                    << " - "
-                    << child["data"]["num_comments"].get<int>() << " comments"
-                    << '\n'
-                    << rang::fg::magenta
-                    << child["data"]["author"].get<std::string>()
-                    << ' '
-                    << rang::fg::yellow
-                    << child["data"]["subreddit_name_prefixed"].get<std::string>();
-
-                if (flairText.size() > 0)
-                {
-                    std::cout
-                        << ' '
-                        << rang::fg::red
-                        << flairText;
-                }
-
-                std::cout
-                    << rang::fg::reset
-                    << rang::bg::reset
-                    << rang::style::reset
-                    << '\n'
-                    << std::endl;
-
-                _lastObjects.push_back(child);
-            }
-        }
-    }
-}
-
 void ConsoleApp::whoami()
 {
     auto jsontext = doRedditGet("/api/v1/me");
@@ -938,20 +758,270 @@ void ConsoleApp::history(const std::string& params)
     }
 }
 
-void ConsoleApp::next(const std::string&)
+void ConsoleApp::printListing(const nlohmann::json reply, bool dumpJson)
 {
-    if (_lastObjects.size() == 0)
+    if (dumpJson)
     {
-        ConsoleApp::printError("no items in cache");
+        // roundtrip the JSON so we can get pretty indentation
+        std::cout << reply.dump(4) << std::endl;
+    }
+    else
+    {
+        unsigned int idx = 0;
+        _lastObjects.clear();
+
+        for (const auto& child : reply["data"]["children"])
+        {
+            std::string flairText;
+            try
+            {
+                flairText = child["data"]["link_flair_text"].get<std::string>();
+            }
+            catch (const nlohmann::json::type_error&)
+            {
+                // swallow this
+            }
+
+            if (flairText.size() > 0)
+            {
+                flairText = "[" + flairText + "]";
+            }
+
+            if (child["data"]["stickied"].get<bool>())
+            {
+                std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
+            }
+
+            std::cout
+                << rang::style::bold
+                << ++idx
+                << ". "
+                << child["data"]["title"].get<std::string>()
+                << rang::style::reset
+                << '\n'
+                << rang::fg::cyan
+                << rang::style::underline
+                << child["data"]["url"].get<std::string>()
+                << rang::style::reset
+                << '\n'
+                << rang::fg::gray
+                << child["data"]["score"].get<int>()
+                << " pts - "
+                << utils::miniMoment(child["data"]["created_utc"].get<std::uint32_t>())
+                << " - "
+                << child["data"]["num_comments"].get<int>() << " comments"
+                << '\n'
+                << rang::fg::magenta
+                << child["data"]["author"].get<std::string>()
+                << ' '
+                << rang::fg::yellow
+                << child["data"]["subreddit_name_prefixed"].get<std::string>();
+
+            if (flairText.size() > 0)
+            {
+                std::cout
+                    << ' '
+                    << rang::fg::red
+                    << flairText;
+            }
+
+            std::cout
+                << rang::fg::reset
+                << rang::bg::reset
+                << rang::style::reset
+                << '\n'
+                << std::endl;
+
+            _lastObjects.push_back(child);
+        }
+    }
+}
+
+void ConsoleApp::list(const std::string& cmdParams)
+{
+    _listing.reset();
+
+    SimpleArgs args{ cmdParams };
+
+    if (args.hasArgument("sub"))
+    {
+        _listing.endpoint = args.getNamedArgument("sub");
+    }
+    else
+    {
+        _listing.endpoint = _location;
     }
 
+    if (args.getPositionalCount() > 0)
+    {
+        static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
+
+        auto temp = args.getPositional(0);
+        if (std::find(std::begin(validTypes), std::end(validTypes), temp) == std::end(validTypes))
+        {
+            ConsoleApp::printError(fmt::format("invalid list type '{}'", temp));
+            ConsoleApp::printStatus(fmt::format("valid values: {}",
+                boost::algorithm::join(validTypes,", ")));
+
+            _listing.reset();
+            return;
+        }
+
+        _listing.type = temp;
+    }
+    else
+    {
+        _listing.type = _settings.value("command.list.type", "hot");
+    }
+
+    if (args.hasArgument("limit"))
+    {
+        auto limitStr = args.getNamedArgument("limit");
+        if (!utils::isNumeric(limitStr))
+        {
+            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
+            _listing.reset();
+            return;
+        }
+
+        _listing.params.insert_or_assign("limit", limitStr);
+    }
+    else
+    {
+        std::string temp = std::to_string(_settings.value("command.list.limit", 5));
+        _listing.params.insert_or_assign("limit", temp);
+    }
+
+    if (_listing.type == "top" && args.hasArgument("t"))
+    {
+        static const std::vector<std::string> validTValues = {"hour", "day", "week", "month", "year", "all"};
+        const auto& tval = args.getNamedArgument("t");
+        if (std::find(std::begin(validTValues), std::end(validTValues), tval)
+                == std::end(validTValues))
+        {
+            ConsoleApp::printError(fmt::format("invalid t-value with 'top' param '{}'", tval));
+            ConsoleApp::printStatus(fmt::format("valid values: {}",
+                boost::algorithm::join(validTValues,", ")));
+            _listing.reset();
+            return;
+        }
+
+        _listing.params.insert_or_assign("t", tval);
+    }
+
+    _listing.dumpJson = args.hasArgument("json");
+
+    ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}",
+        _listing.params.at("limit"), _listing.type,
+        (_listing.endpoint.empty() ? "/" : _listing.endpoint)));
+
+    auto jsontext = doSubRedditGet(_listing.endpoint + "/" + _listing.type, _listing.params);
+    if (jsontext.size() > 0)
+    {
+        const auto reply = nlohmann::json::parse(jsontext);
+
+        if (reply.find("data") == reply.end())
+        {
+            ConsoleApp::printError("the response was malformed");
+            return;
+        }
+
+        // convienence
+        const auto& data = reply["data"];
+
+        if (data.find("before") != data.end()
+            && !data["before"].is_null())
+        {
+            _listing.before = data["before"];
+        }
+
+        if (data.find("after") != data.end()
+            && !data["after"].is_null())
+        {
+            _listing.after = data["after"];
+        }
+
+        printListing(reply, _listing.dumpJson);
+    }
+}
+
+void ConsoleApp::next(const std::string&)
+{
+    if (_listing.after.empty())
+    {
+        ConsoleApp::printError("no more posts");
+    }
+
+    _listing.params.insert_or_assign("before", _listing.before);
+    _listing.params.insert_or_assign("after", _listing.after);
+
+    auto jsontext = doSubRedditGet(_listing.endpoint + "/" + _listing.type, _listing.params);
+    if (jsontext.size() > 0)
+    {
+        const auto reply = nlohmann::json::parse(jsontext);
+
+        if (reply.find("data") == reply.end())
+        {
+            ConsoleApp::printError("the response was malformed");
+            return;
+        }
+
+        // convienence
+        const auto& data = reply["data"];
+
+        if (data.find("before") != data.end()
+            && !data["before"].is_null())
+        {
+            _listing.before = data["before"];
+        }
+
+        if (data.find("after") != data.end()
+            && !data["after"].is_null())
+        {
+            _listing.after = data["after"];
+        }
+
+        printListing(reply, _listing.dumpJson);
+    }
 }
 
 void ConsoleApp::previous(const std::string&)
 {
-    if (_lastObjects.size() == 0)
+    if (_listing.before.empty())
     {
-        ConsoleApp::printError("no items in cache");
+        ConsoleApp::printError("no more previous posts");
+    }
+
+    _listing.params.insert_or_assign("before", _listing.before);
+    _listing.params.insert_or_assign("after", _listing.after);
+
+    auto jsontext = doSubRedditGet(_listing.endpoint + "/" + _listing.type, _listing.params);
+    if (jsontext.size() > 0)
+    {
+        const auto reply = nlohmann::json::parse(jsontext);
+
+        if (reply.find("data") == reply.end())
+        {
+            ConsoleApp::printError("the response was malformed");
+            return;
+        }
+
+        // convienence
+        const auto& data = reply["data"];
+
+        if (data.find("before") != data.end()
+            && !data["before"].is_null())
+        {
+            _listing.before = data["before"];
+        }
+
+        if (data.find("after") != data.end()
+            && !data["after"].is_null())
+        {
+            _listing.after = data["after"];
+        }
+
+        printListing(reply, _listing.dumpJson);
     }
 }
 
