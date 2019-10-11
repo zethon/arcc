@@ -61,9 +61,8 @@ void SimpleArgs::parse(const std::string& original)
                 equals != std::string_view::npos)
             {
                 std::string_view key(token.data(), equals);
-                if (!validParamName(key)) continue;
-
                 token.remove_prefix(equals + 1);
+                if (!validParamName(key)) continue;
                 if (token.size() > 0)
                 {
                     _named.insert_or_assign(std::string{key}, token);
