@@ -3,12 +3,12 @@ project(arcc)
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_CXX_STANDARD 17)
 
+# optional configuration
+option(BUILD_TESTS "Build arcc unit tests (default OFF)" OFF)
+
 # initialize conan libs
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(NO_OUTPUT_DIRS KEEP_RPATHS)
-
-# optional configuration
-option(BUILD_TEST "Build unit tests (default OFF)" OFF)
 
 # Global definitions
 add_definitions(

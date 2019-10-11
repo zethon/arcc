@@ -3,6 +3,7 @@
 
 #include "SimpleArgs.h"
 
+#include <iostream>
 #include <regex>
 #include <vector>
 
@@ -40,10 +41,8 @@ void SimpleArgs::parse(const std::string& original)
 {
     const static std::regex dashReg { R"(^\-{1,2}[^\-])" };
 
-    if (original.size() > 0)
-    {
-        _original = original;
-    }
+    if (original.size() == 0) return;
+    _original = original;
 
     _tokenVector = tokenizeArgs(_original);
     std::smatch regmatches;

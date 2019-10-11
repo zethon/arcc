@@ -22,5 +22,5 @@ build_script:
   - cmake .. "-GVisual Studio 15 2017 Win64"
   - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
 
-# test_script:
-#   - ctest -VV -C "%CONFIG%"
+test_script:
+  - ctest -VV -C "%CONFIG%"

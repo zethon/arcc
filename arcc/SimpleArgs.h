@@ -24,6 +24,7 @@ class SimpleArgs
     std::map<boost::string_view, int>           _named;
     
 public:
+    SimpleArgs() {}
     SimpleArgs(const std::string& val)
         : _original(val)
     {
@@ -31,6 +32,15 @@ public:
     }
 
     void parse(const std::string& = std::string());
+    void clear()
+    {
+        _original.clear();
+        _tokenVector.clear();
+        _positionals.clear();
+        _named.clear();
+    }
+
+    std::string original() const { return _original; }
 
     std::size_t getPositionalCount() const;
     std::string getPositional(unsigned int index) const;

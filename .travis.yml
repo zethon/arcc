@@ -79,6 +79,9 @@ script:
   - cmake ..
   - cmake --build . --config "${CONFIG}" -- -j3 
   
+after_success:
+  - ctest -C "${CONFIG}"
+
 notifactions:
   email:
     recipients:
