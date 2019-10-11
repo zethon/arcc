@@ -743,19 +743,12 @@ void ConsoleApp::setCommand(const std::string& params)
 
 void ConsoleApp::settingsCommand(const std::string& params)
 {
-    static const std::string usage = "usage: settings [list]";
+    static const std::string usage = "usage: settings [list|rest]";
 
     arcc::SimpleArgs args{params};
 
-    if (args.getPositionalCount() != 1)
-    {
-        ConsoleApp::printError(usage);
-        return;
-    }
-
-    const auto& command = args.getPositional(0);
-    
-    if (command == "list" || command.empty())
+    if (args.getPositionalCount() == 0
+        || args.getPositional(0) == "list")
     {
         // find the longest key name for formatting
         std::size_t maxsize = 0;
@@ -776,10 +769,14 @@ void ConsoleApp::settingsCommand(const std::string& params)
                 << '\n';
         }
     }
-    else if (command == "reset")
+    else if (args.getPositional(0) == "reset")
     {
         defaultSettings();
         saveSettings();
+    }
+    else
+    {
+        ConsoleApp::printError(usage);
     }
 }
 
@@ -871,11 +868,18 @@ void ConsoleApp::printListing(const arcc::Listing& listing)
             std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
         }
 
+        std::string namestr;
+        if (listing.verbose)
+        {
+            namestr = fmt::format(" ({})", child["data"]["name"]);
+        }
+
         std::cout
             << rang::style::bold
             << ++idx
             << ". "
             << child["data"]["title"].get<std::string>()
+            << namestr
             << rang::style::reset
             << '\n'
             << rang::fg::cyan
