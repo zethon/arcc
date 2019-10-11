@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE(SimpleArgs)
 
     args.clear();
     args.parse("aa --param1=val1 --param2=val2");
-    BOOST_CHECK_EQUAL(args.getTokenCount(), 5u);
+    BOOST_CHECK_EQUAL(args.getTokenCount(), 3u);
     BOOST_CHECK_EQUAL(args.getPositionalCount(), 1u);
     BOOST_CHECK_EQUAL(args.getNamedCount(), 2u);
     BOOST_CHECK_EQUAL(args.getPositional(0), "aa");
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(SimpleArgs)
 
     args.clear();
     args.parse("--limit=10 --verbose --details");
-    BOOST_CHECK_EQUAL(args.getTokenCount(), 4u);
+    BOOST_CHECK_EQUAL(args.getTokenCount(), 3u);
     BOOST_CHECK(args.hasArgument("limit"));
     BOOST_CHECK_EQUAL(args.getNamedArgument("limit"), "10");
     BOOST_CHECK(args.hasArgument("verbose"));
@@ -37,6 +37,15 @@ BOOST_AUTO_TEST_CASE(SimpleArgs)
     BOOST_CHECK_EQUAL(args.getTokenCount(), 0u);
     BOOST_CHECK_EQUAL(args.getPositionalCount(), 0u);
     BOOST_CHECK_EQUAL(args.getNamedCount(), 0u);
+
+    args.clear();
+    args.parse("positional1 -limit 10 --verbose positional2");
+    BOOST_CHECK_EQUAL(args.getTokenCount(), 5u);
+    BOOST_CHECK_EQUAL(args.getPositionalCount(), 2u);
+    BOOST_CHECK_EQUAL(args.getNamedCount(), 2u);
+    BOOST_CHECK_EQUAL(args.getNamedArgument("limit"), "10");
+    BOOST_CHECK_EQUAL(args.getPositional(0), "positional1");
+    BOOST_CHECK_EQUAL(args.getPositional(1), "positional2");
 }
 
 BOOST_AUTO_TEST_CASE(convertToBool)

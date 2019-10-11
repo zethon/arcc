@@ -17,11 +17,11 @@ namespace arcc
 ///
 class SimpleArgs
 {
-    std::string                                 _original;
-    std::vector<std::string>                    _tokenVector;
+    std::string                                     _original;
+    std::vector<std::string>                        _tokenVector;
 
-    std::vector<unsigned int>                   _positionals;
-    std::map<boost::string_view, int>           _named;
+    std::vector<unsigned int>                       _positionals;
+    std::map<std::string, std::string_view>         _named;
     
 public:
     SimpleArgs() {}
@@ -46,7 +46,7 @@ public:
     std::string getPositional(unsigned int index) const;
     
     std::size_t getNamedCount() const;
-    std::string getNamedArgument(const boost::string_view& name) const;
+    std::string getNamedArgument(const std::string& name) const;
     bool hasArgument(const std::string& name) const;
 
     std::size_t getTokenCount() const;

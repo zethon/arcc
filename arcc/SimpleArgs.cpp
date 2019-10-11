@@ -23,8 +23,8 @@ namespace arcc
 std::vector<std::string> tokenizeArgs(const std::string& input)
 {
   typedef boost::escaped_list_separator<char> separator_type;
-  separator_type separator("\\",    // The escape characters.
-                           "= ",    // The separator characters.
+  separator_type separator("",    // The escape characters.
+                           " ",    // The separator characters.
                            "\"\'"); // The quote characters.
 
   // Tokenize the intput.
@@ -35,44 +35,71 @@ std::vector<std::string> tokenizeArgs(const std::string& input)
   std::copy_if(tokens.begin(), tokens.end(), std::back_inserter(result), 
           [](const std::string& s) { return !s.empty(); });
   return result;
-}    
+}
+
+bool validParamName(const std::string_view& name)
+{
+    static const char* validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvqxyz0123456789";
+    return name.find_first_not_of(validChars) == std::string_view::npos;
+}
 
 void SimpleArgs::parse(const std::string& original)
 {
-    const static std::regex dashReg { R"(^\-{1,2}[^\-])" };
-
     if (original.size() == 0) return;
     _original = original;
 
     _tokenVector = tokenizeArgs(_original);
-    std::smatch regmatches;
 
-    for (unsigned int i = 0; i < (unsigned int)_tokenVector.size(); i++)
+    for (auto i = 0u; i < _tokenVector.size(); i++)
     {
-        const std::string& token = _tokenVector.at(i);
+        std::string_view token = _tokenVector.at(i);
 
-        if (std::regex_search(token, regmatches, dashReg))
+        if (boost::starts_with(token, "--"))
         {
-            boost::string_view key = token;
-
-            // remove '-' and possibly '--'
-            key.remove_prefix(1);
-            if (key.at(0) == '-')
+            token.remove_prefix(2);
+            if (const auto equals = token.find_first_of("=");
+                equals != std::string_view::npos)
             {
-                key.remove_prefix(1);
-            }
+                std::string_view key { token.begin(), equals };
+                if (!validParamName(key)) continue;
 
-             if (i < _tokenVector.size() - 1)
-             {
-                _named.insert(std::make_pair(key, ++i));
-             }
-             else
-             {
-                 // allow something like: myprogram --option=true --option2
-                 // so that `--option2` doesn't require a value but is still a 
-                 // named argument
-                 _named.insert(std::make_pair(key, -1));
-             }
+                token.remove_prefix(equals + 1);
+                if (token.size() > 0)
+                {
+                    _named.insert_or_assign(std::string{key}, token);
+                }
+                else
+                {
+                    _named.insert_or_assign(std::string{key}, std::string_view{});
+                }
+            }
+            else
+            {
+                if (!validParamName(token)) continue;
+
+                // allow something like: myprogram --option=true --option2
+                // so that `--option2` doesn't require a value but is still a 
+                // named argument
+                _named.insert_or_assign(std::string{token}, std::string_view{});
+            }
+        }
+        else if (boost::starts_with(token, "-"))
+        {
+            token.remove_prefix(1);
+            if (!validParamName(token)) continue;
+            
+            if (i < _tokenVector.size() - 1)
+            {
+                i++;
+                _named.insert_or_assign(std::string{token}, _tokenVector.at(i));
+            }
+            else
+            {
+                // allow something like: myprogram --option=true --option2
+                // so that `--option2` doesn't require a value but is still a 
+                // named argument
+                _named.insert_or_assign(std::string{token}, std::string_view{});
+            }
         }
         else
         {
@@ -88,7 +115,7 @@ std::size_t SimpleArgs::getPositionalCount() const
 
 std::string SimpleArgs::getPositional(unsigned int index) const 
 {
-    return _tokenVector.at(_positionals.at(index));
+    return std::string { _tokenVector.at(_positionals.at(index)) };
 }
 
 std::size_t SimpleArgs::getNamedCount() const 
@@ -96,11 +123,12 @@ std::size_t SimpleArgs::getNamedCount() const
     return _named.size(); 
 }
 
-std::string SimpleArgs::getNamedArgument(const boost::string_view& name) const 
+std::string SimpleArgs::getNamedArgument(const std::string& name) const 
 { 
-    if (_named.at(name) >= 0)
+    if (const auto& temp = _named.find(name);
+        temp != _named.end())
     {
-        return _tokenVector.at(_named.at(name)); 
+        return std::string { _named.at(name) };
     }
 
     return std::string{};
@@ -118,7 +146,7 @@ std::size_t SimpleArgs::getTokenCount() const
 
 std::string SimpleArgs::getToken(unsigned int index) const
 {
-    return _tokenVector.at(index);
+    return std::string { _tokenVector.at(index) };
 }
 
 } // namespace
