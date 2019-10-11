@@ -4,6 +4,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(ARCC_FILES
+    ../arcc/CommandHistory.cpp
     ../arcc/SimpleArgs.cpp
     ../arcc/utils.cpp
 )

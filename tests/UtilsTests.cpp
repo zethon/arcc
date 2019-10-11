@@ -1,8 +1,38 @@
 #include <boost/test/unit_test.hpp>
 #include "../arcc/SimpleArgs.h"
+#include "../arcc/CommandHistory.h"
 #include "../arcc/utils.h"
 
 BOOST_AUTO_TEST_SUITE(arccutils)
+
+BOOST_AUTO_TEST_CASE(CommandHistory)
+{
+    using arcc::CommandHistory;
+
+    CommandHistory history;
+
+    history.commit("command 1");
+    history.commit("command 2");
+    history.commit("command 3");
+
+
+    BOOST_CHECK_EQUAL(history.size(), 3u);
+    BOOST_CHECK_EQUAL(history.up(), true);
+    BOOST_CHECK_EQUAL(history.getCurrent(), "command 3");
+    BOOST_CHECK_EQUAL(history.up(), true);
+    BOOST_CHECK_EQUAL(history.getCurrent(), "command 2");
+    BOOST_CHECK_EQUAL(history.up(), true);
+    BOOST_CHECK_EQUAL(history.getCurrent(), "command 1");
+    BOOST_CHECK_EQUAL(history.up(), false);
+
+    history.reset();
+    BOOST_CHECK_EQUAL(history.getCurrent(), "");
+    BOOST_CHECK_EQUAL(history.up(), true);
+    BOOST_CHECK_EQUAL(history.getCurrent(), "command 3");
+
+    history.clear();
+    BOOST_CHECK_EQUAL(history.size(), 0u);
+}
 
 BOOST_AUTO_TEST_CASE(SimpleArgs)
 {

@@ -102,7 +102,8 @@ bool CommandHistory::down()
 
 std::string CommandHistory::getCurrent() const
 {
-    if (_buffer.size() > 0)
+    if (_buffer.size() > 0
+        && _currentPos < _buffer.size())
     {
         return _buffer[_currentPos];
     }
