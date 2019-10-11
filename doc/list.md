@@ -1,4 +1,6 @@
-# `list` 
+# `list`
+
+List
 
 ### Usage
 `list (new|hot|rising|contreversial|top) [--limit=<count>] [--sub=<subreddit>]`

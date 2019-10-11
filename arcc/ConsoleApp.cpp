@@ -869,9 +869,13 @@ void ConsoleApp::printListing(const arcc::Listing& listing)
         }
 
         std::string namestr;
-        if (listing.verbose)
+        std::string updownstr;
+        if (listing.details)
         {
             namestr = fmt::format(" ({})", child["data"]["name"]);
+            updownstr = fmt::format(" ({}/{}) ", 
+                std::to_string(child["data"]["ups"].get<std::uint32_t>()),
+                std::to_string(child["data"]["downs"].get<std::uint32_t>()));
         }
 
         std::cout
@@ -889,7 +893,9 @@ void ConsoleApp::printListing(const arcc::Listing& listing)
             << '\n'
             << rang::fg::gray
             << child["data"]["score"].get<int>()
-            << " pts - "
+            << " pts"
+            << updownstr
+            << " - "
             << utils::miniMoment(child["data"]["created_utc"].get<std::uint32_t>())
             << " - "
             << child["data"]["num_comments"].get<int>() << " comments"
@@ -992,6 +998,7 @@ void ConsoleApp::list(const std::string& cmdParams)
         _listing.params.insert_or_assign("t", tval);
     }
 
+    _listing.details = args.hasArgument("details");
     _listing.verbose = args.hasArgument("verbose");
 
     ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}",

@@ -30,6 +30,8 @@ struct Listing
 
     RedditSession::Params       params;
     nlohmann::json              results;
+
+    bool                        details;
     bool                        verbose;
 
     std::string endpoint() const
@@ -64,6 +66,7 @@ struct Listing
         after.clear();
         results.clear();
         verbose = false;
+        details = false;
         count = 0;
         limit = 0;
     }
