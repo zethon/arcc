@@ -60,7 +60,7 @@ void SimpleArgs::parse(const std::string& original)
             if (const auto equals = token.find_first_of("=");
                 equals != std::string_view::npos)
             {
-                std::string_view key { token.begin(), equals };
+                std::string_view key(token.begin(), equals);
                 if (!validParamName(key)) continue;
 
                 token.remove_prefix(equals + 1);
@@ -87,7 +87,7 @@ void SimpleArgs::parse(const std::string& original)
         {
             token.remove_prefix(1);
             if (!validParamName(token)) continue;
-            
+
             if (i < _tokenVector.size() - 1)
             {
                 i++;
