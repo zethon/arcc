@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(NO_OUTPUT_DIRS KEEP_RPATHS)
 
+# optional configuration
+option(BUILD_TEST "Build unit tests (default OFF)" OFF)
+
 # Global definitions
 add_definitions(
     -DCURL_STATICLIB
@@ -99,3 +102,8 @@ add_subdirectory(rang)
 include_directories(rang/include)
 
 add_subdirectory(arcc)
+
+if (BUILD_TEST)
+    enable_testing()
+    add_subdirectory(tests)
+endif (BUILD_TEST)
