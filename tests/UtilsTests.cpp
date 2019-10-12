@@ -84,6 +84,7 @@ BOOST_AUTO_TEST_CASE(convertToBool)
     BOOST_CHECK_EQUAL(utils::convertToBool("TRUE"), true);
     BOOST_CHECK_EQUAL(utils::convertToBool("on"), true);
     BOOST_CHECK_EQUAL(utils::convertToBool("ON"), true);
+    BOOST_CHECK_EQUAL(utils::convertToBool("1"), true);
 
     BOOST_CHECK_EQUAL(utils::convertToBool("false"), false);
     BOOST_CHECK_EQUAL(utils::convertToBool("FALSE"), false);
@@ -91,9 +92,12 @@ BOOST_AUTO_TEST_CASE(convertToBool)
     BOOST_CHECK_EQUAL(utils::convertToBool("off"), false);
     BOOST_CHECK_EQUAL(utils::convertToBool("OFF"), false);
     BOOST_CHECK_EQUAL(utils::convertToBool("OfF"), false);
+    BOOST_CHECK_EQUAL(utils::convertToBool("0"), false);
     
     BOOST_CHECK_NE(utils::convertToBool("true"), false);
     BOOST_CHECK_NE(utils::convertToBool("false"), true);
+
+    BOOST_CHECK_THROW(utils::convertToBool("asdsad"), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(isNumeric)

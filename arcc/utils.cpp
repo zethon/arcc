@@ -2,6 +2,7 @@
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/range/join.hpp>
 #include <fmt/core.h>
 
 #include "utils.h"
@@ -210,25 +211,40 @@ bool isNumeric(const std::string_view& s)
             }) == s.end();
 }
 
-static const std::vector<std::string> boolStrings = { "true", "false", "on", "off" };
+
+static const std::vector<std::string> trueStrings = { "true", "on", "1" };
+static const std::vector<std::string> falseStrings = { "false", "off", "0" };
 
 bool isBoolean(const std::string_view s)
 {
-    return std::find_if(std::begin(boolStrings), std::end(boolStrings),
+    auto temp = boost::join(trueStrings, falseStrings);
+    return std::find_if(std::begin(temp), std::end(temp),
         [s](const std::string& val) -> bool
         {
             return boost::iequals(val,s);
         })
-        != std::end(boolStrings);
+        != std::end(temp);
 }
 
 bool convertToBool(const std::string_view s)
 {
-    if (boost::iequals(s, "true") || boost::iequals(s, "on"))
+    if (std::find_if(
+        std::begin(trueStrings), 
+        std::end(trueStrings),
+        [&s](const std::string& data)
+        {
+            return boost::iequals(data, s);
+        }) != std::end(trueStrings))
     {
         return true;
     }
-    else if(boost::iequals(s, "false") || boost::iequals(s, "off"))
+    else if (std::find_if(
+        std::begin(falseStrings),
+        std::end(falseStrings),
+        [&s](const std::string& data)
+        {
+            return boost::iequals(data, s);
+        }) != std::end(falseStrings))
     {
         return false;
     }
