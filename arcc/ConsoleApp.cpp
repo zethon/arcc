@@ -43,6 +43,17 @@ void ConsoleApp::printError(const std::string& error)
         << std::endl;
 }
 
+void ConsoleApp::printWarning(const std::string& warning)
+{
+    std::cout
+        << rang::fg::yellow
+        << rang::style::bold
+        << warning
+        << rang::fg::reset
+        << rang::style::reset
+        << std::endl;
+}
+
 void ConsoleApp::printStatus(const std::string& status)
 {
     std::cout 
@@ -107,6 +118,18 @@ void ConsoleApp::initCommands()
     addCommand("list,l,ls", "list links and posts", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
     addCommand("next,n", "go to the next page of links and posts", std::bind(&ConsoleApp::next, this, std::placeholders::_1));
     addCommand("previous,p", "go to a previous page of links and posts", std::bind(&ConsoleApp::previous, this, std::placeholders::_1));
+    addCommand("current,c", "list items on the current page", 
+        [this](const std::string&)
+        {
+            if (this->_listing.results.size() > 0)
+            {
+                this->printListing(this->_listing);
+            }
+            else
+            {
+                ConsoleApp::printWarning("there are no items on the current page");
+            }
+        });
 
     addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
     addCommand("login", "login",
@@ -265,6 +288,7 @@ void ConsoleApp::exec(const std::string& rawline)
     std::string params;
 
     boost::algorithm::trim(command);
+
     auto firstspace = command.find(' ');
     if (firstspace != std::string::npos)
     {
@@ -841,8 +865,8 @@ void ConsoleApp::history(const std::string& params)
     }
 }
 
-void ConsoleApp::printListing(const arcc::Listing& listing)
-{
+std::size_t ConsoleApp::printListing(const arcc::Listing& listing)
+{    
     unsigned int idx = 0;
     _lastObjects.clear();
 
@@ -923,6 +947,8 @@ void ConsoleApp::printListing(const arcc::Listing& listing)
 
         _lastObjects.push_back(child);
     }
+
+    return _lastObjects.size();
 }
 
 void ConsoleApp::list(const std::string& cmdParams)
@@ -979,8 +1005,6 @@ void ConsoleApp::list(const std::string& cmdParams)
         _listing.limit = _settings.value("command.list.limit", 5u);
     }
 
-    _listing.count = _listing.limit;
-
     if (_listing.type == "top" && args.hasArgument("t"))
     {
         static const std::vector<std::string> validTValues = {"hour", "day", "week", "month", "year", "all"};
@@ -1009,7 +1033,7 @@ void ConsoleApp::list(const std::string& cmdParams)
     if (!temp.results.is_null())
     {
         _listing = std::move(temp);
-        printListing(_listing);
+        _listing.count += printListing(_listing);
     }
 }
 
@@ -1017,13 +1041,15 @@ void ConsoleApp::next(const std::string&)
 {
     if (_listing.after.empty())
     {
-        ConsoleApp::printError("no more posts");
+        ConsoleApp::printWarning("no more posts");
+        return;
     }
 
     // `_listing.after` is set in the response so, we only
     // need to clear `before` before submitting another
     // request
     _listing.before.clear();
+    _listing.count += _listing.limit;
 
     auto temp = doGetListing(_listing);
     if (!temp.results.is_null())
@@ -1037,16 +1063,19 @@ void ConsoleApp::previous(const std::string&)
 {
     if (_listing.before.empty())
     {
-        ConsoleApp::printError("no more previous posts");
+        ConsoleApp::printWarning("no more previous posts");
+        return;
     }
 
     _listing.after.clear();
+    _listing.count -= (_listing.limit - 1);
 
     auto temp = doGetListing(_listing);
     if (!temp.results.is_null())
     {
         _listing = std::move(temp);
         printListing(_listing);
+        _listing.count -= 1;
     }
 }
 

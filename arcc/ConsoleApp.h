@@ -25,8 +25,8 @@ struct Listing
     std::string                 before;
     std::string                 after;
 
-    std::uint32_t               count;
-    std::uint32_t               limit;
+    std::size_t                 count;
+    std::size_t                 limit;
 
     RedditSession::Params       params;
     nlohmann::json              results;
@@ -106,8 +106,9 @@ class ConsoleApp final
 
 public:
     static void printError(const std::string& error);
+    static void printWarning(const std::string& warning);
     static void printStatus(const std::string& status);
-
+    
     ConsoleApp();
 
     std::string doRedditGet(const std::string& endpoint);
@@ -144,7 +145,7 @@ public:
 
 private:
     void printPrompt() const;
-    void printListing(const arcc::Listing& listing);
+    std::size_t printListing(const arcc::Listing& listing);
 
     void initCommands();
     void initTerminal();
