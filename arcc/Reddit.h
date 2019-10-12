@@ -69,10 +69,17 @@ class RedditSession final
 public:
     using Params = std::map<std::string, std::string>;
 
+    // Reponse to a Request
+    // 0 - the raw JSON text
+    // 1 - the final URL of the request
+    using ResponsePair = std::tuple<std::string, std::string>;
+
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh);
 
-    std::string doGetRequest(const std::string& endpoint, const RedditSession::Params& params = RedditSession::Params{});
+    ResponsePair doGetRequest(const std::string& endpoint,
+                              const RedditSession::Params& params = RedditSession::Params{},
+                              bool verbose = false);
 
     std::string accessToken() const { return _accessToken; }
     std::string refreshToken() const { return _refreshToken; }
@@ -87,5 +94,7 @@ public:
 private:
     void doRefreshToken();   
 };
+
+std::ostream & operator<<(std::ostream& os, const arcc::RedditSession::Params& params);
 
 } // namespace arcc

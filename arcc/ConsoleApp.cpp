@@ -7,6 +7,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 #include <rang.hpp>
 #include <fmt/core.h>
@@ -96,12 +97,16 @@ void ConsoleApp::initTerminal()
 void ConsoleApp::initCommands()
 {
     addCommand("help", "enter help system", std::bind(&ConsoleApp::help, this, std::placeholders::_1));
-    addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
-    addCommand("list,l,ls", "list stuff", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
-    addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
     addCommand("set", "set the value of a setting", std::bind(&ConsoleApp::setCommand, this, std::placeholders::_1));
     addCommand("settings", "settings options", std::bind(&ConsoleApp::settingsCommand, this, std::placeholders::_1));
     addCommand("history", "command history options", std::bind(&ConsoleApp::history, this, std::placeholders::_1));
+
+    addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
+    addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
+
+    addCommand("list,l,ls", "list links and posts", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
+    addCommand("next,n", "go to the next page of links and posts", std::bind(&ConsoleApp::next, this, std::placeholders::_1));
+    addCommand("previous,p", "go to a previous page of links and posts", std::bind(&ConsoleApp::previous, this, std::placeholders::_1));
 
     addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
     addCommand("login", "login",
@@ -203,7 +208,10 @@ void ConsoleApp::initCommands()
     addCommand("time", "print the current epoch time",
         [](const std::string&)
         {
-            std::cout << std::time(nullptr) << std::endl;
+            auto t = std::time(nullptr);
+            auto tm = *std::localtime(&t);
+            std::cout << "time  : " << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << '\n';
+            std::cout << "epoch : " << t << std::endl;
         });
 }
 
@@ -278,7 +286,7 @@ void ConsoleApp::exec(const std::string& rawline)
                 }
                 catch (const std::exception& ex)
                 {
-                    std::cout << ex.what() << std::endl;
+                    ConsoleApp::printError(ex.what());
                 }
                 
                 executed = true;
@@ -372,7 +380,7 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const RedditSes
 
     if (_reddit)
     {
-        retval = _reddit->doGetRequest(endpoint, params);
+        std::tie(retval, std::ignore) = _reddit->doGetRequest(endpoint, params);
     }
     else
     {
@@ -382,26 +390,112 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const RedditSes
     return retval;
 }
 
-std::string ConsoleApp::doSubRedditGet(const std::string& endpoint)
+arcc::Listing ConsoleApp::doGetListing(const arcc::Listing& listing)
 {
-    return doSubRedditGet(endpoint, RedditSession::Params{});
-}
-
-std::string ConsoleApp::doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params)
-{
-    std::string retval;
+    arcc::Listing retval;
 
     if (_reddit)
     {
-        retval = _reddit->doGetRequest(_location + endpoint, params);
+        // there are a few params we want to specifically set
+        // so we create a copy
+        RedditSession::Params params = listing.params;
+
+        if (listing.before.empty())
+        {
+            params.erase("before");
+        }
+        else
+        {
+            params.insert_or_assign("before", listing.before);
+        }
+
+        if (listing.after.empty())
+        {
+            params.erase("after");
+        }
+        else
+        {
+            params.insert_or_assign("after", listing.after);
+        }
+
+        if (listing.limit == 0)
+        {
+            params.erase("limit");
+        }
+        else
+        {
+            params.insert_or_assign("limit", std::to_string(listing.limit));
+        }
+
+        if (listing.count == 0)
+        {
+            params.erase("count");
+        }
+        else
+        {
+            params.insert_or_assign("count", std::to_string(listing.count));
+        }
+
+        [[maybe_unused]] const auto& [retstr, url]
+            = _reddit->doGetRequest(listing.endpoint(), params, listing.verbose);
+
+        if (retstr.size() > 0)
+        {
+            const auto reply = nlohmann::json::parse(retstr);
+            if (reply.find("data") == reply.end())
+            {
+                throw std::runtime_error("the response was malformed");
+            }
+
+            // copy the passed in object
+            retval = listing;
+
+            // convienence
+            const auto& data = reply["data"];
+
+            if (data.find("before") != data.end()
+                && !data["before"].is_null())
+            {
+                retval.before = data["before"];
+            }
+
+            if (data.find("after") != data.end()
+                && !data["after"].is_null())
+            {
+                retval.after = data["after"];
+            }
+
+            retval.count = 1;
+            retval.results = std::move(reply);
+        }
+        else
+        {
+            throw std::runtime_error("the response was empty");
+        }
     }
     else
     {
-        std::cout << "you must be logged in first. type `login` to sign into reddit" << std::endl;
+        throw std::runtime_error("you must be logged in first. type `login` to sign into reddit");
     }
 
     return retval;
 }
+
+//std::string ConsoleApp::doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params)
+//{
+//    std::string retval;
+
+//    if (_reddit)
+//    {
+//        retval = _reddit->doGetRequest(endpoint, params);
+//    }
+//    else
+//    {
+//        std::cout << "you must be logged in first. type `login` to sign into reddit" << std::endl;
+//    }
+
+//    return retval;
+//}
 
 bool ConsoleApp::loadSession()
 {
@@ -493,141 +587,6 @@ void ConsoleApp::printPrompt() const
     }
 
     std::cout << std::flush;
-}
-
-void ConsoleApp::list(const std::string& cmdParams)
-{
-    static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
-
-    SimpleArgs args { cmdParams };
-
-    std::string subReddit;
-    if (args.hasArgument("sub"))
-    {
-        subReddit = args.getNamedArgument("sub");
-    }
-
-    std::string listType = "hot";
-    if (args.getPositionalCount() > 0)
-    {
-        listType = args.getPositional(0);
-        if (std::find(std::begin(validTypes), std::end(validTypes), listType) == std::end(validTypes))
-        {
-            ConsoleApp::printError("invalid list type '" + listType + "'");
-            return;
-        }
-    }
-    else
-    {
-        listType = _settings.value("command.list.type", listType);
-    }
-
-    std::uint16_t limit = 5;
-    if (args.hasArgument("limit"))
-    {
-        auto limitStr = args.getNamedArgument("limit");
-        try
-        {
-            limit = boost::lexical_cast<unsigned int>(limitStr);
-        }
-        catch (const boost::bad_lexical_cast&)
-        {
-            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitStr + "'");
-            return;
-        }
-    }
-    else
-    {
-        limit = _settings.value("command.list.limit", limit);
-    }
-
-    RedditSession::Params params;
-    params.insert(std::make_pair("limit", boost::lexical_cast<std::string>(limit)));
-
-    ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}", 
-        limit, listType, (subReddit.empty() ? "all" : subReddit)));
-        
-    auto jsontext = doSubRedditGet(subReddit + "/" + listType, params);
-    if (jsontext.size() > 0)
-    {
-        const auto jreply = nlohmann::json::parse(jsontext);
-
-        if (args.hasArgument("json"))
-        {
-            // roundtrip the JSON so we can get pretty indentation
-            std::cout << jreply.dump(4) << std::endl;
-        }
-        else
-        {
-            unsigned int idx = 0;
-            _lastObjects.clear();
-            
-            for (const auto& child : jreply["data"]["children"])
-            {
-                std::string flairText;
-                try
-                {
-                    flairText = child["data"]["link_flair_text"].get<std::string>();
-                }
-                catch (const nlohmann::json::type_error&)
-                {
-                    // swallow this
-                }
-
-                if (flairText.size() > 0)
-                {
-                    flairText = "[" + flairText + "]";
-                }
-
-                if (child["data"]["stickied"].get<bool>())
-                {
-                    std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
-                }                
-
-                std::cout 
-                    << rang::style::bold
-                    << ++idx
-                    << ". "
-                    << child["data"]["title"].get<std::string>()
-                    << rang::style::reset
-                    << '\n'
-                    << rang::fg::cyan
-                    << rang::style::underline
-                    << child["data"]["url"].get<std::string>()
-                    << rang::style::reset
-                    << '\n'
-                    << rang::fg::gray
-                    << child["data"]["score"].get<int>() 
-                    << " pts - "
-                    << utils::miniMoment(child["data"]["created_utc"].get<std::uint32_t>())
-                    << " - "
-                    << child["data"]["num_comments"].get<int>() << " comments"
-                    << '\n'
-                    << rang::fg::magenta
-                    << child["data"]["author"].get<std::string>()
-                    << ' '
-                    << rang::fg::yellow
-                    << child["data"]["subreddit_name_prefixed"].get<std::string>();
-
-                if (flairText.size() > 0)
-                {
-                    std::cout
-                        << ' '
-                        << rang::fg::red
-                        << flairText;
-                }
-
-                std::cout
-                    << rang::fg::reset
-                    << rang::bg::reset
-                    << rang::style::reset
-                    << '\n'
-                    << std::endl;
-
-                _lastObjects.push_back(child);
-            }
-        }
-    }
 }
 
 void ConsoleApp::whoami()
@@ -784,19 +743,12 @@ void ConsoleApp::setCommand(const std::string& params)
 
 void ConsoleApp::settingsCommand(const std::string& params)
 {
-    static const std::string usage = "usage: settings [list]";
+    static const std::string usage = "usage: settings [list|rest]";
 
     arcc::SimpleArgs args{params};
 
-    if (args.getPositionalCount() != 1)
-    {
-        ConsoleApp::printError(usage);
-        return;
-    }
-
-    const auto& command = args.getPositional(0);
-    
-    if (command == "list" || command.empty())
+    if (args.getPositionalCount() == 0
+        || args.getPositional(0) == "list")
     {
         // find the longest key name for formatting
         std::size_t maxsize = 0;
@@ -817,10 +769,14 @@ void ConsoleApp::settingsCommand(const std::string& params)
                 << '\n';
         }
     }
-    else if (command == "reset")
+    else if (args.getPositional(0) == "reset")
     {
         defaultSettings();
         saveSettings();
+    }
+    else
+    {
+        ConsoleApp::printError(usage);
     }
 }
 
@@ -882,6 +838,215 @@ void ConsoleApp::history(const std::string& params)
         out.close();
 
         _history.clear();
+    }
+}
+
+void ConsoleApp::printListing(const arcc::Listing& listing)
+{
+    unsigned int idx = 0;
+    _lastObjects.clear();
+
+    for (const auto& child : listing.results["data"]["children"])
+    {
+        std::string flairText;
+        try
+        {
+            flairText = child["data"]["link_flair_text"].get<std::string>();
+        }
+        catch (const nlohmann::json::type_error&)
+        {
+            // swallow this
+        }
+
+        if (flairText.size() > 0)
+        {
+            flairText = "[" + flairText + "]";
+        }
+
+        if (child["data"]["stickied"].get<bool>())
+        {
+            std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
+        }
+
+        std::string namestr;
+        std::string updownstr;
+        if (listing.details)
+        {
+            namestr = fmt::format(" ({})", child["data"]["name"]);
+            updownstr = fmt::format(" ({}/{}) ", 
+                std::to_string(child["data"]["ups"].get<std::uint32_t>()),
+                std::to_string(child["data"]["downs"].get<std::uint32_t>()));
+        }
+
+        std::cout
+            << rang::style::bold
+            << ++idx
+            << ". "
+            << child["data"]["title"].get<std::string>()
+            << namestr
+            << rang::style::reset
+            << '\n'
+            << rang::fg::cyan
+            << rang::style::underline
+            << child["data"]["url"].get<std::string>()
+            << rang::style::reset
+            << '\n'
+            << rang::fg::gray
+            << child["data"]["score"].get<int>()
+            << " pts"
+            << updownstr
+            << " - "
+            << utils::miniMoment(child["data"]["created_utc"].get<std::uint32_t>())
+            << " - "
+            << child["data"]["num_comments"].get<int>() << " comments"
+            << '\n'
+            << rang::fg::magenta
+            << child["data"]["author"].get<std::string>()
+            << ' '
+            << rang::fg::yellow
+            << child["data"]["subreddit_name_prefixed"].get<std::string>();
+
+        if (flairText.size() > 0)
+        {
+            std::cout
+                << ' '
+                << rang::fg::red
+                << flairText;
+        }
+
+        std::cout
+            << rang::fg::reset
+            << rang::bg::reset
+            << rang::style::reset
+            << '\n'
+            << std::endl;
+
+        _lastObjects.push_back(child);
+    }
+}
+
+void ConsoleApp::list(const std::string& cmdParams)
+{
+    _listing.reset();
+
+    SimpleArgs args{ cmdParams };
+
+    if (args.hasArgument("sub"))
+    {
+        _listing.subreddit = args.getNamedArgument("sub");
+    }
+    else
+    {
+        _listing.subreddit = _location;
+    }
+
+    if (args.getPositionalCount() > 0)
+    {
+        static const std::vector<std::string> validTypes = {"new", "hot", "rising", "controversial", "top"};
+
+        auto temp = args.getPositional(0);
+        if (std::find(std::begin(validTypes), std::end(validTypes), temp) == std::end(validTypes))
+        {
+            ConsoleApp::printError(fmt::format("invalid list type '{}'", temp));
+            ConsoleApp::printStatus(fmt::format("valid values: {}",
+                boost::algorithm::join(validTypes,", ")));
+
+            _listing.reset();
+            return;
+        }
+
+        _listing.type = temp;
+    }
+    else
+    {
+        _listing.type = _settings.value("command.list.type", "hot");
+    }
+
+    if (args.hasArgument("limit"))
+    {
+        auto limitstr = args.getNamedArgument("limit");
+        if (!utils::isNumeric(limitstr))
+        {
+            ConsoleApp::printError("parameter 'limit' has invalid value '" + limitstr + "'");
+            _listing.reset();
+            return;
+        }
+
+        _listing.limit = static_cast<std::uint32_t>(std::stoul(limitstr));
+    }
+    else
+    {
+        _listing.limit = _settings.value("command.list.limit", 5u);
+    }
+
+    _listing.count = _listing.limit;
+
+    if (_listing.type == "top" && args.hasArgument("t"))
+    {
+        static const std::vector<std::string> validTValues = {"hour", "day", "week", "month", "year", "all"};
+        const auto& tval = args.getNamedArgument("t");
+        if (std::find(std::begin(validTValues), std::end(validTValues), tval)
+                == std::end(validTValues))
+        {
+            ConsoleApp::printError(fmt::format("invalid t-value with 'top' param '{}'", tval));
+            ConsoleApp::printStatus(fmt::format("valid values: {}",
+                boost::algorithm::join(validTValues,", ")));
+            _listing.reset();
+            return;
+        }
+
+        _listing.params.insert_or_assign("t", tval);
+    }
+
+    _listing.details = args.hasArgument("details");
+    _listing.verbose = args.hasArgument("verbose");
+
+    ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}",
+        _listing.limit, _listing.type,
+        (_listing.subreddit.empty() ? "/" : _listing.subreddit)));
+
+    auto temp = doGetListing(_listing);
+    if (!temp.results.is_null())
+    {
+        _listing = std::move(temp);
+        printListing(_listing);
+    }
+}
+
+void ConsoleApp::next(const std::string&)
+{
+    if (_listing.after.empty())
+    {
+        ConsoleApp::printError("no more posts");
+    }
+
+    // `_listing.after` is set in the response so, we only
+    // need to clear `before` before submitting another
+    // request
+    _listing.before.clear();
+
+    auto temp = doGetListing(_listing);
+    if (!temp.results.is_null())
+    {
+        _listing = std::move(temp);
+        printListing(_listing);
+    }
+}
+
+void ConsoleApp::previous(const std::string&)
+{
+    if (_listing.before.empty())
+    {
+        ConsoleApp::printError("no more previous posts");
+    }
+
+    _listing.after.clear();
+
+    auto temp = doGetListing(_listing);
+    if (!temp.results.is_null())
+    {
+        _listing = std::move(temp);
+        printListing(_listing);
     }
 }
 
