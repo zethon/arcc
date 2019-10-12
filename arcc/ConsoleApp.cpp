@@ -490,7 +490,6 @@ arcc::Listing ConsoleApp::doGetListing(const arcc::Listing& listing)
                 retval.after = data["after"];
             }
 
-            retval.count = 1;
             retval.results = std::move(reply);
         }
         else
@@ -1066,7 +1065,8 @@ void ConsoleApp::next(const std::string&)
 
 void ConsoleApp::previous(const std::string&)
 {
-    if (_listing.before.empty())
+    if (_listing.before.empty()
+        || (_listing.count - _listing.limit) <= 0)
     {
         ConsoleApp::printWarning("no more previous posts");
         return;
