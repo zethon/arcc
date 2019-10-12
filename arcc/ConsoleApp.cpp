@@ -276,6 +276,7 @@ void ConsoleApp::defaultSettings()
     _settings["command.list.limit"] = 5;
     _settings["command.list.type"] = "hot";
     _settings["command.view.type"] = "url";
+    _settings["command.go.autolist"] = true;
 }
 
 void ConsoleApp::exec(const std::string& rawline)
@@ -642,6 +643,10 @@ void ConsoleApp::go(const std::string& params)
         if (!setLocation(location))
         {
             ConsoleApp::printError("invalid subreddit '" + args.getToken(0) + "'");
+        }
+        else if (_settings.value("command.go.autolist", (bool)false))
+        {
+            list(std::string{});
         }
     }
     else
