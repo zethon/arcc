@@ -111,4 +111,9 @@ std::string CommandHistory::getCurrent() const
     return std::string{};
 }
 
+std::string CommandHistory::at(std::size_t index) const
+{
+    return _buffer[index];
+}
+
 } // namespace arcc

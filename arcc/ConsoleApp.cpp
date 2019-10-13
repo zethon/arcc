@@ -281,14 +281,40 @@ void ConsoleApp::defaultSettings()
 
 void ConsoleApp::exec(const std::string& rawline)
 {
+    const static std::regex histre{ R"(^!(\d+)\s*(.*)$)" };
     bool executed = false;
 
     std::cout << std::endl;
 
+    std::string historyCommand{ rawline };
     std::string command { rawline };
     std::string params;
 
     boost::algorithm::trim(command);
+
+    if (std::smatch match; std::regex_match(command, match, histre)
+        && match.size() > 1 && match[1].str().size() > 0)
+    {
+        assert(utils::isNumeric(match[1].str()));
+        assert(match.size() == 3);
+
+        auto index = std::stoul(match[1].str())-1;
+        if (index >= _history.size())
+        {
+            ConsoleApp::printError(fmt::format("!{} event not found", match[1].str()));
+            return;
+        }
+        
+        historyCommand = command = fmt::format("{} {}",
+            _history.at(index),
+            match[2].str());
+
+        // trim again in case we added any whitespace
+        boost::algorithm::trim(command);
+
+        // print the command we're executing
+        std::cout << command << std::endl;
+    }
 
     auto firstspace = command.find(' ');
     if (firstspace != std::string::npos)
@@ -307,7 +333,7 @@ void ConsoleApp::exec(const std::string& rawline)
                 {
                     // TODO: optimize out the std::string()
                     c.handler_(params);
-                    _history.commit(rawline);
+                    _history.commit(historyCommand);
                 }
                 catch (const std::exception& ex)
                 {
@@ -504,22 +530,6 @@ arcc::Listing ConsoleApp::doGetListing(const arcc::Listing& listing)
 
     return retval;
 }
-
-//std::string ConsoleApp::doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params)
-//{
-//    std::string retval;
-
-//    if (_reddit)
-//    {
-//        retval = _reddit->doGetRequest(endpoint, params);
-//    }
-//    else
-//    {
-//        std::cout << "you must be logged in first. type `login` to sign into reddit" << std::endl;
-//    }
-
-//    return retval;
-//}
 
 bool ConsoleApp::loadSession()
 {
@@ -838,17 +848,16 @@ void ConsoleApp::history(const std::string& params)
 
     if (args.getPositionalCount() == 0)
     {
-        std::uint16_t index = 0;
-        for (const auto& c : _history)
+        for (auto index = 0u; index < _history.size(); index++)
         {
             std::cout
                 << std::right
                 << std::setw(5)
-                << ++index
+                << index + 1
                 << std::left
                 << std::setw(5)
                 << ' '
-                << c
+                << _history.at(index)
                 << '\n';
         }
 
@@ -1029,13 +1038,13 @@ void ConsoleApp::list(const std::string& cmdParams)
     _listing.details = args.hasArgument("details");
     _listing.verbose = args.hasArgument("verbose");
 
-    ConsoleApp::printStatus(fmt::format("retrieving {} {} items from {}",
-        _listing.limit, _listing.type,
-        (_listing.subreddit.empty() ? "/" : _listing.subreddit)));
-
     auto temp = doGetListing(_listing);
     if (!temp.results.is_null())
     {
+        ConsoleApp::printStatus(fmt::format("showing {} '{}' items from '{}'",
+            _listing.limit, _listing.type,
+            (_listing.subreddit.empty() ? "/" : _listing.subreddit)));
+
         _listing = std::move(temp);
         _listing.count += printListing(_listing);
     }
