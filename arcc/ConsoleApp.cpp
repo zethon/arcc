@@ -350,7 +350,6 @@ void ConsoleApp::exec(const std::string& rawline)
                     // TODO: optimize out the std::string()
                     c.handler_(params);
                     _history.commit(historyCommand);
-                    refreshSettings();
                 }
                 catch (const std::exception& ex)
                 {
@@ -793,6 +792,7 @@ void ConsoleApp::setCommand(const std::string& params)
     }
 
     saveSettings();
+    refreshSettings();
     ConsoleApp::printStatus(fmt::format("setting '{}' set to '{}'", result[0], result[1]));
 }
 
