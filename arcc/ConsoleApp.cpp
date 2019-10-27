@@ -112,7 +112,7 @@ void ConsoleApp::initCommands()
     addCommand("settings", "settings options", std::bind(&ConsoleApp::settingsCommand, this, std::placeholders::_1));
     addCommand("history", "command history options", std::bind(&ConsoleApp::history, this, std::placeholders::_1));
 
-    addCommand("go,g", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
+    addCommand("go,g,cd", "go to a subreddit", std::bind(&ConsoleApp::go, this, std::placeholders::_1));
     addCommand("view,v", "view a listed item's link or comments", std::bind(&ConsoleApp::view, this, std::placeholders::_1));
 
     addCommand("list,l,ls", "list links and posts", std::bind(&ConsoleApp::list, this, std::placeholders::_1));
@@ -660,7 +660,8 @@ void ConsoleApp::go(const std::string& params)
     if (args.getTokenCount() > 0)
     {
         auto location = args.getToken(0);
-        if (!boost::istarts_with(location, "/r/"))
+        if (location != "/" &&
+            !boost::istarts_with(location, "/r/"))
         {
             location = "/r/" + location;
         }
