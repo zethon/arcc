@@ -3,74 +3,18 @@
 
 #pragma once
 
-#include <boost/algorithm/string.hpp>
-
 #include <nlohmann/json.hpp>
 
 #include "Reddit.h"
 #include "Terminal.h"
 #include "CommandHistory.h"
+#include "Listing.h"
 
 namespace arcc
 {
 
 class RedditSession;
 using RedditSessionPtr = std::shared_ptr<RedditSession>;
-
-struct Listing
-{
-    std::string                 subreddit;
-    std::string                 type;
-
-    std::string                 before;
-    std::string                 after;
-
-    std::size_t                 count;
-    std::size_t                 limit;
-
-    RedditSession::Params       params;
-    nlohmann::json              results;
-
-    bool                        details;
-    bool                        verbose;
-
-    std::string endpoint() const
-    {
-        std::string retval;
-        if (!subreddit.empty() && subreddit != "/")
-        {
-            if (!boost::starts_with(subreddit, "/r"))
-            {
-                retval.append("/r");
-            }
-
-            retval.append(subreddit);
-        }
-
-        // some times a "/" can sneak into the subreddit
-        // name so check for it before creating a "//"
-        // which can be problematic
-        if (!boost::ends_with(retval, "/")) retval.append("/");
-
-        // now at `hot`, `new`, etc...
-        retval.append(type);
-        return retval;
-    }
-
-    void reset()
-    {
-        subreddit.clear();
-        type.clear();
-        params.clear();
-        before.clear();
-        after.clear();
-        results.clear();
-        verbose = false;
-        details = false;
-        count = 0;
-        limit = 0;
-    }
-};
 
 struct ConsoleCommand
 {
