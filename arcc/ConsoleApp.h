@@ -153,6 +153,7 @@ private:
     void initSettings();
     void saveSettings();
     void defaultSettings();
+    void refreshSettings();
 
     void whoami();
     void list(const std::string& params);

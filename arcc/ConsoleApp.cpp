@@ -273,10 +273,26 @@ void ConsoleApp::defaultSettings()
     _settings.clear();
 
     // create the default config
+    _settings["global.terminal.color"] = true;
     _settings["command.list.limit"] = 5;
     _settings["command.list.type"] = "hot";
     _settings["command.view.type"] = "url";
     _settings["command.go.autolist"] = true;
+}
+
+// poor man's way of updating settings, would be better
+// to optionally store a callback with each value and 
+// detect when it's been changed
+void ConsoleApp::refreshSettings()
+{
+    if (_settings.value("global.terminal.color", false))
+    {
+        rang::setControlMode(rang::control::Auto);
+    }
+    else
+    {
+        rang::setControlMode(rang::control::Off);
+    }
 }
 
 void ConsoleApp::exec(const std::string& rawline)
@@ -776,6 +792,7 @@ void ConsoleApp::setCommand(const std::string& params)
     }
 
     saveSettings();
+    refreshSettings();
     ConsoleApp::printStatus(fmt::format("setting '{}' set to '{}'", result[0], result[1]));
 }
 
