@@ -184,6 +184,9 @@ void ConsoleApp::initCommands()
     addCommand("about", "information about this arcc",
         [](const std::string&) { utils::openBrowser("https://github.com/zethon/arcc"); });
 
+    addCommand("issue,issues,bug,bugs,", "report an issue with arcc",
+        [](const std::string&) { utils::openBrowser("https://github.com/zethon/arcc/issues"); });
+
     addCommand("open,launch", "open a website in the default browser",
         [](const std::string& params)
         {
