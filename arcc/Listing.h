@@ -7,29 +7,51 @@
 
 #include <nlohmann/json_fwd.hpp>
 
-#include "Reddit.h"
-
 namespace arcc
 {
 
-struct Listing
+class RedditSession;
+using SessionPtr = std::weak_ptr<RedditSession>;
+
+using Params = std::map<std::string, std::string>;
+
+class Listing
 {
+    friend class RedditSession;
+
+    SessionPtr                  _sessionPtr;
+
+    std::string                 _after;
+    std::string                 _before;
+
+    std::size_t                 _limit;
+    std::size_t                 _count;
+
+    std::string                 _endpoint;
+
+    nlohmann::json              _results;
+
     std::string                 subreddit;
     std::string                 type;
 
-    std::string                 before;
-    std::string                 after;
-
-    std::size_t                 count;
-    std::size_t                 limit;
-
-    RedditSession::Params       params;
-    nlohmann::json              results;
-
+    Params                      params;
     bool                        details;
     bool                        verbose;
 
-    std::string endpoint() const;
+public:
+
+    void setSession(SessionPtr val) { _sessionPtr = val; }
+
+    void setEndpoint(const std::string& val) { _endpoint = val; }
+    std::string endpoint() const { return _endpoint; }
+
+    std::string after() const { return _after; }
+    std::string before() const { return _before; }
+
+    std::size_t limit() const { return _limit; }
+    std::size_t count() const { return _count; }
+
+    const nlohmann::json& results() const { return _results; }
 
     void reset();
 };

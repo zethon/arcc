@@ -87,7 +87,7 @@ void OAuth2Login::start()
     _server.start();
 }
 
-std::string buildQueryParamString(const RedditSession::Params& params)
+std::string buildQueryParamString(const Params& params)
 {
     std::string retval;
 
@@ -135,9 +135,28 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
     }
 }
 
+Listing RedditSession::getListing(const std::string& endpoint, const Params& params)
+{
+    [[maybe_unused]] const auto [jsontext, url] = doGetRequest(endpoint, params);
+    
+    Listing listing;
+    listing.setSession(shared_from_this());
+
+    if (jsontext.size() > 0)
+    {
+        const auto reply = nlohmann::json::parse(jsontext);
+        if (reply.find("data") == reply.end())
+        {
+            throw std::runtime_error("the listing response was malformed");
+        }
+    }
+
+    return listing;
+}
+
 auto RedditSession::doGetRequest(
     const std::string& endpoint,
-    const RedditSession::Params& params,
+    const Params& params,
     bool verbose)
     -> ResponsePair
 {
@@ -188,7 +207,7 @@ void RedditSession::doRefreshToken()
     }
 }
 
-std::ostream& operator<<(std::ostream& os, const RedditSession::Params& params)
+std::ostream& operator<<(std::ostream& os, const Params& params)
 {
     char prefix = '{';
 

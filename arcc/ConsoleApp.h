@@ -56,11 +56,11 @@ public:
     ConsoleApp();
 
     std::string doRedditGet(const std::string& endpoint);
-    std::string doRedditGet(const std::string& endpoint, const RedditSession::Params& params);
+    std::string doRedditGet(const std::string& endpoint, const Params& params);
 
     // these will automatically prepred `_location` to the endpoint
     arcc::Listing doGetListing(const arcc::Listing& listing);
-    std::string doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params);
+    std::string doSubRedditGet(const std::string& endpoint, const Params& params);
 
     void exec(const std::string& rawline);
     void run();

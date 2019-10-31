@@ -9,14 +9,14 @@ set(ARCC_FILES
     ../arcc/utils.cpp
 )
 
-set(UTILS_TESTS
-    UtilsTests.cpp
+set(UTILS_FILES
+    TestUtils.cpp
 )
 
 add_executable(TestUtils
     main.cpp
     ${ARCC_FILES}
-    ${UTILS_TESTS}
+    ${UTILS_FILES}
 )
 
 target_link_libraries(TestUtils
@@ -26,3 +26,31 @@ target_link_libraries(TestUtils
 add_test(NAME TestUtils
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/TestUtils
 )
+
+if (BUILD_SESSION_TEST)
+    set(SESSION_FILES
+        TestSession.cpp
+        ../arcc/ConsoleApp.cpp
+        ../arcc/Listing.cpp
+        ../arcc/Reddit.cpp
+        ../arcc/WebClient.cpp
+    )
+
+    if (WIN32)
+        list(APPEND SESSION_FILES ../arcc/TerminalWindows.cpp)
+    endif(WIN32)
+
+    add_executable(TestSession
+        main.cpp
+        ${ARCC_FILES}
+        ${SESSION_FILES}
+    )
+
+    target_link_libraries(TestSession
+        ${CONAN_LIBS}
+    )
+
+    add_test(NAME TestSession
+        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/TestSession
+    )
+endif (BUILD_SESSION_TEST)
