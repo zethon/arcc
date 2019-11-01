@@ -38,7 +38,9 @@ if (BUILD_SESSION_TEST)
 
     if (WIN32)
         list(APPEND SESSION_FILES ../arcc/TerminalWindows.cpp)
-    endif(WIN32)
+    elseif (UNIX)
+        list(APPEND SESSION_FILES ../arcc/TerminalPosix.cpp)
+    endif()
 
     add_executable(TestSession
         main.cpp

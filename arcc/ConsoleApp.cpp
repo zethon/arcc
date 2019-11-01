@@ -457,9 +457,9 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const Params& p
     return retval;
 }
 
-arcc::Listing ConsoleApp::doGetListing(const arcc::Listing& listing)
+arcc::ListingPtr ConsoleApp::doGetListing(const arcc::Listing& listing)
 {
-    arcc::Listing retval; 
+    std::unique_ptr<Listing> retval;
 
     //if (_reddit)
     //{
@@ -898,7 +898,7 @@ void ConsoleApp::history(const std::string& params)
 
 std::size_t ConsoleApp::printListing(const arcc::Listing& listing)
 {    
-    unsigned int idx = 0;
+    [[maybe_unused]] unsigned int idx = 0;
     _lastObjects.clear();
 
     //for (const auto& child : listing.results["data"]["children"])
@@ -1055,9 +1055,9 @@ void ConsoleApp::list(const std::string& cmdParams)
 
         limit = static_cast<std::uint32_t>(std::stoul(limitstr));
     }
-    listParams.insert_or_assign("limit", std::to_string(limit));
+//    listParams.insert_or_assign("limit", std::to_string(limit));
 
-    auto listing = _reddit->getListing(endpoint, listParams);
+    auto listing = _reddit->getListing(endpoint, listParams, limit);
 
     //_listing.details = args.hasArgument("details");
     //_listing.verbose = args.hasArgument("verbose");

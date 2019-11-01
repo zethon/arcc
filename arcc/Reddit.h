@@ -77,7 +77,9 @@ public:
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh);
 
-    Listing getListing(const std::string& endpoing, const Params& params = Params{});
+    ListingPtr getListing(const std::string& endpoint,
+                       const Params& params,
+                       std::size_t limit);
 
     ResponsePair doGetRequest(const std::string& endpoint,
                               const Params& params = Params{},

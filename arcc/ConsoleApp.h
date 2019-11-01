@@ -41,7 +41,7 @@ class ConsoleApp final
 
     std::vector<ConsoleCommand>     _commands;
 
-    Listing                         _listing;
+    std::unique_ptr<Listing>        _listing;
     std::vector<nlohmann::json>     _lastObjects;
 
     bool                            _doExit = false;
@@ -59,7 +59,7 @@ public:
     std::string doRedditGet(const std::string& endpoint, const Params& params);
 
     // these will automatically prepred `_location` to the endpoint
-    arcc::Listing doGetListing(const arcc::Listing& listing);
+    ListingPtr doGetListing(const arcc::Listing& listing);
     std::string doSubRedditGet(const std::string& endpoint, const Params& params);
 
     void exec(const std::string& rawline);
