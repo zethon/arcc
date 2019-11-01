@@ -21,39 +21,35 @@ class Listing
 
     SessionPtr                  _sessionPtr;
 
+    std::string                 _endpoint;
+
     std::string                 _after;
     std::string                 _before;
 
     std::size_t                 _limit;
     std::size_t                 _count;
 
-    std::string                 _endpoint;
-
     nlohmann::json              _results;
-
-    std::string                 subreddit;
-    std::string                 type;
-
-    Params                      params;
-    bool                        details;
-    bool                        verbose;
 
 public:
 
-    void setSession(SessionPtr val) { _sessionPtr = val; }
+    Listing() = default;
+    Listing(SessionPtr session, const std::string& endpoint);
 
-    void setEndpoint(const std::string& val) { _endpoint = val; }
-    std::string endpoint() const { return _endpoint; }
-
-    std::string after() const { return _after; }
-    std::string before() const { return _before; }
-
-    std::size_t limit() const { return _limit; }
-    std::size_t count() const { return _count; }
+    Listing getNextPage() const;
+    Listing getPreviousPage() const;
 
     const nlohmann::json& results() const { return _results; }
+    const nlohmann::json& children() const
+    {
+        return _results["data"]["children"];
+    }
 
-    void reset();
+    std::string endpoint() const { return _endpoint; }
+    std::string after() const { return _after; }
+    std::string before() const { return _before; }
+    std::size_t limit() const { return _limit; }
+    std::size_t count() const { return _count; }
 };
 
 } // namespace

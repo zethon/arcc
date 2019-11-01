@@ -6,6 +6,8 @@
 #include "../arcc/ConsoleApp.h"
 #include "../arcc/Reddit.h"
 
+using namespace std::string_literals;
+
 BOOST_AUTO_TEST_SUITE(Session)
 
 arcc::RedditSessionPtr loadSession(const std::string& filename)
@@ -46,8 +48,17 @@ BOOST_AUTO_TEST_CASE(TestListing)
     auto session = loadSession(R"(C:\Users\aclau\.arcc_session)");
 
     arcc::Params params;
-    params.insert_or_assign("count", "20");
-    auto listing = session->getListing("/r/deadsubs/new/", params);
+    params.insert_or_assign("limit", "24");
+    arcc::Listing biglist = session->getListing("/r/deadsubs/new/", params);
+    BOOST_REQUIRE(biglist.endpoint() == "/r/deadsubs/new/"s);
+    BOOST_REQUIRE(biglist.children().size() == 24);
+
+    params.clear();
+    params.insert_or_assign("limit", 4);
+    arcc::Listing listing = session->getListing("/r/deadsubs/new", params);
+
+
+
     //listing = listing.getNextPage();
     //listing = listing.getPreviousPage();
 }

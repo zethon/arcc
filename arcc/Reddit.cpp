@@ -139,8 +139,7 @@ Listing RedditSession::getListing(const std::string& endpoint, const Params& par
 {
     [[maybe_unused]] const auto [jsontext, url] = doGetRequest(endpoint, params);
     
-    Listing listing;
-    listing.setSession(shared_from_this());
+    Listing listing{ shared_from_this(), endpoint };
 
     if (jsontext.size() > 0)
     {
@@ -149,6 +148,8 @@ Listing RedditSession::getListing(const std::string& endpoint, const Params& par
         {
             throw std::runtime_error("the listing response was malformed");
         }
+
+        listing._results = std::move(reply);
     }
 
     return listing;
