@@ -982,6 +982,95 @@ std::size_t ConsoleApp::printListing(const arcc::Listing& listing)
     return _lastObjects.size();
 }
 
+void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
+{
+    std::string flairText = link.value("link_flair_text", "");
+    if (!flairText.empty()) flairText = fmt::format("[{}]", flairText);
+
+    if (link["stickied"].get<bool>())
+    {
+        std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
+    }
+
+    std::string namestr;
+    std::string updownstr;
+//    if (listing.details)
+//    {
+//        namestr = fmt::format(" ({})", child["data"]["name"]);
+//        updownstr = fmt::format(" ({}/{}) ",
+//            std::to_string(child["data"]["ups"].get<std::uint32_t>()),
+//            std::to_string(child["data"]["downs"].get<std::uint32_t>()));
+//    }
+
+    std::cout
+        << rang::style::bold
+        << idx
+        << ". "
+        << link["title"].get<std::string>()
+        << namestr
+        << rang::style::reset
+        << '\n'
+        << rang::fg::cyan
+        << rang::style::underline
+        << link["url"].get<std::string>()
+        << rang::style::reset
+        << '\n'
+        << rang::fg::gray
+        << link["score"].get<int>()
+        << " pts"
+        << updownstr
+        << " - "
+        << utils::miniMoment(link["created_utc"].get<std::uint32_t>())
+        << " - "
+        << link["num_comments"].get<int>() << " comments"
+        << '\n'
+        << rang::fg::magenta
+        << link["author"].get<std::string>()
+        << ' '
+        << rang::fg::yellow
+        << link["subreddit_name_prefixed"].get<std::string>();
+
+    if (flairText.size() > 0)
+    {
+        std::cout
+            << ' '
+            << rang::fg::red
+            << flairText;
+    }
+
+    std::cout
+        << rang::fg::reset
+        << rang::bg::reset
+        << rang::style::reset
+        << '\n'
+        << std::endl;
+}
+
+void ConsoleApp::printListing()
+{
+    if (!_listing || _currentPage.empty()) return;
+
+    std::size_t idx = 0;
+    for (const auto& item : _currentPage)
+    {
+        if (item.at("data").is_null())
+        {
+            continue;
+        }
+
+        const auto listkind = item.value("kind", "t3");
+        if (listkind == "t3")
+        {
+            std::cout << "HI THERE MOTHTER FUCKER!" << std::endl;
+            renderLink(item.at("data"), ++idx);
+        }
+        else
+        {
+            printError(fmt::format("unsupported list prefix '{}'", listkind));
+        }
+    }
+}
+
 void ConsoleApp::list(const std::string& cmdParams)
 {
     static const std::vector<std::string> validTypes = { "new", "hot", "rising", "controversial", "top" };
@@ -997,7 +1086,7 @@ void ConsoleApp::list(const std::string& cmdParams)
     {
         endpoint = fmt::format("/r/{}", subName);
     }
-    else if (!_location.empty())
+    else if (!_location.empty() && _location != "/")
     {
         endpoint = fmt::format("/r/{}", _location);
     }
@@ -1056,25 +1145,17 @@ void ConsoleApp::list(const std::string& cmdParams)
         limit = static_cast<std::uint32_t>(std::stoul(limitstr));
     }
 
-    //_listing = std::make_unique<Listing>(_reddit, limit, listParams);
+    auto listing = std::make_unique<Listing>(_reddit, endpoint, limit, listParams);
+    if (auto page = listing->getFirstPage(); !page.empty())
+    {
+        ConsoleApp::printStatus(fmt::format("showing {} '{}' items from '{}'",
+            limit, listType, endpoint ));
 
-//    listParams.insert_or_assign("limit", std::to_string(limit));
+        _listing = std::move(listing);
+        _currentPage = std::move(page);
 
-    //auto listing = _reddit->getListing(endpoint, limit, listParams);
-
-    //_listing.details = args.hasArgument("details");
-    //_listing.verbose = args.hasArgument("verbose");
-
-    //auto temp = doGetListing(_listing);
-    //if (!temp.results.is_null())
-    //{
-    //    ConsoleApp::printStatus(fmt::format("showing {} '{}' items from '{}'",
-    //        _listing.limit, _listing.type,
-    //        (_listing.subreddit.empty() ? "/" : _listing.subreddit)));
-
-    //    _listing = std::move(temp);
-    //    _listing.count += printListing(_listing);
-    //}
+        printListing();
+    }
 }
 
 void ConsoleApp::next(const std::string&)

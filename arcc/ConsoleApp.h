@@ -42,6 +42,7 @@ class ConsoleApp final
     std::vector<ConsoleCommand>     _commands;
 
     std::unique_ptr<Listing>        _listing;
+    Listing::Page                   _currentPage;
     std::vector<nlohmann::json>     _lastObjects;
 
     bool                            _doExit = false;
@@ -90,6 +91,9 @@ public:
 private:
     void printPrompt() const;
     std::size_t printListing(const arcc::Listing& listing);
+
+    void printListing();
+    void renderLink(const nlohmann::json& link, std::size_t idx);
 
     void initCommands();
     void initTerminal();
