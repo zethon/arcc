@@ -121,14 +121,14 @@ void ConsoleApp::initCommands()
     addCommand("current,c", "list items on the current page", 
         [this](const std::string&)
         {
-            //if (this->_listing.results.size() > 0)
-            //{
-            //    this->printListing(this->_listing);
-            //}
-            //else
-            //{
-            //    ConsoleApp::printWarning("there are no items on the current page");
-            //}
+            if (_currentPage.size() > 0)
+            {
+                printListing();
+            }
+            else
+            {
+                ConsoleApp::printWarning("there are no items on the current page");
+            }
         });
 
     addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
@@ -365,7 +365,7 @@ void ConsoleApp::exec(const std::string& rawline)
     endloop:
     if (!executed)
     {
-        std::cout << "Invalid command: " << command << std::endl;
+        printError(fmt::format("invalid command: {}", command));
     }
 }
 
@@ -453,96 +453,6 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const Params& p
     {
         std::cout << "you must be logged in first. type `login` to sign into reddit" << std::endl;
     }
-
-    return retval;
-}
-
-arcc::ListingPtr ConsoleApp::doGetListing(const arcc::Listing& listing)
-{
-    std::unique_ptr<Listing> retval;
-
-    //if (_reddit)
-    //{
-    //    // there are a few params we want to specifically set
-    //    // so we create a copy
-    //    Params params = listing.params;
-
-    //    if (listing.before.empty())
-    //    {
-    //        params.erase("before");
-    //    }
-    //    else
-    //    {
-    //        params.insert_or_assign("before", listing.before);
-    //    }
-
-    //    if (listing.after.empty())
-    //    {
-    //        params.erase("after");
-    //    }
-    //    else
-    //    {
-    //        params.insert_or_assign("after", listing.after);
-    //    }
-
-    //    if (listing.limit == 0)
-    //    {
-    //        params.erase("limit");
-    //    }
-    //    else
-    //    {
-    //        params.insert_or_assign("limit", std::to_string(listing.limit));
-    //    }
-
-    //    if (listing.count == 0)
-    //    {
-    //        params.erase("count");
-    //    }
-    //    else
-    //    {
-    //        params.insert_or_assign("count", std::to_string(listing.count));
-    //    }
-
-    //    [[maybe_unused]] const auto& [retstr, url]
-    //        = _reddit->doGetRequest(listing.endpoint(), params, listing.verbose);
-
-    //    if (retstr.size() > 0)
-    //    {
-    //        const auto reply = nlohmann::json::parse(retstr);
-    //        if (reply.find("data") == reply.end())
-    //        {
-    //            throw std::runtime_error("the response was malformed");
-    //        }
-
-    //        // copy the passed in object
-    //        retval = listing;
-
-    //        // convienence
-    //        const auto& data = reply["data"];
-
-    //        if (data.find("before") != data.end()
-    //            && !data["before"].is_null())
-    //        {
-    //            retval.before = data["before"];
-    //        }
-
-    //        if (data.find("after") != data.end()
-    //            && !data["after"].is_null())
-    //        {
-    //            retval.after = data["after"];
-    //        }
-
-    //        retval.results = std::move(reply);
-    //    }
-    //    else
-    //    {
-    //        throw std::runtime_error("the response was empty");
-    //    }
-    //}
-    //else
-    //{
-    //    throw std::runtime_error("you must be logged in first. type `login` to sign into reddit");
-    //}
 
     return retval;
 }
@@ -694,9 +604,9 @@ void ConsoleApp::view(const std::string& params)
         {
             auto index = std::stoul(firstarg);
 
-            if (index > 0 && index <= _lastObjects.size())
+            if (index > 0 && index <= _currentPage.size())
             {
-                const auto& object = _lastObjects.at(index - 1);
+                const auto& object = _currentPage.at(index - 1);
 
                 if (args.hasArgument("comments") || args.hasArgument("c"))
                 {
@@ -723,7 +633,9 @@ void ConsoleApp::view(const std::string& params)
                     }
                     else
                     {
-                        ConsoleApp::printError(fmt::format("invalid 'command.view.type' settings. only 'comments' and 'url' allowed"));
+                        ConsoleApp::printError(fmt::format(
+                            "invalid 'command.view.type' settings. only 'comments' and 'url' allowed"));
+
                         return;
                     }
                 }
@@ -734,9 +646,9 @@ void ConsoleApp::view(const std::string& params)
                 }
                 else if (viewType == URL)
                 {
-                    url = object["data"].value("url", "");
+                    url = object.value("url", "");
                 }
-\
+
                 utils::openBrowser(url);
             }
             else
@@ -894,92 +806,6 @@ void ConsoleApp::history(const std::string& params)
 
         _history.clear();
     }
-}
-
-std::size_t ConsoleApp::printListing(const arcc::Listing& listing)
-{    
-    [[maybe_unused]] unsigned int idx = 0;
-    _lastObjects.clear();
-
-    //for (const auto& child : listing.results["data"]["children"])
-    //{
-    //    std::string flairText;
-    //    try
-    //    {
-    //        flairText = child["data"]["link_flair_text"].get<std::string>();
-    //    }
-    //    catch (const nlohmann::json::type_error&)
-    //    {
-    //        // swallow this
-    //    }
-
-    //    if (flairText.size() > 0)
-    //    {
-    //        flairText = "[" + flairText + "]";
-    //    }
-
-    //    if (child["data"]["stickied"].get<bool>())
-    //    {
-    //        std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
-    //    }
-
-    //    std::string namestr;
-    //    std::string updownstr;
-    //    if (listing.details)
-    //    {
-    //        namestr = fmt::format(" ({})", child["data"]["name"]);
-    //        updownstr = fmt::format(" ({}/{}) ", 
-    //            std::to_string(child["data"]["ups"].get<std::uint32_t>()),
-    //            std::to_string(child["data"]["downs"].get<std::uint32_t>()));
-    //    }
-
-    //    std::cout
-    //        << rang::style::bold
-    //        << ++idx
-    //        << ". "
-    //        << child["data"]["title"].get<std::string>()
-    //        << namestr
-    //        << rang::style::reset
-    //        << '\n'
-    //        << rang::fg::cyan
-    //        << rang::style::underline
-    //        << child["data"]["url"].get<std::string>()
-    //        << rang::style::reset
-    //        << '\n'
-    //        << rang::fg::gray
-    //        << child["data"]["score"].get<int>()
-    //        << " pts"
-    //        << updownstr
-    //        << " - "
-    //        << utils::miniMoment(child["data"]["created_utc"].get<std::uint32_t>())
-    //        << " - "
-    //        << child["data"]["num_comments"].get<int>() << " comments"
-    //        << '\n'
-    //        << rang::fg::magenta
-    //        << child["data"]["author"].get<std::string>()
-    //        << ' '
-    //        << rang::fg::yellow
-    //        << child["data"]["subreddit_name_prefixed"].get<std::string>();
-
-    //    if (flairText.size() > 0)
-    //    {
-    //        std::cout
-    //            << ' '
-    //            << rang::fg::red
-    //            << flairText;
-    //    }
-
-    //    std::cout
-    //        << rang::fg::reset
-    //        << rang::bg::reset
-    //        << rang::style::reset
-    //        << '\n'
-    //        << std::endl;
-
-    //    _lastObjects.push_back(child);
-    //}
-
-    return _lastObjects.size();
 }
 
 void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)

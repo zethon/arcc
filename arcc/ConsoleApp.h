@@ -43,7 +43,6 @@ class ConsoleApp final
 
     std::unique_ptr<Listing>        _listing;
     Listing::Page                   _currentPage;
-    std::vector<nlohmann::json>     _lastObjects;
 
     bool                            _doExit = false;
     std::string                     _location = "/";
