@@ -3,6 +3,8 @@
 
 #include <ctime>
 
+#include <boost/algorithm/string.hpp>
+
 #include <nlohmann/json.hpp>
 
 #include "core.h"
@@ -165,7 +167,17 @@ auto RedditSession::doGetRequest(
 {
     doRefreshToken();
 
-    std::string endpointUrl = requestUrl + endpoint + buildQueryParamString(params);
+    // clean the endpoint since a malformed endpoint can
+    // cause timeouts and other non-descript behavior
+    std::string cleanpoint { endpoint };
+    boost::algorithm::trim(cleanpoint);
+    if (!cleanpoint.empty())
+    {
+        if (cleanpoint.at(0) != '/') cleanpoint.insert(0, "/");
+        if (cleanpoint.at(cleanpoint.size()-1) == '/') cleanpoint.pop_back();
+    }
+
+    std::string endpointUrl = requestUrl + cleanpoint + buildQueryParamString(params);
     if (verbose)
     {
         std::cout << "request url: " << endpointUrl << std::endl;

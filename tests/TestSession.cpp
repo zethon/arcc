@@ -49,12 +49,26 @@ BOOST_AUTO_TEST_CASE(TestWhoAmI)
     BOOST_CHECK(!j.value("name", "").empty());
 }
 
-//BOOST_AUTO_TEST_CASE(testBadListings)
-//{
-//    auto session = loadSession(SESSION_FILE);
-//    auto listing = session->getListing("/r/lsdjkhfdsjh0309902", 20);
-//    BOOST_REQUIRE_EQUAL(listing->items()->get().size(), 0u);
-//}
+BOOST_AUTO_TEST_CASE(testWeirdEndPoints)
+{
+    const std::vector<std::string> endpoints =
+    {
+        "/r/IAmA/top", "/r/IAmA/top/", "r/IAmA/top", "r/IAmA/top/"
+    };
+
+    auto session = loadSession(SESSION_FILE);
+
+    for (const auto& endpoint : endpoints)
+    {
+        arcc::Params params{ {"t", "all"} };
+        arcc::Listing listing{ session, endpoint , 2u, params };
+        arcc::Listing::Page page = listing.getFirstPage();
+
+        BOOST_REQUIRE(page.size() > 0);
+        BOOST_REQUIRE_EQUAL(page.at(0).at("data").at("name"), "t3_z1c9z"s);
+        BOOST_REQUIRE_EQUAL(page.at(1).at("data").at("name"), "t3_7eojwf"s);
+    }
+}
 
 void testSubPages(const arcc::Listing::Page& otherpage, 
     const arcc::Listing::Page& basepage, 
@@ -77,41 +91,41 @@ BOOST_AUTO_TEST_CASE(testNewSubListing)
 
     auto session = loadSession(SESSION_FILE);
 
-    arcc::Listing biglist{ session, endpoint, 24 };
+    arcc::Listing biglist{ session, endpoint, 24u };
     arcc::Listing::Page bigpage = biglist.getFirstPage();
     BOOST_REQUIRE_EQUAL(bigpage.size(), 24u);
     BOOST_REQUIRE(biglist.before().empty());
     BOOST_REQUIRE(!biglist.after().empty());
 
-    arcc::Listing listing{ session, endpoint, 4 };
+    arcc::Listing listing{ session, endpoint, 4u };
 
     // test the first page
     arcc::Listing::Page page = listing.getFirstPage();
-    testSubPages(page, bigpage, 0);
+    testSubPages(page, bigpage, 0u);
 
     // test the second page
     page = listing.getNextPage();
-    testSubPages(page, bigpage, 4);
+    testSubPages(page, bigpage, 4u);
 
     // go back a page
     page = listing.getPreviousPage();
-    testSubPages(page, bigpage, 0);
+    testSubPages(page, bigpage, 0u);
 
     // go forward two pages
     listing.getNextPage();
     page = listing.getNextPage();
-    testSubPages(page, bigpage, 8);
+    testSubPages(page, bigpage, 8u);
 
     // go back two pages
     listing.getPreviousPage();
     page = listing.getPreviousPage();
-    testSubPages(page, bigpage, 0);
+    testSubPages(page, bigpage, 0u);
 
     // go fwd three pages
     listing.getNextPage();
     listing.getNextPage();
     page = listing.getNextPage();
-    testSubPages(page, bigpage, 12);
+    testSubPages(page, bigpage, 12u);
 }
 
 BOOST_AUTO_TEST_CASE(testHotSubListing)
@@ -121,7 +135,7 @@ BOOST_AUTO_TEST_CASE(testHotSubListing)
     // Based off of this post: http://shorturl.at/btwH4, we know that
     // the all time top voted thread was Obama's AMA
     arcc::Params params{ {"t", "all"} };
-    arcc::Listing listing{ session, "/r/IAmA/top" , 5, params };
+    arcc::Listing listing{ session, "/r/IAmA/top" , 5u, params };
     arcc::Listing::Page page = listing.getFirstPage();
 
     BOOST_REQUIRE(page.size() > 0);
