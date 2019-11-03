@@ -984,8 +984,12 @@ std::size_t ConsoleApp::printListing(const arcc::Listing& listing)
 
 void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
 {
-    std::string flairText = link.value("link_flair_text", "");
-    if (!flairText.empty()) flairText = fmt::format("[{}]", flairText);
+    std::string flairText;
+    if (link.find("link_flair_text") != link.end()
+        && !link["link_flair_text"].is_null())
+    {
+        flairText = fmt::format("[{}]", link.at("link_flair_text"));
+    }
 
     if (link["stickied"].get<bool>())
     {
@@ -994,13 +998,13 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
 
     std::string namestr;
     std::string updownstr;
-//    if (listing.details)
-//    {
-//        namestr = fmt::format(" ({})", child["data"]["name"]);
-//        updownstr = fmt::format(" ({}/{}) ",
-//            std::to_string(child["data"]["ups"].get<std::uint32_t>()),
-//            std::to_string(child["data"]["downs"].get<std::uint32_t>()));
-//    }
+    if (true)
+    {
+        namestr = fmt::format(" ({})", link["name"]);
+        updownstr = fmt::format(" (+{}/-{}) ",
+            std::to_string(link["ups"].get<std::uint32_t>()),
+            std::to_string(link["downs"].get<std::uint32_t>()));
+    }
 
     std::cout
         << rang::style::bold
@@ -1061,7 +1065,6 @@ void ConsoleApp::printListing()
         const auto listkind = item.value("kind", "t3");
         if (listkind == "t3")
         {
-            std::cout << "HI THERE MOTHTER FUCKER!" << std::endl;
             renderLink(item.at("data"), ++idx);
         }
         else
@@ -1076,19 +1079,25 @@ void ConsoleApp::list(const std::string& cmdParams)
     static const std::vector<std::string> validTypes = { "new", "hot", "rising", "controversial", "top" };
     static const std::vector<std::string> validTValues = { "hour", "day", "week", "month", "year", "all" };
 
-    std::string endpoint;
     Params listParams;
-
     SimpleArgs args{ cmdParams };
+    std::string endpoint;
 
     if (const std::string subName = args.getNamedArgument("sub"); 
         !subName.empty())
     {
-        endpoint = fmt::format("/r/{}", subName);
+        if (boost::starts_with(subName, "/r/"))
+        {
+            endpoint = subName;
+        }
+        else
+        {
+            endpoint = fmt::format("/r/{}", subName);
+        }
     }
-    else if (!_location.empty() && _location != "/")
+    else if (_location != "/")
     {
-        endpoint = fmt::format("/r/{}", _location);
+        endpoint = _location;
     }
 
     std::string listType;
@@ -1160,45 +1169,28 @@ void ConsoleApp::list(const std::string& cmdParams)
 
 void ConsoleApp::next(const std::string&)
 {
-    //if (_listing.after.empty())
-    //{
-    //    ConsoleApp::printWarning("no more posts");
-    //    return;
-    //}
-
-    //// `_listing.after` is set in the response so, we only
-    //// need to clear `before` before submitting another
-    //// request
-    //_listing.before.clear();
-    //_listing.count += _listing.limit;
-
-    //auto temp = doGetListing(_listing);
-    //if (!temp.results.is_null())
-    //{
-    //    _listing = std::move(temp);
-    //    printListing(_listing);
-    //}
+    if (auto page = _listing->getNextPage(); !page.empty())
+    {
+        _currentPage = std::move(page);
+        printListing();
+    }
+    else
+    {
+        ConsoleApp::printWarning("no more posts");
+    }
 }
 
 void ConsoleApp::previous(const std::string&)
 {
-    //if (_listing.before.empty()
-    //    || (_listing.count - _listing.limit) <= 0)
-    //{
-    //    ConsoleApp::printWarning("no more previous posts");
-    //    return;
-    //}
-
-    //_listing.after.clear();
-    //_listing.count -= (_listing.limit - 1);
-
-    //auto temp = doGetListing(_listing);
-    //if (!temp.results.is_null())
-    //{
-    //    _listing = std::move(temp);
-    //    printListing(_listing);
-    //    _listing.count -= 1;
-    //}
+    if (auto page = _listing->getPreviousPage(); !page.empty())
+    {
+        _currentPage = std::move(page);
+        printListing();
+    }
+    else
+    {
+        ConsoleApp::printWarning("no more previous posts");
+    }
 }
 
 } // namespace arcc
