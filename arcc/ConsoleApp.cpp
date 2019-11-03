@@ -1055,9 +1055,12 @@ void ConsoleApp::list(const std::string& cmdParams)
 
         limit = static_cast<std::uint32_t>(std::stoul(limitstr));
     }
+
+    //_listing = std::make_unique<Listing>(_reddit, limit, listParams);
+
 //    listParams.insert_or_assign("limit", std::to_string(limit));
 
-    auto listing = _reddit->getListing(endpoint, listParams, limit);
+    //auto listing = _reddit->getListing(endpoint, limit, listParams);
 
     //_listing.details = args.hasArgument("details");
     //_listing.verbose = args.hasArgument("verbose");

@@ -49,53 +49,84 @@ BOOST_AUTO_TEST_CASE(TestWhoAmI)
     BOOST_CHECK(!j.value("name", "").empty());
 }
 
-BOOST_AUTO_TEST_CASE(testBadListings)
+//BOOST_AUTO_TEST_CASE(testBadListings)
+//{
+//    auto session = loadSession(SESSION_FILE);
+//    auto listing = session->getListing("/r/lsdjkhfdsjh0309902", 20);
+//    BOOST_REQUIRE_EQUAL(listing->items()->get().size(), 0u);
+//}
+
+void testSubPages(const arcc::Listing::Page& otherpage, 
+    const arcc::Listing::Page& basepage, 
+    std::size_t baseOffset)
 {
-    auto session = loadSession(SESSION_FILE);
-    arcc::Listing listing = session->getListing("/r/lsdjkhfdsjh0309902");
-    BOOST_REQUIRE_EQUAL(listing.items()->get().size(), 0u);
+    std::size_t baseIdx = baseOffset;
+    for (const auto& item : otherpage)
+    {
+        const auto& bigitem = basepage.at(baseIdx).at("data");
+        BOOST_REQUIRE(item.find("data") != item.end());
+        BOOST_REQUIRE(!item["data"].value("name", "").empty());
+        BOOST_REQUIRE_EQUAL(item["data"]["name"], bigitem["name"]);
+        baseIdx++;
+    }
 }
 
-BOOST_AUTO_TEST_CASE(testSubListing)
+BOOST_AUTO_TEST_CASE(testNewSubListing)
 {
-    // https://www.reddit.com/r/deadsubs/new/ is a pretty dead sub so the goal
-    // here is to get the first 20 threads, and then paginate through them
+    constexpr auto endpoint = "r/Omnism/new/";
 
     auto session = loadSession(SESSION_FILE);
 
-    arcc::Params params;
-    params.insert_or_assign("limit", "2");
-    auto biglist = session->getListing("/r/deadsubs/new/", params, 24);
-    BOOST_REQUIRE_EQUAL(biglist.endpoint(), "/r/deadsubs/new/"s);
-    BOOST_REQUIRE(biglist.items());
-    BOOST_REQUIRE_EQUAL(biglist.items()->get().size(), 24u);
+    arcc::Listing biglist{ session, endpoint, 24 };
+    arcc::Listing::Page bigpage = biglist.getFirstPage();
+    BOOST_REQUIRE_EQUAL(bigpage.size(), 24u);
     BOOST_REQUIRE(biglist.before().empty());
     BOOST_REQUIRE(!biglist.after().empty());
 
-    params.clear();
-    params.insert_or_assign("limit", "4");
-    auto listing = session->getListing("/r/deadsubs/new", params);
-    BOOST_REQUIRE_EQUAL(listing.items()->get().size(), 4u);
-    BOOST_CHECK(listing.before().empty());
-    BOOST_CHECK_EQUAL(listing.after(), biglist.items()->get().at(3).at("data").at("name"));
+    arcc::Listing listing{ session, endpoint, 4 };
 
-    for (auto idx = 0u; idx < 4; idx++)
-    {
-        const auto& bigitem  = biglist.items()->get().at(idx).at("data");
-        const auto& item = listing.items()->get().at(idx).at("data");
-        BOOST_CHECK_EQUAL(item.at("name"), bigitem.at("name"));
-    }
+    // test the first page
+    arcc::Listing::Page page = listing.getFirstPage();
+    testSubPages(page, bigpage, 0);
 
-    listing = listing.getNextPage();
-    BOOST_REQUIRE_EQUAL(listing.items()->get().size(), 4u);
-    for (auto idx = 0u; idx < 4; idx++)
-    {
-        const auto& bigitem  = biglist.items()->get().at(idx+4).at("data");
-        const auto& item = listing.items()->get().at(idx).at("data");
-        BOOST_CHECK_EQUAL(item.at("name"), bigitem.at("name"));
-    }
+    // test the second page
+    page = listing.getNextPage();
+    testSubPages(page, bigpage, 4);
 
-    //listing = listing.getPreviousPage();
+    // go back a page
+    page = listing.getPreviousPage();
+    testSubPages(page, bigpage, 0);
+
+    // go forward two pages
+    listing.getNextPage();
+    page = listing.getNextPage();
+    testSubPages(page, bigpage, 8);
+
+    // go back two pages
+    listing.getPreviousPage();
+    page = listing.getPreviousPage();
+    testSubPages(page, bigpage, 0);
+
+    // go fwd three pages
+    listing.getNextPage();
+    listing.getNextPage();
+    page = listing.getNextPage();
+    testSubPages(page, bigpage, 12);
+}
+
+BOOST_AUTO_TEST_CASE(testHotSubListing)
+{
+    auto session = loadSession(SESSION_FILE);
+
+    // Based off of this post: http://shorturl.at/btwH4, we know that
+    // the all time top voted thread was Obama's AMA
+    arcc::Params params{ {"t", "all"} };
+    arcc::Listing listing{ session, "/r/IAmA/top" , 5, params };
+    arcc::Listing::Page page = listing.getFirstPage();
+
+    BOOST_REQUIRE(page.size() > 0);
+    BOOST_REQUIRE_EQUAL(page.at(0).at("data").at("name"), "t3_z1c9z"s);
+    BOOST_REQUIRE_EQUAL(page.at(1).at("data").at("name"), "t3_7eojwf"s); 
 }
 
 BOOST_AUTO_TEST_SUITE_END()

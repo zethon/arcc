@@ -135,23 +135,24 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
     }
 }
 
-ListingPtr RedditSession::getListing(const std::string& endpoint, const Params& params, std::size_t limit)
+ListingPtr RedditSession::getListing(const std::string& endpoint, std::size_t limit, const Params& params)
 {
-    [[maybe_unused]] const auto [jsontext, url] = doGetRequest(endpoint, params);
-    std::cout << jsontext << std::endl;
+    Params copyParams{ params };
+    copyParams.insert_or_assign("limit", std::to_string(limit));
 
     auto listing = std::make_unique<Listing>(shared_from_this(), endpoint, limit);
 
-    if (jsontext.size() > 0)
-    {
-        const auto reply = nlohmann::json::parse(jsontext);
-        if (reply.find("data") == reply.end())
-        {
-            throw std::runtime_error("the listing response was malformed");
-        }
+    //[[maybe_unused]] const auto [jsontext, url] = doGetRequest(endpoint, copyParams);
+    //if (jsontext.size() > 0)
+    //{
+    //    const auto reply = nlohmann::json::parse(jsontext);
+    //    if (reply.find("data") == reply.end())
+    //    {
+    //        throw std::runtime_error("the listing response was malformed");
+    //    }
 
-        listing->initialize(std::move(reply));
-    }
+    //    listing->initialize(std::move(reply));
+    //}
 
     return listing;
 }

@@ -5,6 +5,7 @@
 
 #include <string>
 #include <memory>
+#include <optional>
 
 #include <nlohmann/json.hpp>
 
@@ -30,36 +31,35 @@ class Listing
 
     std::string                 _after;
     std::string                 _before;
-
-
     std::size_t                 _count;
 
-    nlohmann::json              _response;
-    nlohmann::json              _data;
-
-    void initialize(nlohmann::json reponse);
+    Params                      _params;
 
 public:
-
+    
+    using Page = nlohmann::json::value_type;
     using Items = std::optional<std::reference_wrapper<const nlohmann::json>>;
 
     Listing(const Listing& other);
-    Listing(SessionPtr session,
-            const std::string& endpoint,
-            std::size_t limit);
+    Listing(SessionPtr session, const std::string& endpoint, std::size_t limit);
+    Listing(SessionPtr session, const std::string& endpoint, std::size_t limit, const Params& params);
 
-    ListingPtr getNextPage() const;
-    ListingPtr getPreviousPage() const;
-
-    const nlohmann::json& results() const { return _response; }
-    const nlohmann::json& data() const;
-    const Items items() const;
+    [[maybe_unused]] Listing::Page getFirstPage();
+    [[maybe_unused]] Listing::Page getNextPage();
+    [[maybe_unused]] Listing::Page getPreviousPage();
 
     std::string endpoint() const { return _endpoint; }
     std::string after() const { return _after; }
     std::string before() const { return _before; }
     std::size_t limit() const { return _limit; }
     std::size_t count() const { return _count; }
+
+    const Params& params() const { return _params; }
+    void setParams(const Params& v) { _params = v; }
+
+private:
+
+    Page processResponse(nlohmann::json reponse);
 };
 
 } // namespace

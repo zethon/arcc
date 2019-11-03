@@ -5,6 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "Reddit.h"
 #include "Listing.h"
 
 namespace arcc
@@ -13,16 +14,29 @@ namespace arcc
 Listing::Listing(SessionPtr session,
                  const std::string& endpoint,
                  std::size_t limit)
-    : _sessionPtr{ session },
-      _endpoint{ endpoint },
-      _limit { limit }
+    : Listing(session, endpoint, limit, Params{})
 {}
 
-void Listing::initialize(nlohmann::json response)
-{
-    _response = std::move(response);
+Listing::Listing(SessionPtr session, const std::string& endpoint, std::size_t limit, const Params& params)
+    : _sessionPtr{ session },
+    _endpoint{ endpoint },
+    _limit{ limit },
+    _params{ params }
+{}
 
-    const auto& data = _response.at("data");
+Listing::Listing(const Listing& other)
+    : _sessionPtr{ other._sessionPtr },
+    _endpoint{ other.endpoint() },
+    _limit{ other.limit() },
+    _params{ other.params() }
+{
+}
+
+Listing::Page Listing::processResponse(nlohmann::json response)
+{
+    Listing::Page retval;
+
+    const auto& data = response.at("data");
 
     if (data.find("before") != data.end()
         && !data["before"].is_null())
@@ -35,51 +49,107 @@ void Listing::initialize(nlohmann::json response)
     {
         _after = data["after"];
     }
-}
 
-Listing::Listing(const Listing& other)
-    : _sessionPtr{ other._sessionPtr },
-      _endpoint{ other.endpoint() },
-      _limit { other.limit() }
-{
-}
-
-ListingPtr Listing::getNextPage() const
-{
-    auto retval = std::make_unique<Listing>(*this);
-
-    return retval;
+    return data.value("children", Page{});
 }
 
 
-ListingPtr Listing::getPreviousPage() const
+
+Listing::Page Listing::getFirstPage()
 {
-    auto retval = std::make_unique<Listing>(*this);
-
-    return retval;
-}
-
-//const nlohmann::json& Listing::data() const
-//{
-//    if (_results.find("data") == _results.end())
-//    {
-//        return std::nullopt;
-//    }
-//}
-
-auto Listing::items() const -> const Listing::Items
-{
-    if (_response.find("data") == _response.end())
+    if (auto session = _sessionPtr.lock(); session)
     {
-        return std::nullopt;
+        Params params{ _params };
+        params.insert_or_assign("limit", std::to_string(_limit));
+
+        [[maybe_unused]] auto[jsontext, url] = session->doGetRequest(_endpoint, params);
+        if (!jsontext.empty())
+        {
+            const auto reply = nlohmann::json::parse(jsontext);
+            if (reply.find("data") == reply.end())
+            {
+                throw std::runtime_error("the listing response was malformed");
+            }
+
+            return processResponse(reply);
+        }
+    }
+    
+    return Listing::Page{};
+}
+
+Listing::Page Listing::getNextPage()
+{
+    if (_after.empty())
+    {
+        // no more posts
+        return Listing::Page{};
     }
 
-    if (_response["data"].find("children") == _response["data"].end())
+    if (auto session = _sessionPtr.lock(); session)
     {
-        return std::nullopt;
+        _before.clear();
+        _count += _limit;
+
+        Params params{ _params };
+        params.insert_or_assign("limit", std::to_string(_limit));
+        params.insert_or_assign("count", std::to_string(_count));
+        params.insert_or_assign("after", _after);
+
+        [[maybe_unused]] auto[jsontext, url] = session->doGetRequest(_endpoint, params);
+        if (!jsontext.empty())
+        {
+            const auto reply = nlohmann::json::parse(jsontext);
+            if (reply.find("data") == reply.end())
+            {
+                throw std::runtime_error("the listing response was malformed");
+            }
+
+            return processResponse(reply);
+        }
     }
 
-    return _response["data"]["children"];
+    return Listing::Page{};
+}
+
+
+Listing::Page Listing::getPreviousPage()
+{
+    if (_before.empty()
+        || (_count - _limit) <= 0)
+    {
+        // we're at the first page, so no more pages
+        return Listing::Page{};
+    }
+
+    if (auto session = _sessionPtr.lock(); session)
+    {
+        _after.clear();
+        _count -= (_limit - 1);
+
+        Params params{ _params };
+        params.insert_or_assign("limit", std::to_string(_limit));
+        params.insert_or_assign("before", _before);
+
+        if (_count > 0)
+        {
+            params.insert_or_assign("count", std::to_string(_count));
+        }
+
+        [[maybe_unused]] auto[jsontext, url] = session->doGetRequest(_endpoint, params);
+        if (!jsontext.empty())
+        {
+            const auto reply = nlohmann::json::parse(jsontext);
+            if (reply.find("data") == reply.end())
+            {
+                throw std::runtime_error("the listing response was malformed");
+            }
+
+            return processResponse(reply);
+        }
+    }
+
+    return Listing::Page{};
 }
 
 }
