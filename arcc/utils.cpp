@@ -100,7 +100,7 @@ void openBrowser(const std::string& url_str)
         kCFStringEncodingASCII,
 
         // baseURL
-        nullptr
+        NULL
     );
 
     LSOpenCFURLRef(url, nullptr);
