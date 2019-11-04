@@ -275,12 +275,20 @@ void ConsoleApp::defaultSettings()
 {
     _settings.clear();
 
-    // create the default config
+    // global options
     _settings["global.terminal.color"] = true;
+
+    // options for varous user commands
     _settings["command.list.limit"] = 5;
     _settings["command.list.type"] = "hot";
     _settings["command.view.type"] = "url";
     _settings["command.go.autolist"] = true;
+
+    // options for various lists/data that are printed
+    _settings["render.list.url"] = false;
+    _settings["render.list.votes"] = true;
+    _settings["render.list.name"] = false;
+    _settings["render.list.title.length"] = 75;
 }
 
 // poor man's way of updating settings, would be better
@@ -694,6 +702,12 @@ void ConsoleApp::setCommand(const std::string& params)
         return;
     }
 
+    if (_settings.find(result[0]) == _settings.end())
+    {
+        ConsoleApp::printError(fmt::format("unknown setting '{}'", result[0]));
+        return;
+    }
+
     if (utils::isNumeric(result[1]))
     {
         _settings[result[0]] = std::stoul(result[1]);
@@ -744,6 +758,7 @@ void ConsoleApp::settingsCommand(const std::string& params)
     {
         defaultSettings();
         saveSettings();
+        printStatus(fmt::format("{} settings reset", _settings.size()));
     }
     else
     {
@@ -826,28 +841,51 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
     }
 
     std::string namestr;
-    std::string updownstr;
-    if (true)
+    if (_settings.value("render.list.name", false))
     {
         namestr = fmt::format(" ({})", link["name"]);
-        updownstr = fmt::format(" (+{}/-{}) ",
+    }
+
+    std::string updownstr;
+    if (_settings.value("render.list.votes", false))
+    {
+        updownstr = fmt::format(" (+{}/-{})",
             std::to_string(link["ups"].get<std::uint32_t>()),
             std::to_string(link["downs"].get<std::uint32_t>()));
+    }
+
+    std::string urlstr;
+    if (_settings.value("render.list.url", false))
+    {
+        urlstr = fmt::format("{}\n", link.value("url", ""));
+    }
+
+    std::string titlestr { link.value("title","")} ;
+    if (const std::size_t maxlen = _settings.value("render.list.title.length",0);
+        maxlen > 0 && titlestr.size() > maxlen)
+    {
+        // first try trimming the string, there could be some 
+        // extraneous white space at the end
+        boost::algorithm::trim(titlestr);
+        if (titlestr.size() > maxlen)
+        {
+            titlestr = titlestr.substr(0, maxlen - 3);
+            titlestr.append("...");
+        }
     }
 
     std::cout
         << rang::style::bold
         << idx
         << ". "
-        << link["title"].get<std::string>()
+        << titlestr
         << namestr
         << rang::style::reset
         << '\n'
         << rang::fg::cyan
         << rang::style::underline
-        << link["url"].get<std::string>()
+        << urlstr
         << rang::style::reset
-        << '\n'
         << rang::fg::gray
         << link["score"].get<int>()
         << " pts"
