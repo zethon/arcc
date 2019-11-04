@@ -11,7 +11,7 @@ environment:
 install:
   - echo "Initializing test data..."
   - ps: iex ((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/appveyor/secure-file/master/install.ps1'))
-  - cmd: appveyor-tools\secure-file -decrypt arcc\tests\session.dat.enc -secret %session_secret% -salt %session_salt%
+  - cmd: appveyor-tools\secure-file -decrypt tests\session.dat.enc -secret %session_secret% -salt %session_salt%
   - echo "Downloading conan..."
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan
