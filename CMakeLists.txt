@@ -8,8 +8,8 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(NO_OUTPUT_DIRS KEEP_RPATHS)
 
 # optional configuration
-option(BUILD_TEST "Build unit tests (default OFF)" OFF)
-option(BUILD_SESSION_TEST "Build Sessions Tests (default OFF)" OFF)
+option(BUILD_ARCC_TESTS "Build unit tests (default OFF)" OFF)
+option(BUILD_SESSION_TESTS "Build Sessions Tests (default OFF)" OFF)
 
 # Global definitions
 add_definitions(

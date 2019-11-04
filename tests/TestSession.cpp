@@ -40,7 +40,7 @@ arcc::RedditSessionPtr loadSession(const std::string& filename)
 BOOST_AUTO_TEST_CASE(TestWhoAmI)
 {
     auto session = loadSession(SESSION_FILE);
-
+    BOOST_REQUIRE(session);
     const auto& [jsontext, url] = session->doGetRequest("/api/v1/me");
     BOOST_REQUIRE(!jsontext.empty());
     BOOST_CHECK(!url.empty());
