@@ -27,7 +27,7 @@ add_test(NAME TestUtils
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/TestUtils
 )
 
-if (BUILD_SESSION_TEST)
+if (BUILD_SESSION_TESTS)
     set(SESSION_FILES
         TestSession.cpp
         ../arcc/ConsoleApp.cpp
