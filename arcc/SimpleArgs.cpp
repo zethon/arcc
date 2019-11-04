@@ -87,7 +87,8 @@ void SimpleArgs::parse(const std::string& original)
             token.remove_prefix(1);
             if (!validParamName(token)) continue;
 
-            if (i < _tokenVector.size() - 1)
+            if (i < _tokenVector.size() - 1
+                && !boost::starts_with(_tokenVector.at(i+1), "-"))
             {
                 i++;
                 _named.insert_or_assign(std::string{token}, _tokenVector.at(i));

@@ -279,10 +279,12 @@ void ConsoleApp::defaultSettings()
     _settings["global.terminal.color"] = true;
 
     // options for varous user commands
+    _settings["command.go.autolist"] = true;
     _settings["command.list.limit"] = 5;
     _settings["command.list.type"] = "hot";
     _settings["command.view.type"] = "url";
-    _settings["command.go.autolist"] = true;
+    _settings["command.view.form"] = "normal";
+    
 
     // options for various lists/data that are printed
     _settings["render.list.url"] = false;
@@ -602,6 +604,16 @@ void ConsoleApp::go(const std::string& params)
     }
 }   
 
+ConsoleApp::ViewFormType ConsoleApp::parserViewFormType(const std::string& val)
+{
+    if (boost::iequals(val, "normal")) return ViewFormType::NORMAL;
+    else if (boost::iequals(val, "mobile")) return ViewFormType::MOBILE;
+    else if (boost::iequals(val, "compact")) return ViewFormType::COMPACT;
+    else if (boost::iequals(val, "json")) return ViewFormType::JSON;
+
+    return ViewFormType::NORMAL;
+}
+
 void ConsoleApp::view(const std::string& params)
 {
     static const std::string usage = "usage: view <index> (-c,--comments | -u,--url)";
@@ -617,7 +629,11 @@ void ConsoleApp::view(const std::string& params)
 
             if (index > 0 && index <= _currentPage.size())
             {
-                const auto& object = _currentPage.at(index - 1);
+                const auto& page = _currentPage.at(index-1);
+                assert(page.find("data") != page.end());
+                const auto& data = page.at("data");
+                assert(data.find("url") != data.end());
+                assert(data.find("permalink") != data.end());
 
                 if (args.hasArgument("comments") || args.hasArgument("c"))
                 {
@@ -626,11 +642,6 @@ void ConsoleApp::view(const std::string& params)
                 else if (args.hasArgument("url") || args.hasArgument("u"))
                 {
                     viewType = URL;
-                }
-                else if (args.getNamedCount() > 0)
-                {
-                    ConsoleApp::printError(usage);
-                    return;
                 }
                 else
                 {
@@ -653,13 +664,45 @@ void ConsoleApp::view(const std::string& params)
 
                 if (viewType == COMMENTS)
                 {
-                    url = "https://www.reddit.com" + object["data"].value("permalink", "");
+                    url = fmt::format("https://www.reddit.com{}", data["permalink"]);
+                    
+                    auto formType = ViewFormType::NORMAL;
+                    if (args.hasArgument("mobile")) formType = ViewFormType::MOBILE;
+                    else if (args.hasArgument("compact")) formType = ViewFormType::COMPACT;
+                    else if (args.hasArgument("json")) formType = ViewFormType::JSON;
+                    else
+                    {
+                        formType = parserViewFormType(_settings["command.view.form"]);
+                    }
+                    
+                    if (formType != ViewFormType::NORMAL)
+                    {
+                        if (!boost::ends_with(url, "/")) url.append("/");
+                        switch (formType)
+                        {
+                            default:
+                            break;
+
+                            case ViewFormType::MOBILE:
+                                url.append(".mobile?keep_extension=True");
+                            break;
+
+                            case ViewFormType::COMPACT:
+                                url.append(".compact");
+                            break;
+
+                            case ViewFormType::JSON:
+                                url.append(".json");
+                            break;
+                        }
+                    }
                 }
                 else if (viewType == URL)
                 {
-                    url = object.value("url", "");
+                    url = data["url"];
                 }
 
+                printStatus(fmt::format("opening '{}'", url));
                 utils::openBrowser(url);
             }
             else

@@ -35,6 +35,8 @@ using CommandHandler = ConsoleCommand::Handler;
 
 class ConsoleApp final
 {
+    enum class ViewFormType { NORMAL, MOBILE, COMPACT, JSON };
+    
     Terminal                        _terminal;
     RedditSessionPtr                _reddit;
     CommandHistory                  _history;
@@ -88,6 +90,8 @@ public:
     void resetSession();
 
 private:
+    ViewFormType parserViewFormType(const std::string& val);
+
     void printPrompt() const;
     std::size_t printListing(const arcc::Listing& listing);
 

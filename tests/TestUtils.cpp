@@ -76,6 +76,12 @@ BOOST_AUTO_TEST_CASE(SimpleArgs)
     BOOST_CHECK_EQUAL(args.getNamedArgument("limit"), "10");
     BOOST_CHECK_EQUAL(args.getPositional(0), "positional1");
     BOOST_CHECK_EQUAL(args.getPositional(1), "positional2");
+
+    args.clear();
+    args.parse("positional1 -c --mobile");
+    BOOST_CHECK_EQUAL(args.getTokenCount(), 3u);
+    BOOST_CHECK_EQUAL(args.getPositionalCount(), 1u);
+    BOOST_CHECK_EQUAL(args.getNamedCount(), 2u);
 }
 
 BOOST_AUTO_TEST_CASE(convertToBool)
