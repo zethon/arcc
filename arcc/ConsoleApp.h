@@ -114,6 +114,8 @@ private:
     void history(const std::string& params);
     void next(const std::string& params);
     void previous(const std::string& params);
+    void upvote(const std::string& params);
+    void downvote(const std::string& params);
 
     void setCommand(const std::string& params);
     void settingsCommand(const std::string& params);

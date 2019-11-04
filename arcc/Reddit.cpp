@@ -170,6 +170,12 @@ auto RedditSession::doGetRequest(
     return { result.data, endpointUrl };
 }
 
+std::string RedditSession::doPostRequest(const std::string& endpoint, const Params& params)
+{
+    doRefreshToken();
+
+}
+
 void RedditSession::doRefreshToken()
 {
     std::time_t elapsed_seconds = std::time(nullptr) - _lastRefresh;

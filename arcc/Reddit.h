@@ -81,6 +81,8 @@ public:
                               const Params& params = Params{},
                               bool verbose = false);
 
+    std::string doPostRequest(const std::string& endpoint, const Params& params);
+
     std::string accessToken() const { return _accessToken; }
     std::string refreshToken() const { return _refreshToken; }
     double expiry() const { return _expiry; }

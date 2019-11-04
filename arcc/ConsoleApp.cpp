@@ -131,6 +131,9 @@ void ConsoleApp::initCommands()
             }
         });
 
+    addCommand("upvote,+", "upvote an item", std::bind(&ConsoleApp::upvote, this, std::placeholders::_1));
+    addCommand("downvote,-", "upvote an item", std::bind(&ConsoleApp::downvote, this, std::placeholders::_1));
+
     addCommand("whoami", "whoami", [this](const std::string&) { whoami(); });
     addCommand("login", "login",
         [this](const std::string&)
@@ -981,6 +984,60 @@ void ConsoleApp::printListing()
         {
             printError(fmt::format("unsupported list prefix '{}'", listkind));
         }
+    }
+}
+
+void ConsoleApp::upvote(const std::string& params)
+{
+    constexpr auto usage = "usage: upvote <index>";
+
+    if (SimpleArgs args{ params }; args.getPositionalCount() > 0)
+    {
+        if (const auto& firstarg = args.getPositional(0);
+            utils::isNumeric(firstarg))
+        {
+            auto index = std::stoul(firstarg);
+            if (index > 0 && index <= _currentPage.size())
+            {
+                const auto& object = _currentPage.at(index - 1);
+                [[maybe_unsed]] const auto& [jsontext, url] =
+                    _reddit->doGetRequest
+            }
+            else
+            {
+                ConsoleApp::printError("index out of range");
+            }
+        }
+    }
+    else
+    {
+        ConsoleApp::printError(usage);
+    }
+}
+
+void ConsoleApp::downvote(const std::string& params)
+{
+    constexpr auto usage = "usage: downvote <index>";
+
+    if (SimpleArgs args{ params }; args.getPositionalCount() > 0)
+    {
+        if (const auto& firstarg = args.getPositional(0);
+            utils::isNumeric(firstarg))
+        {
+            auto index = std::stoul(firstarg);
+            if (index > 0 && index <= _currentPage.size())
+            {
+                const auto& object = _currentPage.at(index - 1);
+            }
+            else
+            {
+                ConsoleApp::printError("index out of range");
+            }
+        }
+    }
+    else
+    {
+        ConsoleApp::printError(usage);
     }
 }
 
