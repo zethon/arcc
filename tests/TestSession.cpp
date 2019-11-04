@@ -12,6 +12,10 @@ using namespace std::string_literals;
 
 BOOST_AUTO_TEST_SUITE(Session)
 
+#ifndef _SESSION_FILE
+#   error "_SESSION_FILE not defined, session unit tests cannot run"
+#endif
+
 arcc::RedditSessionPtr loadSession(const std::string& filename)
 {
     if (boost::filesystem::exists(filename))
@@ -32,7 +36,7 @@ arcc::RedditSessionPtr loadSession(const std::string& filename)
 
 BOOST_AUTO_TEST_CASE(TestWhoAmI)
 {
-    auto session = loadSession(SESSION_FILE);
+    auto session = loadSession(_SESSION_FILE);
     BOOST_REQUIRE(session);
 
     const auto& [jsontext, url] = session->doGetRequest("/api/v1/me");
@@ -50,7 +54,7 @@ BOOST_AUTO_TEST_CASE(testWeirdEndPoints)
         "/r/IAmA/top", "/r/IAmA/top/", "r/IAmA/top", "r/IAmA/top/"
     };
 
-    auto session = loadSession(SESSION_FILE);
+    auto session = loadSession(_SESSION_FILE);
 
     for (const auto& endpoint : endpoints)
     {
@@ -83,7 +87,7 @@ BOOST_AUTO_TEST_CASE(testNewSubListing)
 {
     constexpr auto endpoint = "r/Omnism/new/";
 
-    auto session = loadSession(SESSION_FILE);
+    auto session = loadSession(_SESSION_FILE);
 
     arcc::Listing biglist{ session, endpoint, 24u };
     arcc::Listing::Page bigpage = biglist.getFirstPage();
@@ -124,7 +128,7 @@ BOOST_AUTO_TEST_CASE(testNewSubListing)
 
 BOOST_AUTO_TEST_CASE(testHotSubListing)
 {
-    auto session = loadSession(SESSION_FILE);
+    auto session = loadSession(_SESSION_FILE);
 
     // Based off of this post: http://shorturl.at/btwH4, we know that
     // the all time top voted thread was Obama's AMA

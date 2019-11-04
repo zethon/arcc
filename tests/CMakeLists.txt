@@ -28,7 +28,7 @@ add_test(NAME TestUtils
 )
 
 if (BUILD_SESSION_TESTS)
-    add_definitions(-DSESSION_FILE="${CMAKE_SOURCE_DIR}/tests/session.dat")
+    add_definitions(-D_SESSION_FILE="${CMAKE_SOURCE_DIR}/tests/session.dat")
 
     set(SESSION_FILES
         TestSession.cpp
