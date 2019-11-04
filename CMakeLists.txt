@@ -78,6 +78,7 @@ if (MSVC)
         -D_WINDOWS
         -DNOMINMAX
         -D_SCL_SECURE_NO_WARNINGS
+        -D_WIN32_WINNT=0x0600
         -DWIN32_LEAN_AND_MEAN
 
         # use this to supress the boost generated "warning C4996"
