@@ -12,13 +12,6 @@ using namespace std::string_literals;
 
 BOOST_AUTO_TEST_SUITE(Session)
 
-#ifdef _WINDOWS
-constexpr auto SESSION_FILE = R"(C:\Users\aclau\.arcc_session)";
-#else
-constexpr auto SESSION_FILE = R"(/Users/adalidclaure/.arcc_session)";
-#endif
-
-
 arcc::RedditSessionPtr loadSession(const std::string& filename)
 {
     if (boost::filesystem::exists(filename))
@@ -41,6 +34,7 @@ BOOST_AUTO_TEST_CASE(TestWhoAmI)
 {
     auto session = loadSession(SESSION_FILE);
     BOOST_REQUIRE(session);
+
     const auto& [jsontext, url] = session->doGetRequest("/api/v1/me");
     BOOST_REQUIRE(!jsontext.empty());
     BOOST_CHECK(!url.empty());

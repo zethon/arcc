@@ -104,7 +104,7 @@ include_directories(rang/include)
 
 add_subdirectory(arcc)
 
-if (BUILD_TEST)
+if (BUILD_ARCC_TESTS)
     enable_testing()
     add_subdirectory(tests)
-endif (BUILD_TEST)
+endif (BUILD_ARCC_TESTS)

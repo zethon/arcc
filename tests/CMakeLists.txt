@@ -28,6 +28,8 @@ add_test(NAME TestUtils
 )
 
 if (BUILD_SESSION_TESTS)
+    add_definitions(-DSESSION_FILE="${CMAKE_SOURCE_DIR}/tests/session.dat")
+
     set(SESSION_FILES
         TestSession.cpp
         ../arcc/ConsoleApp.cpp

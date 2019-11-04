@@ -3,3 +3,4 @@ build
 Untitled-1
 build64/
 /CMakeLists.txt.user
+tests/session.dat
