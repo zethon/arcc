@@ -8,7 +8,8 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(NO_OUTPUT_DIRS KEEP_RPATHS)
 
 # optional configuration
-option(BUILD_TEST "Build unit tests (default OFF)" OFF)
+option(BUILD_ARCC_TESTS "Build unit tests (default OFF)" OFF)
+option(BUILD_SESSION_TESTS "Build Sessions Tests (default OFF)" OFF)
 
 # Global definitions
 add_definitions(
@@ -77,6 +78,7 @@ if (MSVC)
         -D_WINDOWS
         -DNOMINMAX
         -D_SCL_SECURE_NO_WARNINGS
+        -D_WIN32_WINNT=0x0600
         -DWIN32_LEAN_AND_MEAN
 
         # use this to supress the boost generated "warning C4996"
@@ -103,7 +105,7 @@ include_directories(rang/include)
 
 add_subdirectory(arcc)
 
-if (BUILD_TEST)
+if (BUILD_ARCC_TESTS)
     enable_testing()
     add_subdirectory(tests)
-endif (BUILD_TEST)
+endif (BUILD_ARCC_TESTS)

@@ -4,6 +4,7 @@ set(SOURCE_FILES
     arcc.cpp
     CommandHistory.cpp
     ConsoleApp.cpp
+    Listing.cpp
     Reddit.cpp
     utils.cpp
     SimpleArgs.cpp
@@ -14,6 +15,7 @@ set(HEADER_FILES
     CommandHistory.h
     ConsoleApp.h
     core.h
+    Listing.h
     Reddit.h
     Terminal.h
     utils.h

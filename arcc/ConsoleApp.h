@@ -3,74 +3,18 @@
 
 #pragma once
 
-#include <boost/algorithm/string.hpp>
-
 #include <nlohmann/json.hpp>
 
 #include "Reddit.h"
 #include "Terminal.h"
 #include "CommandHistory.h"
+#include "Listing.h"
 
 namespace arcc
 {
 
 class RedditSession;
 using RedditSessionPtr = std::shared_ptr<RedditSession>;
-
-struct Listing
-{
-    std::string                 subreddit;
-    std::string                 type;
-
-    std::string                 before;
-    std::string                 after;
-
-    std::size_t                 count;
-    std::size_t                 limit;
-
-    RedditSession::Params       params;
-    nlohmann::json              results;
-
-    bool                        details;
-    bool                        verbose;
-
-    std::string endpoint() const
-    {
-        std::string retval;
-        if (!subreddit.empty() && subreddit != "/")
-        {
-            if (!boost::starts_with(subreddit, "/r"))
-            {
-                retval.append("/r");
-            }
-
-            retval.append(subreddit);
-        }
-
-        // some times a "/" can sneak into the subreddit
-        // name so check for it before creating a "//"
-        // which can be problematic
-        if (!boost::ends_with(retval, "/")) retval.append("/");
-
-        // now at `hot`, `new`, etc...
-        retval.append(type);
-        return retval;
-    }
-
-    void reset()
-    {
-        subreddit.clear();
-        type.clear();
-        params.clear();
-        before.clear();
-        after.clear();
-        results.clear();
-        verbose = false;
-        details = false;
-        count = 0;
-        limit = 0;
-    }
-};
 
 struct ConsoleCommand
 {
@@ -97,8 +41,8 @@ class ConsoleApp final
 
     std::vector<ConsoleCommand>     _commands;
 
-    Listing                         _listing;
-    std::vector<nlohmann::json>     _lastObjects;
+    std::unique_ptr<Listing>        _listing;
+    Listing::Page                   _currentPage;
 
     bool                            _doExit = false;
     std::string                     _location = "/";
@@ -112,11 +56,11 @@ public:
     ConsoleApp();
 
     std::string doRedditGet(const std::string& endpoint);
-    std::string doRedditGet(const std::string& endpoint, const RedditSession::Params& params);
+    std::string doRedditGet(const std::string& endpoint, const Params& params);
 
     // these will automatically prepred `_location` to the endpoint
-    arcc::Listing doGetListing(const arcc::Listing& listing);
-    std::string doSubRedditGet(const std::string& endpoint, const RedditSession::Params& params);
+    ListingPtr doGetListing(const arcc::Listing& listing);
+    std::string doSubRedditGet(const std::string& endpoint, const Params& params);
 
     void exec(const std::string& rawline);
     void run();
@@ -146,6 +90,9 @@ public:
 private:
     void printPrompt() const;
     std::size_t printListing(const arcc::Listing& listing);
+
+    void printListing();
+    void renderLink(const nlohmann::json& link, std::size_t idx);
 
     void initCommands();
     void initTerminal();

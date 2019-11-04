@@ -9,6 +9,9 @@ environment:
     - CONFIG: RelWithDebInfo
 
 install:
+  - echo "Initializing test data..."
+  - ps: iex ((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/appveyor/secure-file/master/install.ps1'))
+  - cmd: appveyor-tools\secure-file -decrypt tests\session.dat.enc -secret %session_secret% -salt %session_salt%
   - echo "Downloading conan..."
   - set PATH=%PATH%;%PYTHON%/Scripts/
   - pip.exe install conan
@@ -19,7 +22,7 @@ build_script:
   - mkdir build
   - cd build
   - conan install .. --build missing
-  - cmake .. "-GVisual Studio 15 2017 Win64" -DBUILD_TEST=ON
+  - cmake .. "-GVisual Studio 15 2017 Win64" -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON
   - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
 
 test_script:

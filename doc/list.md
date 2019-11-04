@@ -1,13 +1,14 @@
 # `list`
 
-List
+List the content of the current subreddit. If there is no active subreddit, then the list is equivalent to users home listing.
 
 ### Usage
 `list (new|hot|rising|contreversial|top) [--limit=<count>] [--sub=<subreddit>]`
 
 ### Options
 `--limit=<count>` - Number of topics to list [default: 5]<br/>
-`--sub=<subreddit>` - List items in <subreddit> [default: current sub]
+`--sub=<subreddit>` - list items in `<subreddit>` [default: current sub]
+`-t <top>` - used with `list top`, one of `hour`, `day`, `week`, `month`, `year`, `all` 
 
 ### Settings
 `command.list.type` - Default listing type, one of `new`, `hot`, `rising`, `contreversial`, `top`<br/>

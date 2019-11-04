@@ -10,7 +10,7 @@
 #include <boost/format.hpp>
 #include <server_http.hpp>
 
-#include "Reddit.h"
+#include "Listing.h"
 #include "WebClient.h"
 
 #define REDDIT_CLIENT_ID        "8T4M69w3Eop4YA"
@@ -53,6 +53,7 @@ public:
 };
 
 class RedditSession final
+    : public std::enable_shared_from_this<RedditSession>
 {
     std::function<void(void)>   _refreshCallback;
 
@@ -67,7 +68,6 @@ class RedditSession final
     WebClient                   _webclient;             // our "connection" to www.reddit.com
 
 public:
-    using Params = std::map<std::string, std::string>;
 
     // Reponse to a Request
     // 0 - the raw JSON text
@@ -77,8 +77,12 @@ public:
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh);
 
+    ListingPtr getListing(const std::string& endpoint, 
+        std::size_t limit, 
+        const Params& param = Params{});
+
     ResponsePair doGetRequest(const std::string& endpoint,
-                              const RedditSession::Params& params = RedditSession::Params{},
+                              const Params& params = Params{},
                               bool verbose = false);
 
     std::string accessToken() const { return _accessToken; }
@@ -95,6 +99,6 @@ private:
     void doRefreshToken();   
 };
 
-std::ostream & operator<<(std::ostream& os, const arcc::RedditSession::Params& params);
+std::ostream & operator<<(std::ostream& os, const arcc::Params& params);
 
 } // namespace arcc

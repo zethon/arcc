@@ -3,6 +3,8 @@
 
 #include <ctime>
 
+#include <boost/algorithm/string.hpp>
+
 #include <nlohmann/json.hpp>
 
 #include "core.h"
@@ -87,7 +89,7 @@ void OAuth2Login::start()
     _server.start();
 }
 
-std::string buildQueryParamString(const RedditSession::Params& params)
+std::string buildQueryParamString(const Params& params)
 {
     std::string retval;
 
@@ -135,15 +137,47 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
     }
 }
 
+ListingPtr RedditSession::getListing(const std::string& endpoint, std::size_t limit, const Params& params)
+{
+    Params copyParams{ params };
+    copyParams.insert_or_assign("limit", std::to_string(limit));
+
+    auto listing = std::make_unique<Listing>(shared_from_this(), endpoint, limit);
+
+    //[[maybe_unused]] const auto [jsontext, url] = doGetRequest(endpoint, copyParams);
+    //if (jsontext.size() > 0)
+    //{
+    //    const auto reply = nlohmann::json::parse(jsontext);
+    //    if (reply.find("data") == reply.end())
+    //    {
+    //        throw std::runtime_error("the listing response was malformed");
+    //    }
+
+    //    listing->initialize(std::move(reply));
+    //}
+
+    return listing;
+}
+
 auto RedditSession::doGetRequest(
     const std::string& endpoint,
-    const RedditSession::Params& params,
+    const Params& params,
     bool verbose)
     -> ResponsePair
 {
     doRefreshToken();
 
-    std::string endpointUrl = requestUrl + endpoint + buildQueryParamString(params);
+    // clean the endpoint since a malformed endpoint can
+    // cause timeouts and other non-descript behavior
+    std::string cleanpoint { endpoint };
+    boost::algorithm::trim(cleanpoint);
+    if (!cleanpoint.empty())
+    {
+        if (cleanpoint.at(0) != '/') cleanpoint.insert(0, "/");
+        if (cleanpoint.at(cleanpoint.size()-1) == '/') cleanpoint.pop_back();
+    }
+
+    std::string endpointUrl = requestUrl + cleanpoint + buildQueryParamString(params);
     if (verbose)
     {
         std::cout << "request url: " << endpointUrl << std::endl;
@@ -188,7 +222,7 @@ void RedditSession::doRefreshToken()
     }
 }
 
-std::ostream& operator<<(std::ostream& os, const RedditSession::Params& params)
+std::ostream& operator<<(std::ostream& os, const Params& params)
 {
     char prefix = '{';
 
