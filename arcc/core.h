@@ -21,3 +21,5 @@
 #define APP_DOMAIN              "arcc"
 #define APP_TITLE               APP_NAME_LONG " " VERSION
 #define COPYRIGHT               "Copyright (c) 2017-2019, github.com/zethon"
+
+#define GITHUB_PAGE             "https://github.com/zethon/arcc"
