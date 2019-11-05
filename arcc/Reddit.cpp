@@ -6,6 +6,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <nlohmann/json.hpp>
+#include <fmt/core.h>
 
 #include "core.h"
 #include "utils.h"
@@ -46,10 +47,10 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
         _refreshToken(refreshToken), 
         _expiry(expiry)
 {
-    const std::string userAgent = (boost::format("%1%:%2%:v%3% (by /u/wolosocu)") 
-        % utils::getOsString() 
-        % APP_TITLE 
-        % VERSION).str();
+    const std::string userAgent = fmt::format("{}:{}:v{} (by /u/wolosocu)"
+        ,utils::getOsString() 
+        ,APP_TITLE 
+        ,VERSION);
 
     _webclient.setUserAgent(userAgent);
     _webclient.setHeader("Authorization: bearer " + _accessToken);
@@ -105,9 +106,7 @@ void RedditSession::doRefreshToken()
         WebClient client;
         client.setBasicAuth(REDDIT_CLIENT_ID,"");
 
-        const std::string postData = (boost::format("grant_type=refresh_token&refresh_token=%1%") 
-            % _refreshToken).str();
-
+        const std::string postData = fmt::format("grant_type=refresh_token&refresh_token={}", _refreshToken);
         auto result = client.doRequest("https://www.reddit.com/api/v1/access_token", postData, WebClient::Method::POST);
 
         if (result.status == 200)

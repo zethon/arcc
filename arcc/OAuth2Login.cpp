@@ -1,8 +1,8 @@
 // Another Reddit Console Client
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
-#include <boost/format.hpp>
 
+#include <fmt/core.h>
 #include <nlohmann/json.hpp>
 
 #include "Reddit.h"
@@ -12,14 +12,14 @@
 #include "OAuth2Login.h"
 
 namespace arcc
-
 {
+
 OAuth2Login::OAuth2Login()
-    : _loginUrl((boost::format("https://ssl.reddit.com/api/v1/authorize?client_id=%1%&response_type=code&state=%2%&redirect_uri=%3%&duration=permanent&scope=%4%")
-    % REDDIT_CLIENT_ID
-    % REDDIT_RANDOM_STRING
-    % REDDIT_REDIRECT_URL
-    % REDDIT_SCOPE).str())
+    : _loginUrl{fmt::format("https://ssl.reddit.com/api/v1/authorize?client_id={}&response_type=code&state={}&redirect_uri={}&duration=permanent&scope={}",
+    REDDIT_CLIENT_ID, 
+    REDDIT_RANDOM_STRING, 
+    REDDIT_REDIRECT_URL, 
+    REDDIT_SCOPE)}
 {
     _server.config.port = 27182;
 }
@@ -51,8 +51,12 @@ void OAuth2Login::start()
                 WebClient client;
                 client.setBasicAuth(REDDIT_CLIENT_ID,"");
 
-                const std::string postData = (boost::format("grant_type=authorization_code&code=%1%&redirect_uri=%2%") % codeIt->second % REDDIT_REDIRECT_URL).str();
-                auto result = client.doRequest("https://www.reddit.com/api/v1/access_token", postData, WebClient::Method::POST);
+                const std::string postData = 
+                    fmt::format("grant_type=authorization_code&code={}&redirect_uri={}", 
+                        codeIt->second, REDDIT_REDIRECT_URL);
+
+                auto result = client.doRequest("https://www.reddit.com/api/v1/access_token", 
+                    postData, WebClient::Method::POST);
                 
                 if (result.status == 200)
                 {
