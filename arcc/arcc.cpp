@@ -4,15 +4,15 @@
 #include <iostream>
 
 #include "core.h"
-#include "Terminal.h"
 #include "ConsoleApp.h"
 
 int main(int, char*[])
 {
     using namespace arcc;
 
-    std::cout <<  APP_TITLE << std::endl;
+    std::cout << APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;
+    std::cout << std::endl;
 
     auto consoleApp = std::unique_ptr<ConsoleApp>(new ConsoleApp());
     if (consoleApp->loadSession())

@@ -11,9 +11,13 @@
 
 #include <rang.hpp>
 #include <fmt/core.h>
+#include <nlohmann/json_fwd.hpp>
 
 #include "utils.h"
 #include "SimpleArgs.h"
+#include "OAuth2Login.h"
+#include "core.h"
+
 #include "ConsoleApp.h"
 
 namespace arcc
@@ -36,6 +40,7 @@ void ConsoleApp::printError(const std::string& error)
     std::cout 
         << rang::fg::red
         << rang::style::bold
+        << "-- "
         << "error: " 
         << rang::fg::reset
         << rang::style::reset
@@ -48,6 +53,7 @@ void ConsoleApp::printWarning(const std::string& warning)
     std::cout
         << rang::fg::yellow
         << rang::style::bold
+        << "-- "
         << warning
         << rang::fg::reset
         << rang::style::reset
@@ -59,6 +65,7 @@ void ConsoleApp::printStatus(const std::string& status)
     std::cout 
         << rang::fg::magenta
         << rang::style::bold
+        << "-- "
         << status
         << rang::fg::reset
         << rang::style::reset
@@ -181,11 +188,21 @@ void ConsoleApp::initCommands()
             this->doExitApp();
         });
 
-    addCommand("about", "information about this arcc",
-        [](const std::string&) { utils::openBrowser("https://github.com/zethon/arcc"); });
+    addCommand("about", "information about arcc",
+        [](const std::string&) 
+        { 
+            std::cout << fmt::format("{} ({})\n", APP_TITLE, utils::getOsString());
+            std::cout << COPYRIGHT << '\n';
+            std::cout << fmt::format("build-date : {}\n", BUILDTIMESTAMP);
+            std::cout << fmt::format("user-folder : {}\n", utils::getUserFolder());
+            std::cout << std::endl;
+        });
+
+    addCommand("git", "load the github page for arcc",
+        [](const std::string&) { utils::openBrowser(GITHUB_PAGE); });
 
     addCommand("issue,issues,bug,bugs,", "report an issue with arcc",
-        [](const std::string&) { utils::openBrowser("https://github.com/zethon/arcc/issues"); });
+        [](const std::string&) { utils::openBrowser(fmt::format("{}/issues", GITHUB_PAGE)); });
 
     addCommand("open,launch", "open a website in the default browser",
         [](const std::string& params)

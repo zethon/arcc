@@ -36,6 +36,7 @@ if (BUILD_SESSION_TESTS)
         ../arcc/Listing.cpp
         ../arcc/Reddit.cpp
         ../arcc/WebClient.cpp
+        ../arcc/OAuth2Login.cpp
     )
 
     if (WIN32)
@@ -57,4 +58,4 @@ if (BUILD_SESSION_TESTS)
     add_test(NAME TestSession
         COMMAND ${CMAKE_CURRENT_BINARY_DIR}/TestSession
     )
-endif (BUILD_SESSION_TEST)
+endif (BUILD_SESSION_TESTS)
