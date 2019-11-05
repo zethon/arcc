@@ -8,49 +8,12 @@
 #include <memory>
 
 #include <boost/format.hpp>
-#include <server_http.hpp>
 
 #include "Listing.h"
 #include "WebClient.h"
 
-#define REDDIT_CLIENT_ID        "8T4M69w3Eop4YA"
-#define REDDIT_RANDOM_STRING    "ArccClientForReddit"
-#define REDDIT_REDIRECT_URL     "http://localhost:27182/oauth2"
-#define REDDIT_SCOPE            "identity,edit,history,mysubreddits,privatemessages,read,save,submit,subscribe,vote"
-
 namespace arcc
 {
-
-class RedditSession;
-using RedditSessionPtr = std::shared_ptr<RedditSession>;
-using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
-
-class OAuth2Login 
-{
-    const std::string               _loginUrl;
-    HttpServer                      _server;
-    bool                            _loggedIn = false;
-    RedditSessionPtr                _reddit;
-
-public:
-    OAuth2Login()
-        : _loginUrl((boost::format("https://ssl.reddit.com/api/v1/authorize?client_id=%1%&response_type=code&state=%2%&redirect_uri=%3%&duration=permanent&scope=%4%")
-        % REDDIT_CLIENT_ID
-        % REDDIT_RANDOM_STRING
-        % REDDIT_REDIRECT_URL
-        % REDDIT_SCOPE).str())
-    {
-        _server.config.port = 27182;
-    }
-
-    // TODO: this is a blocking call that will wait forever and returns once the user's 
-    // browser loads and the user either clicks authorize or decline. Eventually there
-    // should be a timeout OR a way in the terminal to allow the user to abort
-    void start();
-
-    bool loggedIn() { return _loggedIn; }
-    RedditSessionPtr getRedditSession() { return _reddit; }
-};
 
 class RedditSession final
     : public std::enable_shared_from_this<RedditSession>

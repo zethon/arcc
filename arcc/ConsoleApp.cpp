@@ -11,9 +11,12 @@
 
 #include <rang.hpp>
 #include <fmt/core.h>
+#include <nlohmann/json_fwd.hpp>
 
 #include "utils.h"
 #include "SimpleArgs.h"
+#include "OAuth2Login.h"
+
 #include "ConsoleApp.h"
 
 namespace arcc

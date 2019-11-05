@@ -9,6 +9,7 @@ set(SOURCE_FILES
     utils.cpp
     SimpleArgs.cpp
     WebClient.cpp
+    OAuth2Login.cpp
 )
 
 set(HEADER_FILES
@@ -21,6 +22,7 @@ set(HEADER_FILES
     utils.h
     SimpleArgs.h
     WebClient.h
+    OAuth2Login.h
 )
 
 if (WIN32)

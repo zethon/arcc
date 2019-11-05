@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include "core.h"
-#include "Terminal.h"
 #include "ConsoleApp.h"
 
 int main(int, char*[])
