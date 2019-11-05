@@ -53,7 +53,7 @@ void OAuth2Login::start()
                 }
                 else
                 {
-                    // TODO: need to support more failures if the retrieval to get the access token files
+                    // TODO: need to support more failures if the retrieval to get the access token fails
                     //       see https://github.com/reddit/reddit/wiki/oauth2#authorization
                     
                     if (result.status == 401)
