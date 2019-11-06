@@ -307,7 +307,7 @@ void ConsoleApp::defaultSettings()
     _settings["render.list.url"] = false;
     _settings["render.list.votes"] = true;
     _settings["render.list.name"] = false;
-    _settings["render.list.title.length"] = 75;
+    _settings["render.list.title.length"] = 0;
 }
 
 // poor man's way of updating settings, would be better
