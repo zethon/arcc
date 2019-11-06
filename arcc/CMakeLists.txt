@@ -4,27 +4,27 @@ set(SOURCE_FILES
     arcc.cpp
     CommandHistory.cpp
     ConsoleApp.cpp
+    CursesApp.cpp
     Listing.cpp
+    OAuth2Login.cpp
     Reddit.cpp
     Settings.cpp
-    utils.cpp
     SimpleArgs.cpp
+    utils.cpp
     WebClient.cpp
-    OAuth2Login.cpp
 )
 
 set(HEADER_FILES
     CommandHistory.h
     ConsoleApp.h
     core.h
+    CursesApp.h
     Listing.h
+    OAuth2Login.h
     Reddit.h
-    Settings.h
     Terminal.h
     utils.h
-    SimpleArgs.h
     WebClient.h
-    OAuth2Login.h
 )
 
 if (WIN32)

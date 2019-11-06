@@ -7,7 +7,6 @@
 
 #include "core.h"
 #include "ConsoleApp.h"
-#include "Settings.h"
 
 arcc::Settings registerAllSettings()
 {
@@ -48,6 +47,13 @@ arcc::Settings initSettings()
 int main(int, char*[])
 {
     using namespace arcc;
+
+    setlocale(LC_ALL, "");
+
+    // [[maybe_unused]] auto window = arcc::curses_init();
+    // printw("hi there! %d", static_cast<void*>(window));
+    // getch();
+    // endwin();   
 
     std::cout << APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;
