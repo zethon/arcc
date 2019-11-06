@@ -5,15 +5,17 @@
 
 #include <stdexcept>
 
-#ifdef _WINDOWS
-#   include <pdcurses.h>
-#elif defined(__APPLE__)    
-#   include <curses.h>
-#elif defined(__linux__)
-#   include <curses.h>
-#else
-#   error "ncurses is not supported on this system"
-#endif
+//#ifdef _WINDOWS
+//#   include <pdcurses.h>
+//#elif defined(__APPLE__)    
+//#   include <curses.h>
+//#elif defined(__linux__)
+//#   include <curses.h>
+//#else
+//#   error "ncurses is not supported on this system"
+//#endif
+
+#include <curses.h>
 
 namespace arcc
 {

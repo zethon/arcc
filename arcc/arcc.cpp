@@ -5,6 +5,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include <curses.h>
+
 #include "core.h"
 #include "ConsoleApp.h"
 
@@ -51,9 +53,11 @@ int main(int, char*[])
     setlocale(LC_ALL, "");
 
     // [[maybe_unused]] auto window = arcc::curses_init();
+    initscr();
+    printw("Hi there!");
     // printw("hi there! %d", static_cast<void*>(window));
-    // getch();
-    // endwin();   
+    getch();
+    endwin();   
 
     std::cout << APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;
