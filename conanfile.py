@@ -61,6 +61,6 @@ class ArccConan(ConanFile):
 
     def requirements(self):
         if self.settings.os == "Windows":
-            self.requires("pdcurses/3.6@arcc/stable")
+            self.requires("pdcurses/3.9@zethon/stable")
         else:
             self.requires("ncurses/6.1@conan/stable")
