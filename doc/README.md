@@ -1,6 +1,6 @@
 ## Documentation
 
-[settings-doc](settings-doc) - List of configuration settings
+[settings-doc](settings-doc.md) - List of configuration settings
 
 ## Commands
 
