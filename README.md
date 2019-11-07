@@ -27,32 +27,6 @@ Just install and run! 👍
 
 Coming soon! ⏳
 
-## Used Third Party Tools
-
-* `boost`<br/>
-Boost Software License - http://www.boost.org/users/license.html</br>
-http://www.boost.org
-
-* `libcurl`<br/>
-The curl license - https://curl.haxx.se/docs/copyright.html</br>
-https://curl.haxx.se/
-
-* `JSON for Modern C++`<br/>
-MIT License - https://github.com/nlohmann/json/blob/develop/LICENSE.MIT<br/>
-https://nlohmann.github.io/json/
-
-* `Simple-Web-Server`<br/>
-MIT License - https://github.com/eidheim/Simple-Web-Server/blob/master/LICENSE<br/>
-https://github.com/eidheim/Simple-Web-Server
-
-<!-- * `Lightweight C++ command line option parser`<br/>
-MIT License - https://github.com/jarro2783/cxxopts/blob/master/LICENSE<br/>
-https://github.com/jarro2783/cxxopts -->
-
-* `rang`<br/>
-The Unlicense - https://github.com/agauniyal/rang/blob/master/LICENSE<br/>
-https://github.com/agauniyal/rang
-
 <!-- footnotes -->
 [travis-img]: https://travis-ci.org/zethon/arcc.svg?branch=master
 [travis]: https://travis-ci.org/zethon/arcc
