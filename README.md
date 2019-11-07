@@ -17,15 +17,15 @@
 
 `arcc` is console client for Reddit written in C++. What does this mean?
 
-* **NO** 👎 &nbsp; Javascript, Python, ScriptLanguageOfTheDay modules to install!
-* **NO** 👎 &nbsp; `npm`, `brew`, `someotherthirdpartytool` to deal with!
-* **NO** 👎 &nbsp; BS!
+* 👎 **NO** Javascript, Python, ScriptLanguageOfTheDay modules to install!
+* 👎 **NO** npm`, `brew`, `someotherthirdpartytool` to deal with!
+* 👎 **NO** BS!
 
 Just install and run! 👍 
 
 ## Downloading
 
-Coming soon! ⏳
+Coming soon! ⏳ 😂
 
 <!-- footnotes -->
 [travis-img]: https://travis-ci.org/zethon/arcc.svg?branch=master
