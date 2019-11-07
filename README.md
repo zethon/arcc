@@ -18,7 +18,7 @@
 `arcc` is console client for Reddit written in C++. What does this mean?
 
 * 👎 **NO** Javascript, Python, ScriptLanguageOfTheDay modules to install!
-* 👎 **NO** npm`, `brew`, `someotherthirdpartytool` to deal with!
+* 👎 **NO** `npm`, `brew`, `someotherthirdpartytool` to deal with!
 * 👎 **NO** BS!
 
 Just install and run! 👍 
