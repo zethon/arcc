@@ -20,8 +20,7 @@ class RedditSession final
 {
     std::function<void(void)>   _refreshCallback;
 
-    const std::string           oauthUrl = "https://oauth.reddit.com";
-    const std::string           guestUtl = "https://reddit.com";
+    const std::string           _oauthUrl = "https://oauth.reddit.com";
 
     std::string                 _accessToken;
     std::string                 _refreshToken;

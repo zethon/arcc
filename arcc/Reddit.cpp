@@ -95,7 +95,7 @@ std::string RedditSession::doGetRequest(
         if (cleanpoint.at(cleanpoint.size()-1) == '/') cleanpoint.pop_back();
     }
 
-    _lastRequest = oauthUrl + cleanpoint + buildQueryParamString(params);
+    _lastRequest = _oauthUrl + cleanpoint + buildQueryParamString(params);
     
     if (verbose)
     {
@@ -131,13 +131,10 @@ void RedditSession::doRefreshToken()
         }
 
         auto result = client.doRequest("https://www.reddit.com/api/v1/access_token", postData, WebClient::Method::POST);
-        std::cout << "result: " << result.status << std::endl;
 
         if (result.status == 200)
         {
-            std::cout << "data: " << result.data << std::endl;
             auto jreply = nlohmann::json::parse(result.data);
-
 
             _accessToken = jreply["access_token"].get<std::string>();
             _webclient.setHeader("Authorization: bearer " + _accessToken);
