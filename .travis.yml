@@ -51,7 +51,7 @@ matrix:
       compiler: clang
       env: CONFIG=Debug
     - os: linux
-      dist: trusty
+      dist: bionic
       sudo: required
       compiler: gcc
       language: python
