@@ -3,11 +3,12 @@
 
 #include <iostream>
 
-#include <boost/filesystem.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 #include <curses.h>
 
 #include "core.h"
+#include "SimpleArgs.h"
 #include "ConsoleApp.h"
 
 arcc::Settings registerAllSettings()
@@ -46,43 +47,81 @@ arcc::Settings initSettings()
 
     return settings;
 }
-int main(int, char*[])
+
+int main(int argc, char* argv[])
 {
     using namespace arcc;
 
     setlocale(LC_ALL, "");
 
-    // [[maybe_unused]] auto window = arcc::curses_init();
-    initscr();
-    printw("Hi there!");
-    // printw("hi there! %d", static_cast<void*>(window));
-    getch();
-    endwin();   
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help,?", "print help message")
+        ("version,v", "print version string")
+        ("mode,m", po::value<std::string>(), "run in 'curses' (default) or 'text' mode")
+    ;
 
-    std::cout << APP_TITLE << std::endl;
-    std::cout << COPYRIGHT << std::endl;
-    std::cout << std::endl;
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
 
-    auto settings = initSettings();
-
-    auto consoleApp = std::make_unique<ConsoleApp>(settings);
-    if (consoleApp->loadSession())
+    if (vm.count("help")) 
     {
-        ConsoleApp::printStatus("saved session restored");
+        std::cout << desc << "\n";
+        return 1;
     }
     else
     {
         consoleApp->setRedditSession(std::make_shared<arcc::RedditSession>());
     }
 
-    try
+    enum ModeEnum { NCURSES, TEXT } termMode = NCURSES;
+    if (vm.count("mode"))
     {
-        consoleApp->run();
-        settings.save(utils::getDefaultConfigFile());
+        const std::string mode = vm["mode"].as<std::string>();
+        if (boost::iequals(mode, "text")) 
+        {   
+            termMode = TEXT;
+        }
+        else if (!boost::iequals(mode, "curses"))
+        {
+            std::cout << "error: possible values for 'mode' are [curses|text]\n";
+            return 1;
+        }
     }
-    catch (const std::exception& ex)
+
+    if (termMode == NCURSES)
     {
-        std::cerr << "terminal error: " << ex.what() << std::endl;
+        // [[maybe_unused]] auto window = arcc::curses_init();
+        initscr();
+        printw("Hi there!");
+        // printw("hi there! %d", static_cast<void*>(window));
+        getch();
+        endwin();
+    }
+    else
+    {
+        std::cout << APP_TITLE << std::endl;
+        std::cout << COPYRIGHT << std::endl;
+        std::cout << std::endl;
+
+    auto settings = initSettings();
+
+    auto consoleApp = std::make_unique<ConsoleApp>(settings);
+        if (consoleApp->loadSession())
+        {
+            ConsoleApp::printStatus("saved session restored");
+        }
+
+        try
+        {
+            consoleApp->run();
+        settings.save(utils::getDefaultConfigFile());
+        }
+        catch (const std::exception& ex)
+        {
+            std::cerr << "terminal error: " << ex.what() << std::endl;
+        }
     }
 
     return 0;
