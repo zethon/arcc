@@ -10,26 +10,6 @@ install:
       # cert failure when trying to download curl
       sudo pip install conan
       alias python=python3
-
-      # Since we are using GCC7 we need to update `ld`. The default version, 2.24, will
-      # fail to link the generated object files. There seems to be no other easier way
-      # to update "ld", so we pull down binutils, build it and then link the resulting
-      # executable to the system's path
-      pushd .
-      cd ..
-      mkdir binutils
-      cd binutils
-      wget http://ftp.gnu.org/gnu/binutils/binutils-2.30.tar.gz
-      tar -xf binutils-2.30.tar.gz
-      mkdir binutils-build
-      cd binutils-build
-      ../binutils-2.30/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
-      make
-      sudo make install
-      cd ..
-      sudo rm -f /usr/bin/ld
-      sudo ln -s binutils-build/ld/ld-new /usr/bin/ld
-      popd      
     fi
 
   - |
@@ -50,31 +30,41 @@ matrix:
       osx_image: xcode10
       compiler: clang
       env: CONFIG=Debug
-    # - os: linux
-    #   dist: trusty
-    #   sudo: required
-    #   compiler: gcc
-    #   language: python
-    #   python: "3.6"
-    #   env:
-    #     - CC_COMPILER=gcc-7
-    #     - CXX_COMPILER=g++-7
-    #     - CONFIG=RelWithDebInfo
-    #   addons:
-    #     apt:
-    #       packages:
-    #         - gcc-7
-    #         - g++-7
-    #         - build-essential
-    #       sources:
-    #         - ubuntu-toolchain-r-test
+    - os: linux
+      dist: bionic
+      sudo: required
+      compiler: gcc
+      language: python
+      python: "3.6"
+      env:
+        - CC_COMPILER=gcc-7
+        - CXX_COMPILER=g++-7
+        - CONFIG=RelWithDebInfo
+      addons:
+        apt:
+          packages:
+            - gcc-7
+            - g++-7
+            - build-essential
+          sources:
+            - ubuntu-toolchain-r-test
 
 script:
   - git submodule update --init --recursive
   - mkdir build
   - cd build
   - conan install .. --build missing -s cppstd=17
-  - cmake .. -DBUILD_ARCC_TESTS=ON
+
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      cmake .. -DBUILD_ARCC_TESTS=OFF
+    fi
+
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      cmake .. -DBUILD_ARCC_TESTS=ON
+    fi  
+  
   - cmake --build . --config "${CONFIG}" -- -j3 
   
 after_success:

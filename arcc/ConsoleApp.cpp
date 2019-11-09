@@ -78,9 +78,8 @@ ConsoleApp::ConsoleApp()
     initSettings();
     initCommands();
 
-    boost::filesystem::path homefolder { utils::getUserFolder() };
-    boost::filesystem::path sessionfile = homefolder / ".arcc_history";
-    _history.setHistoryFile(sessionfile.string());
+    const std::string historyfile{ utils::getDefaultHistoryFile() };
+    _history.setHistoryFile(historyfile);
     _history.loadHistory(false);
 }
 
@@ -260,8 +259,8 @@ void ConsoleApp::initCommands()
 
 void ConsoleApp::initSettings()
 {
-    boost::filesystem::path homefolder{ utils::getUserFolder() };
-    boost::filesystem::path configfile = homefolder / ".arcc_config";
+    boost::filesystem::path configfile{ utils::getDefaultConfigFile() };
+
     if (boost::filesystem::exists(configfile))
     {
         std::ifstream in(configfile.string());
@@ -277,8 +276,7 @@ void ConsoleApp::initSettings()
 
 void ConsoleApp::saveSettings()
 {
-    boost::filesystem::path homefolder{ utils::getUserFolder() };
-    boost::filesystem::path configfile = homefolder / ".arcc_config";
+    boost::filesystem::path configfile{ utils::getDefaultConfigFile() };
 
     boost::filesystem::ofstream out;
     out.open(configfile.string(),
@@ -489,8 +487,7 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const Params& p
 
 bool ConsoleApp::loadSession()
 {
-    boost::filesystem::path homefolder { utils::getUserFolder() };
-    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
+    boost::filesystem::path sessionfile{ utils::getDefaultSessionFile() };
 
     if (boost::filesystem::exists(sessionfile))
     {
@@ -498,7 +495,8 @@ bool ConsoleApp::loadSession()
 
         try
         {
-            nlohmann::json j;
+            nlohmann::json j = nlohmann::json::parse(i);
+
             i >> j;
 
             if (j.find("accessToken") != j.end() && j.find("refreshToken") != j.end() && j.find("expiry") != j.end())
@@ -524,8 +522,7 @@ bool ConsoleApp::loadSession()
 
 void ConsoleApp::saveSession()
 {
-    boost::filesystem::path homefolder { utils::getUserFolder() };
-    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
+    boost::filesystem::path sessionfile{ utils::getDefaultSessionFile() };
 
     nlohmann::json j;
 
@@ -544,9 +541,9 @@ void ConsoleApp::resetSession()
 {
     _reddit = std::make_shared<RedditSession>();
 
-    boost::filesystem::path homefolder { utils::getUserFolder() };
-    boost::filesystem::path sessionfile = homefolder / ".arcc_session";
-    std::ofstream out(sessionfile.string());
+    std::string sessionfile{ utils::getDefaultSessionFile() };
+
+    std::ofstream out(sessionfile);
     out << nlohmann::json{};
     out.close();
 }
@@ -873,11 +870,10 @@ void ConsoleApp::history(const std::string& params)
     }
     else
     {
-        boost::filesystem::path homefolder{ utils::getUserFolder() };
-        boost::filesystem::path configfile = homefolder / ".arcc_history";
+        const std::string historyfile{ utils::getDefaultHistoryFile() };
 
         boost::filesystem::ofstream out;
-        out.open(configfile.string(),
+        out.open(historyfile,
             boost::filesystem::ofstream::out | boost::filesystem::ofstream::trunc);
         out << std::endl;
         out.close();

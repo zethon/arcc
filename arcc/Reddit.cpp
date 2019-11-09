@@ -40,7 +40,7 @@ std::string buildQueryParamString(const Params& params)
 RedditSession::RedditSession()
     : _expiry { 0 }
 {
-    const std::string userAgent = fmt::format("{}:{}:v{} (by /u/wolosocu)"
+    const std::string userAgent = fmt::format("{}:{}:v{} (by /u/ll)"
         ,utils::getOsString() 
         ,APP_TITLE 
         ,VERSION);
