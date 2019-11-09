@@ -3,6 +3,7 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/join.hpp>
+#include <boost/process.hpp>
 #include <fmt/core.h>
 
 #include "utils.h"
@@ -36,8 +37,8 @@
 namespace utils
 {
 
-NotImplementedException::NotImplementedException()
-    : std::logic_error("Function not yet implemented.")
+NotImplementedException::NotImplementedException(const std::string& funcname)
+    : std::logic_error(fmt::format("Function '{}' not yet implemented.", funcname))
 {
     // nothing to do
 }
@@ -106,9 +107,11 @@ void openBrowser(const std::string& url_str)
     LSOpenCFURLRef(url, nullptr);
     CFRelease(url);
 #elif defined(__linux__)
-    throw NotImplementedException();
+    boost::process::system("/usr/bin/xdg-open", url_str,
+        boost::process::std_err > boost::process::null,
+        boost::process::std_out > boost::process::null);
 #else
-    throw NotImplementedException();
+    throw NotImplementedException("openBrowser");
 #endif
 }
 
@@ -217,7 +220,7 @@ static const std::vector<std::string> falseStrings = { "false", "off", "0" };
 
 bool isBoolean(const std::string_view s)
 {
-    auto temp = boost::join(trueStrings, falseStrings);
+    auto temp = boost::range::join(trueStrings, falseStrings);
     return std::find_if(std::begin(temp), std::end(temp),
         [s](const std::string& val) -> bool
         {
