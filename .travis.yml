@@ -1,5 +1,8 @@
 language: cpp
 
+before_install:
+  - pip install --user cpp-coveralls
+
 install:
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
@@ -77,10 +80,11 @@ script:
   - cd build
   - conan install .. --build missing -s cppstd=17
   - cmake .. -DBUILD_ARCC_TESTS=ON
-  - cmake --build . --config "${CONFIG}" -- -j3 
+  - cmake --build . --config "${CONFIG}" -- -j3
+  - ctest -C "${CONFIG}"
   
 after_success:
-  - ctest -C "${CONFIG}"
+  - coveralls --root . -E ".*CMakeFiles.*" 
 
 notifactions:
   email:
