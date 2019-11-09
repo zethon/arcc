@@ -37,4 +37,8 @@ bool isNumeric(const std::string_view& s);
 bool isBoolean(const std::string_view s);
 bool convertToBool(const std::string_view s);
 
+std::string getDefaultHistoryFile();
+std::string getDefaultSessionFile();
+std::string getDefaultConfigFile();
+
 } // namespace

@@ -3,7 +3,6 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/join.hpp>
-#include <boost/process.hpp>
 #include <fmt/core.h>
 
 #include "utils.h"
@@ -27,11 +26,22 @@
 #   include <unistd.h>
 #   include <sys/types.h>
 #   include <pwd.h>
+#   include <boost/process.hpp>
 #endif
 
 #ifdef __APPLE__
 #   include <CoreFoundation/CFBundle.h>
 #   include <ApplicationServices/ApplicationServices.h>
+#endif
+
+// There's some weirdness going on in Ubuntu where using the / operator
+// on Ubuntu was throwing an error in some instances. Instead I set out
+// to use boost::filesystem::path::seperator but that turned out to be
+// a pain since it is multibyte on Windows! So I did this manually.
+#ifdef _WINDOWS
+#   define PATH_SEPERATOR   '\\'
+#else
+#   define PATH_SEPERATOR   '/'
 #endif
 
 namespace utils
@@ -254,5 +264,24 @@ bool convertToBool(const std::string_view s)
 
     throw std::runtime_error(fmt::format("invalid value '{}'", s));
 }
+
+std::string getDefaultHistoryFile()
+{
+    return fmt::format("{}{}{}",
+        utils::getUserFolder(), PATH_SEPERATOR, ".arcc_history");
+}
+
+std::string getDefaultSessionFile()
+{
+    return fmt::format("{}{}{}",
+        utils::getUserFolder(), PATH_SEPERATOR, ".arcc_session");
+}
+
+std::string getDefaultConfigFile()
+{
+    return fmt::format("{}{}{}",
+        utils::getUserFolder(), PATH_SEPERATOR, ".arcc_config");
+}
+
 
 } // namespace

@@ -78,9 +78,7 @@ ConsoleApp::ConsoleApp()
     initSettings();
     initCommands();
 
-    const std::string historyfile =
-            utils::getUserFolder() + boost::filesystem::path::separator + ".arcc_history";
-
+    const std::string historyfile{ utils::getDefaultHistoryFile() };
     _history.setHistoryFile(historyfile);
     _history.loadHistory(false);
 }
@@ -261,8 +259,7 @@ void ConsoleApp::initCommands()
 
 void ConsoleApp::initSettings()
 {
-    boost::filesystem::path configfile =
-            boost::filesystem::path { utils::getUserFolder() + boost::filesystem::path::separator + ".arcc_config" };
+    boost::filesystem::path configfile{ utils::getDefaultConfigFile() };
 
     if (boost::filesystem::exists(configfile))
     {
@@ -279,8 +276,7 @@ void ConsoleApp::initSettings()
 
 void ConsoleApp::saveSettings()
 {
-    boost::filesystem::path configfile =
-            boost::filesystem::path { utils::getUserFolder() + boost::filesystem::path::separator + ".arcc_config" };
+    boost::filesystem::path configfile{ utils::getDefaultConfigFile() };
 
     boost::filesystem::ofstream out;
     out.open(configfile.string(),
@@ -491,8 +487,7 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const Params& p
 
 bool ConsoleApp::loadSession()
 {
-    boost::filesystem::path sessionfile =
-            boost::filesystem::path { utils::getUserFolder() + boost::filesystem::path::separator + ".arcc_session" };
+    boost::filesystem::path sessionfile{ utils::getDefaultSessionFile() };
 
     if (boost::filesystem::exists(sessionfile))
     {
@@ -527,8 +522,7 @@ bool ConsoleApp::loadSession()
 
 void ConsoleApp::saveSession()
 {
-    boost::filesystem::path sessionfile =
-            boost::filesystem::path { utils::getUserFolder() + boost::filesystem::path::separator + ".arcc_session" };
+    boost::filesystem::path sessionfile{ utils::getDefaultSessionFile() };
 
     nlohmann::json j;
 
@@ -547,8 +541,7 @@ void ConsoleApp::resetSession()
 {
     _reddit = std::make_shared<RedditSession>();
 
-    std::string sessionfile =
-        utils::getUserFolder() + boost::filesystem::path::separator + ".arcc_session";
+    std::string sessionfile{ utils::getDefaultSessionFile() };
 
     std::ofstream out(sessionfile);
     out << nlohmann::json{};
@@ -877,8 +870,7 @@ void ConsoleApp::history(const std::string& params)
     }
     else
     {
-        const std::string historyfile =
-                utils::getUserFolder() + boost::filesystem::path::separator + ".arcc_history";
+        const std::string historyfile{ utils::getDefaultHistoryFile() };
 
         boost::filesystem::ofstream out;
         out.open(historyfile,
