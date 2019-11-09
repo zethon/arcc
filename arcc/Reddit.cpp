@@ -37,6 +37,18 @@ std::string buildQueryParamString(const Params& params)
     return retval;
 }
 
+RedditSession::RedditSession()
+    : _expiry { 0 }
+{
+    const std::string userAgent = fmt::format("{}:{}:v{} (by /u/wolosocu)"
+        ,utils::getOsString() 
+        ,APP_TITLE 
+        ,VERSION);
+
+    _webclient.setUserAgent(userAgent);
+    _webclient.setHeader("Authorization: bearer " + _accessToken);
+}
+
 RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry)
     : RedditSession(accessToken, refreshToken, expiry, 0)
 {
@@ -45,7 +57,8 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
 RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh)
     : _accessToken(accessToken), 
         _refreshToken(refreshToken), 
-        _expiry(expiry)
+        _expiry(expiry),
+        _loggedIn(true)
 {
     const std::string userAgent = fmt::format("{}:{}:v{} (by /u/wolosocu)"
         ,utils::getOsString() 
@@ -65,11 +78,10 @@ RedditSession::RedditSession(const std::string& accessToken, const std::string& 
     }
 }
 
-auto RedditSession::doGetRequest(
+std::string RedditSession::doGetRequest(
     const std::string& endpoint,
     const Params& params,
     bool verbose)
-    -> ResponsePair
 {
     doRefreshToken();
 
@@ -83,30 +95,41 @@ auto RedditSession::doGetRequest(
         if (cleanpoint.at(cleanpoint.size()-1) == '/') cleanpoint.pop_back();
     }
 
-    std::string endpointUrl = requestUrl + cleanpoint + buildQueryParamString(params);
+    _lastRequest = _oauthUrl + cleanpoint + buildQueryParamString(params);
+    
     if (verbose)
     {
-        std::cout << "request url: " << endpointUrl << std::endl;
+        std::cout << "request url: " << _lastRequest << std::endl;
     }
 
-    auto result = _webclient.doRequest(endpointUrl);
+    auto result = _webclient.doRequest(_lastRequest);
     if (verbose)
     {
         std::cout << "response: " << result << std::endl;
     }
 
-    return { result.data, endpointUrl };
+    return result.data;
 }
 
 void RedditSession::doRefreshToken()
 {
     std::time_t elapsed_seconds = std::time(nullptr) - _lastRefresh;
-    if (elapsed_seconds > _expiry)
+    if (elapsed_seconds > _expiry || _expiry == 0)
     {
         WebClient client;
-        client.setBasicAuth(REDDIT_CLIENT_ID,"");
+        std::string postData;
 
-        const std::string postData = fmt::format("grant_type=refresh_token&refresh_token={}", _refreshToken);
+        if (loggedIn())
+        {
+            client.setBasicAuth(REDDIT_CLIENT_ID,"");
+            postData = fmt::format("grant_type=refresh_token&refresh_token={}", _refreshToken);
+        }
+        else
+        {
+            client.setBasicAuth(REDDIT_CLIENT_ID,"client_secret??");
+            postData = "grant_type=https://oauth.reddit.com/grants/installed_client&\\&device_id=34jr438r043j0438j043";
+        }
+
         auto result = client.doRequest("https://www.reddit.com/api/v1/access_token", postData, WebClient::Method::POST);
 
         if (result.status == 200)
