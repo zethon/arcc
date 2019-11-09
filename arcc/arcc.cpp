@@ -19,6 +19,10 @@ int main(int, char*[])
     {
         ConsoleApp::printStatus("saved session restored");
     }
+    else
+    {
+        consoleApp->setRedditSession(std::make_shared<arcc::RedditSession>());
+    }
 
     try
     {

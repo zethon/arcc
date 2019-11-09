@@ -142,7 +142,7 @@ void ConsoleApp::initCommands()
     addCommand("login", "login",
         [this](const std::string&)
         {
-            if (!this->getRedditSession())
+            if (!_reddit->loggedIn())
             {
                 OAuth2Login login;
                 login.start(); // will block until the login results are returned
@@ -542,7 +542,7 @@ void ConsoleApp::saveSession()
 
 void ConsoleApp::resetSession()
 {
-    _reddit.reset(); 
+    _reddit = std::make_shared<RedditSession>();
 
     boost::filesystem::path homefolder { utils::getUserFolder() };
     boost::filesystem::path sessionfile = homefolder / ".arcc_session";

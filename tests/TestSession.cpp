@@ -140,6 +140,11 @@ BOOST_AUTO_TEST_CASE(testHotSubListing)
     BOOST_REQUIRE_EQUAL(page.at(1).at("data").at("name"), "t3_7eojwf"s); 
 }
 
+BOOST_AUTO_TEST_SUITE_END() // Session
+
+
+BOOST_AUTO_TEST_SUITE(GuestSession)
+
 BOOST_AUTO_TEST_CASE(testGuestHotSubList)
 {
     // create default guest session
@@ -156,4 +161,4 @@ BOOST_AUTO_TEST_CASE(testGuestHotSubList)
     BOOST_REQUIRE_EQUAL(page.at(1).at("data").at("name"), "t3_7eojwf"s); 
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // GuestSession

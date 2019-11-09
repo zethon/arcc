@@ -114,7 +114,7 @@ std::string RedditSession::doGetRequest(
 void RedditSession::doRefreshToken()
 {
     std::time_t elapsed_seconds = std::time(nullptr) - _lastRefresh;
-    if (elapsed_seconds > _expiry)
+    if (elapsed_seconds > _expiry || _expiry == 0)
     {
         WebClient client;
         std::string postData;
