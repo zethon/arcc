@@ -39,9 +39,8 @@ BOOST_AUTO_TEST_CASE(TestWhoAmI)
     auto session = loadSession(_SESSION_FILE);
     BOOST_REQUIRE(session);
 
-    const auto& [jsontext, url] = session->doGetRequest("/api/v1/me");
+    const auto jsontext = session->doGetRequest("/api/v1/me");
     BOOST_REQUIRE(!jsontext.empty());
-    BOOST_CHECK(!url.empty());
 
     nlohmann::json j = nlohmann::json::parse(jsontext);
     BOOST_CHECK(!j.value("name", "").empty());
@@ -129,6 +128,22 @@ BOOST_AUTO_TEST_CASE(testNewSubListing)
 BOOST_AUTO_TEST_CASE(testHotSubListing)
 {
     auto session = loadSession(_SESSION_FILE);
+
+    // Based off of this post: http://shorturl.at/btwH4, we know that
+    // the all time top voted thread was Obama's AMA
+    arcc::Params params{ {"t", "all"} };
+    arcc::Listing listing{ session, "/r/IAmA/top" , 5u, params };
+    arcc::Listing::Page page = listing.getFirstPage();
+
+    BOOST_REQUIRE(page.size() > 0);
+    BOOST_REQUIRE_EQUAL(page.at(0).at("data").at("name"), "t3_z1c9z"s);
+    BOOST_REQUIRE_EQUAL(page.at(1).at("data").at("name"), "t3_7eojwf"s); 
+}
+
+BOOST_AUTO_TEST_CASE(testGuestHotSubList)
+{
+    // create default guest session
+    auto session = std::make_shared<arcc::RedditSession >(); 
 
     // Based off of this post: http://shorturl.at/btwH4, we know that
     // the all time top voted thread was Obama's AMA

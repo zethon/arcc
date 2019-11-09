@@ -53,8 +53,6 @@ Listing::Page Listing::processResponse(nlohmann::json response)
     return data.value("children", Page{});
 }
 
-
-
 Listing::Page Listing::getFirstPage()
 {
     if (auto session = _sessionPtr.lock(); session)
@@ -62,7 +60,7 @@ Listing::Page Listing::getFirstPage()
         Params params{ _params };
         params.insert_or_assign("limit", std::to_string(_limit));
 
-        [[maybe_unused]] auto[jsontext, url] = session->doGetRequest(_endpoint, params);
+        const auto jsontext = session->doGetRequest(_endpoint, params);
         if (!jsontext.empty())
         {
             const auto reply = nlohmann::json::parse(jsontext);
@@ -96,7 +94,7 @@ Listing::Page Listing::getNextPage()
         params.insert_or_assign("count", std::to_string(_count));
         params.insert_or_assign("after", _after);
 
-        [[maybe_unused]] auto[jsontext, url] = session->doGetRequest(_endpoint, params);
+        const auto jsontext = session->doGetRequest(_endpoint, params);
         if (!jsontext.empty())
         {
             const auto reply = nlohmann::json::parse(jsontext);
@@ -136,7 +134,7 @@ Listing::Page Listing::getPreviousPage()
             params.insert_or_assign("count", std::to_string(_count));
         }
 
-        [[maybe_unused]] auto[jsontext, url] = session->doGetRequest(_endpoint, params);
+        const auto jsontext = session->doGetRequest(_endpoint, params);
         if (!jsontext.empty())
         {
             const auto reply = nlohmann::json::parse(jsontext);

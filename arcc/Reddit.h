@@ -15,32 +15,31 @@
 namespace arcc
 {
 
-class RedditSession final
+class RedditSession final 
     : public std::enable_shared_from_this<RedditSession>
 {
     std::function<void(void)>   _refreshCallback;
 
-    const std::string           requestUrl = "https://oauth.reddit.com";
+    const std::string           oauthUrl = "https://oauth.reddit.com";
+    const std::string           guestUtl = "https://reddit.com";
 
     std::string                 _accessToken;
     std::string                 _refreshToken;
     
     double                      _expiry;                // number of seconds until the session needs refresh
     time_t                      _lastRefresh;           // keep track so we know when to refresh our token
-
     WebClient                   _webclient;             // our "connection" to www.reddit.com
+
+    bool                        _loggedIn = false;
+    std::string                 _lastRequest;
 
 public:
 
-    // Reponse to a Request
-    // 0 - the raw JSON text
-    // 1 - the final URL of the request
-    using ResponsePair = std::tuple<std::string, std::string>;
-
+    RedditSession();
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh);
 
-    ResponsePair doGetRequest(const std::string& endpoint,
+    std::string doGetRequest(const std::string& endpoint,
                               const Params& params = Params{},
                               bool verbose = false);
 
@@ -48,6 +47,9 @@ public:
     std::string refreshToken() const { return _refreshToken; }
     double expiry() const { return _expiry; }
     time_t lastRefresh() const { return _lastRefresh; }
+
+    bool loggedIn() const { return _loggedIn; }
+    std::string lastRequest() const { return _lastRequest; }
 
     void setRefreshCallback(std::function<void(void)> cb)
     {

@@ -477,7 +477,7 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const Params& p
 
     if (_reddit)
     {
-        std::tie(retval, std::ignore) = _reddit->doGetRequest(endpoint, params);
+        retval = _reddit->doGetRequest(endpoint, params);
     }
     else
     {
