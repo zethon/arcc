@@ -36,8 +36,6 @@ install:
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update
       brew install conan
-      brew install qt5
-      brew link --force qt5
     fi
 
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
