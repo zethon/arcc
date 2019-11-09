@@ -15,21 +15,21 @@ install:
       # fail to link the generated object files. There seems to be no other easier way
       # to update "ld", so we pull down binutils, build it and then link the resulting
       # executable to the system's path
-      pushd .
-      cd ..
-      mkdir binutils
-      cd binutils
-      wget http://ftp.gnu.org/gnu/binutils/binutils-2.30.tar.gz
-      tar -xf binutils-2.30.tar.gz
-      mkdir binutils-build
-      cd binutils-build
-      ../binutils-2.30/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
-      make
-      sudo make install
-      cd ..
-      sudo rm -f /usr/bin/ld
-      sudo ln -s binutils-build/ld/ld-new /usr/bin/ld
-      popd      
+      # pushd .
+      # cd ..
+      # mkdir binutils
+      # cd binutils
+      # wget http://ftp.gnu.org/gnu/binutils/binutils-2.30.tar.gz
+      # tar -xf binutils-2.30.tar.gz
+      # mkdir binutils-build
+      # cd binutils-build
+      # ../binutils-2.30/configure --target=$TARGET --prefix="$PREFIX" --with-sysroot --disable-nls --disable-werror
+      # make
+      # sudo make install
+      # cd ..
+      # sudo rm -f /usr/bin/ld
+      # sudo ln -s binutils-build/ld/ld-new /usr/bin/ld
+      # popd      
     fi
 
   - |
@@ -74,7 +74,16 @@ script:
   - mkdir build
   - cd build
   - conan install .. --build missing -s cppstd=17
-  - cmake .. -DBUILD_ARCC_TESTS=ON
+    - |
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      cmake .. -DBUILD_ARCC_TESTS=OFF
+    fi
+
+    - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      cmake .. -DBUILD_ARCC_TESTS=ON
+    fi  
+  
   - cmake --build . --config "${CONFIG}" -- -j3 
   
 after_success:
