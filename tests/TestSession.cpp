@@ -21,14 +21,8 @@ arcc::RedditSessionPtr loadSession(const std::string& filename)
     if (boost::filesystem::exists(filename))
     {
         std::ifstream i(filename);
-        std::cout << i.rdbuf();
-        i.close();
-
-        i.open(filename);
         nlohmann::json j;
         i >> j;
-
-        
 
         return std::make_shared<arcc::RedditSession>(
             j["accessToken"].get<std::string>(),
