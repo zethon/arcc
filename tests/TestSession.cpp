@@ -22,7 +22,9 @@ arcc::RedditSessionPtr loadSession(const std::string& filename)
     {
         std::ifstream i(filename);
         std::cout << i.rdbuf();
+        i.close();
 
+        i.open(filename);
         nlohmann::json j;
         i >> j;
 
