@@ -22,7 +22,7 @@ build_script:
   - mkdir build
   - cd build
   - conan install .. --build missing
-  - cmake .. "-GVisual Studio 15 2017 Win64" -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON
+  - cmake .. "-GVisual Studio 15 2017 Win64" -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=OFF
   - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
 
 test_script:
