@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(basicSettings)
     BOOST_TEST(!settings.exists("middlename"));
     
     BOOST_TEST(settings.value("firstname", ""s) == "bob"s);
-    BOOST_TEST(settings.value("age", 0u) == 150);
+    BOOST_TEST(settings.value("age", 0u) == 150u);
     BOOST_TEST(settings.value("alive", false) == true);
     BOOST_TEST(settings.value("enum", ""s) == "option2"s);
 
