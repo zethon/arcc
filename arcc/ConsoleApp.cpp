@@ -17,8 +17,11 @@
 #include "SimpleArgs.h"
 #include "OAuth2Login.h"
 #include "core.h"
+#include "Settings.h"
 
 #include "ConsoleApp.h"
+
+using namespace std::string_literals;
 
 namespace arcc
 {
@@ -259,53 +262,39 @@ void ConsoleApp::initCommands()
 
 void ConsoleApp::initSettings()
 {
-    boost::filesystem::path configfile{ utils::getDefaultConfigFile() };
+    arcc::Settings settings = registerSettings();
 
+    boost::filesystem::path configfile{ utils::getDefaultConfigFile() };
     if (boost::filesystem::exists(configfile))
     {
-        std::ifstream in(configfile.string());
-        in >> _settings;
-        in.close();
+        settings.load(configfile.string());
     }
     else
     {
-        defaultSettings();
-        saveSettings();
+        settings.save(configfile.string());
     }
+
+    _settings = std::move(settings);
 }
 
-void ConsoleApp::saveSettings()
-{
-    boost::filesystem::path configfile{ utils::getDefaultConfigFile() };
+arcc::Settings ConsoleApp::registerSettings()
+{   
+    arcc::Settings settings;
 
-    boost::filesystem::ofstream out;
-    out.open(configfile.string(),
-        boost::filesystem::ofstream::out | boost::filesystem::ofstream::trunc);
-
-    out << _settings;
-    out.close();
-}
-
-void ConsoleApp::defaultSettings()
-{
-    _settings.clear();
-
-    // global options
-    _settings["global.terminal.color"] = true;
-
-    // options for varous user commands
-    _settings["command.go.autolist"] = true;
-    _settings["command.list.limit"] = 5;
-    _settings["command.list.type"] = "hot";
-    _settings["command.view.type"] = "url";
-    _settings["command.view.form"] = "normal";
-    
+    settings.registerBool("global.terminal.color", true);
+    settings.registerBool("command.go.autolist", true);
+    settings.registerUInt("command.list.limit", 5);
+    settings.registerEnum("command.list.type", "hot", { "new", "hot", "rising", "controversial", "top" });
+    settings.registerEnum("command.view.type", "url", { "url", "comments" });
+    settings.registerEnum("command.view.form", "normal", { "normal", "mobile", "compact", "json" });
 
     // options for various lists/data that are printed
-    _settings["render.list.url"] = false;
-    _settings["render.list.votes"] = true;
-    _settings["render.list.name"] = false;
-    _settings["render.list.title.length"] = 0;
+    settings.registerBool("render.list.url", false);
+    settings.registerBool("render.list.votes", true);
+    settings.registerBool("render.list.name", false);
+    settings.registerUInt("render.list.title.length", 0);
+
+    return settings;
 }
 
 // poor man's way of updating settings, would be better
@@ -686,7 +675,7 @@ void ConsoleApp::view(const std::string& params)
                     else if (args.hasArgument("json")) formType = ViewFormType::JSON;
                     else
                     {
-                        formType = parserViewFormType(_settings["command.view.form"]);
+                        formType = parserViewFormType(_settings.value("command.view.form", "normal"s));
                     }
                     
                     if (formType != ViewFormType::NORMAL)
@@ -759,26 +748,15 @@ void ConsoleApp::setCommand(const std::string& params)
         return;
     }
 
-    if (_settings.find(result[0]) == _settings.end())
+    if (!_settings.exists(result[0]))
     {
         ConsoleApp::printError(fmt::format("unknown setting '{}'", result[0]));
         return;
     }
 
-    if (utils::isNumeric(result[1]))
-    {
-        _settings[result[0]] = std::stoul(result[1]);
-    }
-    else if (utils::isBoolean(result[1]))
-    {
-        _settings[result[0]] = utils::convertToBool(result[1]);
-    }
-    else
-    {
-        _settings[result[0]] = result[1];
-    }
+    _settings.set(result[0], result[1]);
 
-    saveSettings();
+    _settings.save(utils::getDefaultConfigFile());
     refreshSettings();
     ConsoleApp::printStatus(fmt::format("setting '{}' set to '{}'", result[0], result[1]));
 }
@@ -794,17 +772,17 @@ void ConsoleApp::settingsCommand(const std::string& params)
     {
         // find the longest key name for formatting
         std::size_t maxsize = 0;
-        for (const auto& s : _settings.items())
+        for (const auto& s : _settings)
         {
             maxsize = std::max(maxsize, s.key().size());
         }
 
         ConsoleApp::printStatus(fmt::format("{} setting(s)", _settings.size()));
-        for (const auto& s : _settings.items())
+        for (const auto& s : _settings)
         {
             std::cout
                 << std::left
-                << std::setw(static_cast<int>(maxsize + 5))
+                << std::setw(static_cast<int>(maxsize + 2))
                 << s.key()
                 << " = "
                 << s.value()
@@ -813,8 +791,8 @@ void ConsoleApp::settingsCommand(const std::string& params)
     }
     else if (args.getPositional(0) == "reset")
     {
-        defaultSettings();
-        saveSettings();
+        _settings = registerSettings();
+        _settings.save(utils::getDefaultConfigFile());
         printStatus(fmt::format("{} settings reset", _settings.size()));
     }
     else
