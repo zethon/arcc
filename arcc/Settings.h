@@ -241,7 +241,12 @@ public:
     std::uint32_t value(const std::string& name, std::uint32_t defval);
     std::int32_t value(const std::string& name, std::int32_t defval);
     bool value(const std::string& name, bool defval);
+
     std::string value(const std::string& name, std::string defval);
+    std::string value(const std::string& name, const char* defval)
+    {
+        return value(name, std::string{ defval });
+    }
 };
 
 } // namespace
