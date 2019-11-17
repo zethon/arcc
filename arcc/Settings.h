@@ -116,7 +116,7 @@ public:
     {
         if (!typename NumberValidator<T>::isValid(value))
         {
-            throw std::invalid_argument(NumberValidator::error(value));
+            throw std::invalid_argument(NumberValidator<T>::error(value));
         }
         else if (!isValid(value))
         {
