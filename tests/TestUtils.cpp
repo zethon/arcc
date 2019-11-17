@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(basicSettings)
     registerAllSettings(settings2);
     BOOST_TEST(settings.size() == settings2.load(configfile.string()));
     BOOST_TEST(settings2.value("firstname", ""s) == "bob"s);
-    BOOST_TEST(settings2.value("age", 0u) == 150);
+    BOOST_TEST(settings2.value("age", 0u) == 150u);
     BOOST_TEST(settings2.value("alive", false) == true);
     BOOST_TEST(settings2.value("enum", ""s) == "option2"s);
 }
