@@ -114,7 +114,7 @@ public:
 
     void validate(const std::string& value) override
     {
-        if (!typename NumberValidator<T>::isValid(value))
+        if (!NumberValidator<T>::isValid(value))
         {
             throw std::invalid_argument(NumberValidator<T>::error(value));
         }
