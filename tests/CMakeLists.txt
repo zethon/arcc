@@ -5,6 +5,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(ARCC_FILES
     ../arcc/CommandHistory.cpp
+    ../arcc/Settings.cpp
     ../arcc/SimpleArgs.cpp
     ../arcc/utils.cpp
 )

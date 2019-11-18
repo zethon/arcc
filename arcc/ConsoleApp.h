@@ -9,6 +9,7 @@
 #include "Terminal.h"
 #include "CommandHistory.h"
 #include "Listing.h"
+#include "Settings.h"
 
 namespace arcc
 {
@@ -48,21 +49,17 @@ class ConsoleApp final
 
     bool                            _doExit = false;
     std::string                     _location = "/";
-    nlohmann::json                  _settings;
+    arcc::Settings&                 _settings;
 
 public:
     static void printError(const std::string& error);
     static void printWarning(const std::string& warning);
     static void printStatus(const std::string& status);
     
-    ConsoleApp();
+    ConsoleApp(arcc::Settings& settings);
 
     std::string doRedditGet(const std::string& endpoint);
     std::string doRedditGet(const std::string& endpoint, const Params& params);
-
-    // these will automatically prepred `_location` to the endpoint
-    ListingPtr doGetListing(const arcc::Listing& listing);
-    std::string doSubRedditGet(const std::string& endpoint, const Params& params);
 
     void exec(const std::string& rawline);
     void run();
@@ -101,9 +98,6 @@ private:
     void initCommands();
     void initTerminal();
 
-    void initSettings();
-    void saveSettings();
-    void defaultSettings();
     void refreshSettings();
 
     void whoami();

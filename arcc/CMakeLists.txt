@@ -6,6 +6,7 @@ set(SOURCE_FILES
     ConsoleApp.cpp
     Listing.cpp
     Reddit.cpp
+    Settings.cpp
     utils.cpp
     SimpleArgs.cpp
     WebClient.cpp
@@ -18,6 +19,7 @@ set(HEADER_FILES
     core.h
     Listing.h
     Reddit.h
+    Settings.h
     Terminal.h
     utils.h
     SimpleArgs.h
