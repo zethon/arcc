@@ -15,6 +15,9 @@
 namespace arcc
 {
 
+class Settings;
+using SettingsPtr = std::unique_ptr<Settings>;
+
 class Validator
 {
 public:
@@ -179,6 +182,7 @@ class Settings final
     using Validators = std::map<std::string, std::shared_ptr<Validator>>;
 
     nlohmann::json  _settings;
+    nlohmann::json  _defaults;
     Validators      _validators;
 
 public:
@@ -215,7 +219,8 @@ public:
             _validators[name] = std::make_shared<NumberValidator<T>>();
         }
 
-        _settings[name] = static_cast<T>(value);
+        _settings[name] = value;
+        _defaults[name] = value;
     }
 
     void registerInt(const std::string& name, std::int32_t value,
@@ -247,6 +252,8 @@ public:
     {
         return value(name, std::string{ defval });
     }
+
+    void reset();
 };
 
 } // namespace

@@ -49,14 +49,14 @@ class ConsoleApp final
 
     bool                            _doExit = false;
     std::string                     _location = "/";
-    Settings                        _settings;
+    arcc::Settings&                 _settings;
 
 public:
     static void printError(const std::string& error);
     static void printWarning(const std::string& warning);
     static void printStatus(const std::string& status);
     
-    ConsoleApp();
+    ConsoleApp(arcc::Settings& settings);
 
     std::string doRedditGet(const std::string& endpoint);
     std::string doRedditGet(const std::string& endpoint, const Params& params);
@@ -98,8 +98,6 @@ private:
     void initCommands();
     void initTerminal();
 
-    void initSettings();
-    Settings registerSettings();
     void refreshSettings();
 
     void whoami();

@@ -90,12 +90,14 @@ void Settings::registerString(const std::string & name, const std::string & valu
 
     _validators[name] = val;
     _settings[name] = value;
+    _defaults[name] = value;
 }
 
 void Settings::registerBool(const std::string & name, bool value)
 {
     _validators[name] = std::make_shared<BoolValidator>();
     _settings[name] = value;
+    _defaults[name] = value;
 }
 
 void Settings::registerEnum(const std::string & name, const std::string & value, const std::vector<std::string>& possibleVals)
@@ -104,6 +106,7 @@ void Settings::registerEnum(const std::string & name, const std::string & value,
     validator->validate(value);
     _validators[name] = validator;
     _settings[name] = value;
+    _defaults[name] = value;
 }
 
 void Settings::set(const std::string& name, const std::string& value)
@@ -228,6 +231,14 @@ std::string Settings::value(const std::string & name, std::string defval)
     return _settings[name].get<std::string>();
 }
 
+void Settings::reset()
+{
+    _settings.clear();
 
+    for (const auto& defval : _defaults.items())
+    {
+        _settings[defval.key()] = _defaults[defval.key()];
+    }
+}
 
 } // namespace

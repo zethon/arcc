@@ -198,6 +198,14 @@ BOOST_AUTO_TEST_CASE(basicSettings)
     BOOST_TEST(settings2.value("age", 0u) == 150u);
     BOOST_TEST(settings2.value("alive", false) == true);
     BOOST_TEST(settings2.value("enum", ""s) == "option2"s);
+
+    settings2.reset();
+    BOOST_TEST(settings2.value("firstname", "") == "value");
+    BOOST_TEST(settings2.value("lastname", "") == "value");
+    BOOST_TEST(settings2.value("age", 0u) == 30u);
+    BOOST_TEST(settings2.value("int", 0) == -5);
+    BOOST_TEST(settings2.value("alive", false) == true);
+    BOOST_TEST(settings2.value("enum", "") == "option1");
 }
 
 BOOST_AUTO_TEST_SUITE_END() // arccutils/basicSettings

@@ -75,10 +75,10 @@ void ConsoleApp::printStatus(const std::string& status)
         << std::endl;
 }
 
-ConsoleApp::ConsoleApp()
+ConsoleApp::ConsoleApp(arcc::Settings& settings)
+    : _settings{ settings }
 {
     initTerminal();
-    initSettings();
     initCommands();
 
     const std::string historyfile{ utils::getDefaultHistoryFile() };
@@ -258,43 +258,6 @@ void ConsoleApp::initCommands()
             std::cout << "time  : " << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << '\n';
             std::cout << "epoch : " << t << std::endl;
         });
-}
-
-void ConsoleApp::initSettings()
-{
-    arcc::Settings settings = registerSettings();
-
-    boost::filesystem::path configfile{ utils::getDefaultConfigFile() };
-    if (boost::filesystem::exists(configfile))
-    {
-        settings.load(configfile.string());
-    }
-    else
-    {
-        settings.save(configfile.string());
-    }
-
-    _settings = std::move(settings);
-}
-
-arcc::Settings ConsoleApp::registerSettings()
-{   
-    arcc::Settings settings;
-
-    settings.registerBool("global.terminal.color", true);
-    settings.registerBool("command.go.autolist", true);
-    settings.registerUInt("command.list.limit", 5);
-    settings.registerEnum("command.list.type", "hot", { "new", "hot", "rising", "controversial", "top" });
-    settings.registerEnum("command.view.type", "url", { "url", "comments" });
-    settings.registerEnum("command.view.form", "normal", { "normal", "mobile", "compact", "json" });
-
-    // options for various lists/data that are printed
-    settings.registerBool("render.list.url", false);
-    settings.registerBool("render.list.votes", true);
-    settings.registerBool("render.list.name", false);
-    settings.registerUInt("render.list.title.length", 0);
-
-    return settings;
 }
 
 // poor man's way of updating settings, would be better
@@ -791,7 +754,7 @@ void ConsoleApp::settingsCommand(const std::string& params)
     }
     else if (args.getPositional(0) == "reset")
     {
-        _settings = registerSettings();
+        _settings.reset();
         _settings.save(utils::getDefaultConfigFile());
         printStatus(fmt::format("{} settings reset", _settings.size()));
     }
