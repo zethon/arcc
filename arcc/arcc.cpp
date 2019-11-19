@@ -3,7 +3,9 @@
 
 #include <iostream>
 
+#include <boost/program_options.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/filesystem.hpp>
 
 #include <curses.h>
 
@@ -11,11 +13,16 @@
 #include "SimpleArgs.h"
 #include "ConsoleApp.h"
 
+namespace po = boost::program_options;
+namespace po = boost::program_options;
+
 arcc::Settings registerAllSettings()
 {
     arcc::Settings settings;
 
     settings.registerBool("global.terminal.color", true);
+    settings.registerEnum("global.mode", "text", { "text", "curses" });
+
     settings.registerBool("command.go.autolist", true);
     settings.registerUInt("command.list.limit", 5);
     settings.registerEnum("command.list.type", "hot", { "new", "hot", "rising", "controversial", "top" });
@@ -70,27 +77,30 @@ int main(int argc, char* argv[])
         std::cout << desc << "\n";
         return 1;
     }
-    else
-    {
-        consoleApp->setRedditSession(std::make_shared<arcc::RedditSession>());
-    }
 
-    enum ModeEnum { NCURSES, TEXT } termMode = NCURSES;
+    auto settings = initSettings();
+
+    enum ModeEnum { CURSES, TEXT } termMode = TEXT;
     if (vm.count("mode"))
     {
         const std::string mode = vm["mode"].as<std::string>();
-        if (boost::iequals(mode, "text")) 
+        if (boost::iequals(mode, "curses")) 
         {   
-            termMode = TEXT;
+            termMode = CURSES;
         }
-        else if (!boost::iequals(mode, "curses"))
+        else if (!boost::iequals(mode, "text"))
         {
             std::cout << "error: possible values for 'mode' are [curses|text]\n";
             return 1;
         }
     }
+    else
+    {
+        const auto mode = settings.value("global.mode", "text");
+        if (mode == "curses") termMode = CURSES;
+    }
 
-    if (termMode == NCURSES)
+    if (termMode == CURSES)
     {
         // [[maybe_unused]] auto window = arcc::curses_init();
         initscr();
@@ -105,9 +115,7 @@ int main(int argc, char* argv[])
         std::cout << COPYRIGHT << std::endl;
         std::cout << std::endl;
 
-    auto settings = initSettings();
-
-    auto consoleApp = std::make_unique<ConsoleApp>(settings);
+        auto consoleApp = std::make_unique<ConsoleApp>(settings);
         if (consoleApp->loadSession())
         {
             ConsoleApp::printStatus("saved session restored");
@@ -116,7 +124,7 @@ int main(int argc, char* argv[])
         try
         {
             consoleApp->run();
-        settings.save(utils::getDefaultConfigFile());
+            settings.save(utils::getDefaultConfigFile());
         }
         catch (const std::exception& ex)
         {
