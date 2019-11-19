@@ -75,18 +75,24 @@ int main(int argc, char* argv[])
     if (vm.count("help")) 
     {
         std::cout << desc << "\n";
-        return 1;
+        return 0;
+    }
+    else if (vm.count("version"))
+    {
+        std::cout << APP_TITLE << std::endl;
+        std::cout << COPYRIGHT << std::endl;
+        return 0;
     }
 
     auto settings = initSettings();
 
-    enum ModeEnum { CURSES, TEXT } termMode = TEXT;
+    enum ModeEnum { NCURSES, TEXT } termMode = TEXT;
     if (vm.count("mode"))
     {
         const std::string mode = vm["mode"].as<std::string>();
         if (boost::iequals(mode, "curses")) 
         {   
-            termMode = CURSES;
+            termMode = NCURSES;
         }
         else if (!boost::iequals(mode, "text"))
         {
@@ -97,10 +103,10 @@ int main(int argc, char* argv[])
     else
     {
         const auto mode = settings.value("global.mode", "text");
-        if (mode == "curses") termMode = CURSES;
+        if (mode == "curses") termMode = NCURSES;
     }
 
-    if (termMode == CURSES)
+    if (termMode == NCURSES)
     {
         // [[maybe_unused]] auto window = arcc::curses_init();
         initscr();
