@@ -38,12 +38,12 @@ if (APPLE)
     set(EXTRA_LIBS ${APP_SERVICES_LIBRARY} ${CORE_SERVICES_LIBRARY})
 endif()
 
-add_executable(${PROJECT_NAME}
+add_executable(arcc
     ${SOURCE_FILES}
     ${HEADER_FILES}
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(arcc
     PUBLIC
         ${CONAN_LIBS}
         ${EXTRA_LIBS}
@@ -51,8 +51,7 @@ target_link_libraries(${PROJECT_NAME}
         "$<$<CONFIG:DEBUG>:${COVERAGE_FLAG}>"
 )
 
-target_compile_definitions(
-    ${PROJECT_NAME}
+target_compile_definitions(arcc
     PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
 )
