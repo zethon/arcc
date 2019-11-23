@@ -48,11 +48,8 @@ target_link_libraries(${PROJECT_NAME}
         ${CONAN_LIBS}
         ${EXTRA_LIBS}
         simple-web-server
-)
-
-target_link_options(${PROJECT_NAME}
-    PUBLIC
-        --coverage
+        
+    --coverage
 )
 
 target_compile_definitions(
