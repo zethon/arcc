@@ -6,7 +6,7 @@
 #include <nlohmann/json_fwd.hpp>
 
 #include "AppBase.h"
-#include "Reddit.h"
+#include "RedditSession.h"
 #include "Terminal.h"
 #include "CommandHistory.h"
 #include "Listing.h"

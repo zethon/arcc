@@ -5,7 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "Reddit.h"
+#include "RedditSession.h"
 #include "Listing.h"
 
 namespace arcc

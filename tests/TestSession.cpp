@@ -6,7 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include "../arcc/ConsoleApp.h"
-#include "../arcc/Reddit.h"
+#include "../arcc/RedditSession.h"
 
 using namespace std::string_literals;
 

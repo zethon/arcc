@@ -37,7 +37,7 @@ if (BUILD_SESSION_TESTS)
         TestSession.cpp
         ../arcc/ConsoleApp.cpp
         ../arcc/Listing.cpp
-        ../arcc/Reddit.cpp
+        ../arcc/RedditSession.cpp
         ../arcc/WebClient.cpp
         ../arcc/OAuth2Login.cpp
     )

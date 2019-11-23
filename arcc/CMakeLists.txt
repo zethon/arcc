@@ -5,7 +5,7 @@ set(SOURCE_FILES
     CommandHistory.cpp
     ConsoleApp.cpp
     Listing.cpp
-    Reddit.cpp
+    RedditSession.cpp
     Settings.cpp
     utils.cpp
     SimpleArgs.cpp
@@ -19,7 +19,7 @@ set(HEADER_FILES
     ConsoleApp.h
     core.h
     Listing.h
-    Reddit.h
+    RedditSession.h
     Settings.h
     Terminal.h
     utils.h
