@@ -26,4 +26,4 @@ build_script:
   - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
 
 test_script:
-  - ctest -VV -C "%CONFIG%"
+  - ctest -VV -C "%CONFIG%" --output-on-failure

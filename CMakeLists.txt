@@ -18,6 +18,24 @@ add_definitions(
     -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 )
 
+# Code Coverage Configuration
+add_library(COVERAGE_CONFIG INTERFACE)
+
+option(CODE_COVERAGE "Enable coverage reporting" OFF)
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  # Add required flags (GCC & LLVM/Clang)
+  target_compile_options(COVERAGE_CONFIG INTERFACE
+    -O0        # no optimization
+    -g         # generate debug info
+    --coverage # sets all required flags
+  )
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(COVERAGE_CONFIG INTERFACE --coverage)
+  else()
+    target_link_libraries(COVERAGE_CONFIG INTERFACE --coverage)
+  endif()
+endif(CODE_COVERAGE)
+
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
 
     add_compile_options(
