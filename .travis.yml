@@ -22,14 +22,15 @@ install:
 
 matrix:
   include:
-    - os: osx
-      osx_image: xcode10
-      compiler: clang
-      env: CONFIG=Release
-    - os: osx
-      osx_image: xcode10
-      compiler: clang
-      env: CONFIG=Debug
+    # - os: osx
+    #   osx_image: xcode10
+    #   compiler: clang
+    #   env: CONFIG=Release
+    # - os: osx
+    #   osx_image: xcode10
+    #   compiler: clang
+    #   env: CONFIG=Debug
+
     - os: linux
       dist: bionic
       sudo: required
@@ -46,6 +47,7 @@ matrix:
             - gcc-7
             - g++-7
             - build-essential
+            - cmake
           sources:
             - ubuntu-toolchain-r-test
 
