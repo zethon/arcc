@@ -19,7 +19,7 @@ install:
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update
-      rew install cmake || brew upgrade cmake
+      brew install cmake || brew upgrade cmake
     fi
 
   - cmake --version
