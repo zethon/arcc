@@ -67,7 +67,7 @@ script:
       cmake .. -DBUILD_ARCC_TESTS=ON -DCODE_COVERAGE=ON
     fi  
   
-  - cmake --build . --config "${CONFIG}" -- -j3
+  - cmake --build . --config "${CONFIG}" -- -j3 VERBOSE=1
   - ctest -C "${CONFIG}" --output-on-failure
   
 after_success:
