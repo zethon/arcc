@@ -35,19 +35,12 @@ matrix:
       dist: bionic
       sudo: required
       compiler: gcc
-      # language: python
-      python: "3.6"
       env:
-        # - CC_COMPILER=gcc-7
-        # - CXX_COMPILER=g++-7
         - CONFIG=Debug
+        - COVERAGE=ON
       addons:
         apt:
           packages:
-            # - gcc-7
-            # - g++-7
-            # - build-essential
-            - cmake
             - lcov
 
 script:
@@ -55,32 +48,18 @@ script:
   - mkdir build
   - cd build
   - conan install .. --build missing  -s compiler.libcxx=libstdc++11
-
-  - |
-    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      cmake .. -DBUILD_ARCC_TESTS=ON -DCODE_COVERAGE=ON
-    fi
-
-  - |
-    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      cmake .. -DBUILD_ARCC_TESTS=ON -DCODE_COVERAGE=ON
-    fi  
-  
+  - cmake .. -DBUILD_ARCC_TESTS=ON -DCODE_COVERAGE=${COVERAGE}
   - cmake --build . --config "${CONFIG}" -- -j3 VERBOSE=1
   - ctest -C "${CONFIG}" --output-on-failure
   
 after_success:
-  # Create lcov report
-  # capture coverage info
-  - lcov --directory . --capture --output-file coverage.info
-  # filter out system and extra files.
-  # To also not include test code in coverage add them with full path to the patterns: '*/tests/*'
-  - lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
-  # output coverage data for debugging (optional)
-  - lcov --list coverage.info
-  # Uploading to CodeCov
-  # '-f' specifies file(s) to use and disables manual coverage gathering and file search which has already been done above
-  - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+  - |
+    if [[ "$COVERAGE" == "ON" ]]; then
+      lcov --directory . --capture --output-file coverage.info
+      lcov --remove coverage.info '/usr/*' "${HOME}"'/.cache/*' --output-file coverage.info
+      lcov --list coverage.info
+      bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+    fi  
 
 notifactions:
   email:
