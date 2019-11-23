@@ -109,6 +109,10 @@ if (MSVC)
         /wd4005 
 >>>>>>> 3fb917f... ignore macro redefinition warnings because of PDCurses;
     )
+
+    add_link_options(
+        /ignore:4099
+    )
 endif(MSVC)
 
 if (APPLE)
