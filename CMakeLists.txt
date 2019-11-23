@@ -65,12 +65,14 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
 
         # disabled errors/warnings
         -Wno-error=date-time
+
+        --coverage
     )
 
     # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
-    # # add_link_options(
-    # #     --coverage
-    # # )
+    add_link_options(
+        --coverage
+    )
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
