@@ -48,8 +48,7 @@ target_link_libraries(${PROJECT_NAME}
         ${CONAN_LIBS}
         ${EXTRA_LIBS}
         simple-web-server
-        
-    --coverage
+        "$<$<CONFIG:DEBUG>:${COVERAGE_FLAG}>"
 )
 
 target_compile_definitions(

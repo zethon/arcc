@@ -10,6 +10,7 @@ conan_basic_setup(NO_OUTPUT_DIRS KEEP_RPATHS)
 # optional configuration
 option(BUILD_ARCC_TESTS "Build unit tests (default OFF)" OFF)
 option(BUILD_SESSION_TESTS "Build Sessions Tests (default OFF)" OFF)
+option(BUILD_CODE_COVERAGE "Enable coverage reporting" OFF)
 
 # Global definitions
 add_definitions(
@@ -21,7 +22,7 @@ add_definitions(
 # Code Coverage Configuration
 # add_library(COVERAGE_CONFIG INTERFACE)
 
-# option(CODE_COVERAGE "Enable coverage reporting" OFF)
+# 
 # if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 #   # Add required flags (GCC & LLVM/Clang)
 #   target_compile_options(COVERAGE_CONFIG INTERFACE
@@ -65,14 +66,18 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
 
         # disabled errors/warnings
         -Wno-error=date-time
+    )
+endif()
 
-        --coverage
+if (CMAKE_COMPILER_IS_GNUCXX AND BUILD_CODE_COVERAGE)
+    add_compile_options(
+        "$<$<CONFIG:DEBUG>:--coverage>"
     )
 
-    # # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
-    # add_link_options(
-    #     --coverage
-    # )
+    # travis-ci still uses an old cmake which does not support
+    # add_link_options, so we set a variable here and then
+    # append it to each build target manually
+    set(COVERAGE_FLAG "--coverage")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang)

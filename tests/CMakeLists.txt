@@ -23,8 +23,7 @@ add_executable(TestUtils
 target_link_libraries(TestUtils
     PUBLIC
         ${CONAN_LIBS}
-
-    --coverage
+        "$<$<CONFIG:DEBUG>:${COVERAGE_FLAG}>"
 )
 
 add_test(NAME TestUtils
