@@ -57,7 +57,7 @@ script:
 
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      cmake .. -DBUILD_ARCC_TESTS=OFF -DCODE_COVERAGE=ON
+      cmake .. -DBUILD_ARCC_TESTS=ON -DCODE_COVERAGE=ON
     fi
 
   - |
