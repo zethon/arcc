@@ -7,7 +7,7 @@ set(SOURCE_FILES
     CursesApp.cpp
     Listing.cpp
     OAuth2Login.cpp
-    Reddit.cpp
+    RedditSession.cpp
     Settings.cpp
     SimpleArgs.cpp
     utils.cpp
@@ -22,7 +22,7 @@ set(HEADER_FILES
     CursesApp.h
     Listing.h
     OAuth2Login.h
-    Reddit.h
+    RedditSession.h
     Terminal.h
     utils.h
     WebClient.h

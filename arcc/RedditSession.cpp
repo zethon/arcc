@@ -12,7 +12,7 @@
 #include "utils.h"
 #include "OAuth2Login.h"
 
-#include "Reddit.h"
+#include "RedditSession.h"
 
 namespace arcc
 {

@@ -5,7 +5,7 @@
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
 
-#include "Reddit.h"
+#include "RedditSession.h"
 #include "WebClient.h"
 #include "utils.h"
 
