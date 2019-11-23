@@ -35,21 +35,20 @@ matrix:
       dist: bionic
       sudo: required
       compiler: gcc
-      language: python
+      # language: python
       python: "3.6"
       env:
-        - CC_COMPILER=gcc-7
-        - CXX_COMPILER=g++-7
+        # - CC_COMPILER=gcc-7
+        # - CXX_COMPILER=g++-7
         - CONFIG=Debug
       addons:
         apt:
           packages:
-            - gcc-7
-            - g++-7
-            - build-essential
+            # - gcc-7
+            # - g++-7
+            # - build-essential
             - cmake
             - lcov
-            - 
 
 script:
   - git submodule update --init --recursive
