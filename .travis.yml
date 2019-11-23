@@ -48,15 +48,13 @@ matrix:
             - g++-7
             - build-essential
             - cmake
-          # sources:
-          #   - ubuntu-toolchain-r-test
+            - lcov
 
 script:
   - git submodule update --init --recursive
   - mkdir build
   - cd build
   - cmake --version
-  # - conan install .. --build missing -s cppstd=17
   - conan install .. --build missing  -s compiler.libcxx=libstdc++11
 
   - |
