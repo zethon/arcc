@@ -44,12 +44,15 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    INTERFACE
-        --coverage
     PUBLIC
         ${CONAN_LIBS}
         ${EXTRA_LIBS}
         simple-web-server
+)
+
+target_link_options(${PROJECT_NAME}
+    PUBLIC
+        --coverage
 )
 
 target_compile_definitions(
