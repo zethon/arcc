@@ -75,4 +75,4 @@ notifactions:
     recipients:
       - aclaure@gmail.com
     on_suucess: never
-    on_failre: always
+    on_failure: always
