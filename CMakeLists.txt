@@ -69,10 +69,10 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
         --coverage
     )
 
-    # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
-    add_link_options(
-        --coverage
-    )
+    # # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} --coverage")
+    # add_link_options(
+    #     --coverage
+    # )
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
