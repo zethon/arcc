@@ -18,6 +18,7 @@ install:
       brew install conan
     fi
 
+  - conan profile update settings.compiler.libcxx=libstdc++11 default
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
 
 matrix:
@@ -48,8 +49,8 @@ matrix:
             - g++-7
             - build-essential
             - cmake
-          sources:
-            - ubuntu-toolchain-r-test
+          # sources:
+          #   - ubuntu-toolchain-r-test
 
 script:
   - git submodule update --init --recursive
