@@ -14,6 +14,7 @@ set(SOURCE_FILES
 )
 
 set(HEADER_FILES
+    AppBase.h
     CommandHistory.h
     ConsoleApp.h
     core.h

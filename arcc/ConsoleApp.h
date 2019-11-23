@@ -5,6 +5,7 @@
 
 #include <nlohmann/json_fwd.hpp>
 
+#include "AppBase.h"
 #include "Reddit.h"
 #include "Terminal.h"
 #include "CommandHistory.h"
@@ -34,7 +35,7 @@ struct ConsoleCommand
 
 using CommandHandler = ConsoleCommand::Handler;
 
-class ConsoleApp final
+class ConsoleApp final : public AppBase
 {
     enum class ViewFormType { NORMAL, MOBILE, COMPACT, JSON };
     
@@ -62,7 +63,7 @@ public:
     std::string doRedditGet(const std::string& endpoint, const Params& params);
 
     void exec(const std::string& rawline);
-    void run();
+    void run() override;
 
     void addCommand(const std::string& n, const std::string& hlp, ConsoleCommand::Handler hdr)
     {
