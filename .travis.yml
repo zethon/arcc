@@ -40,7 +40,7 @@ matrix:
       env:
         - CC_COMPILER=gcc-7
         - CXX_COMPILER=g++-7
-        - CONFIG=RelWithDebInfo
+        - CONFIG=Debug
       addons:
         apt:
           packages:
@@ -55,6 +55,7 @@ script:
   - git submodule update --init --recursive
   - mkdir build
   - cd build
+  - cmake --version
   - conan install .. --build missing -s cppstd=17
 
   - |
