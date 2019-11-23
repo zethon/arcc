@@ -47,6 +47,8 @@ target_link_libraries(${PROJECT_NAME}
     ${CONAN_LIBS}
     ${EXTRA_LIBS}
     simple-web-server
+    INTERFACE
+        --coverage    
 )
 
 target_compile_definitions(
