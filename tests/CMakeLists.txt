@@ -21,7 +21,8 @@ add_executable(TestUtils
 )
 
 target_link_libraries(TestUtils
-    ${CONAN_LIBS}
+    PUBLIC
+        ${CONAN_LIBS}
     INTERFACE
         --coverage
 )
