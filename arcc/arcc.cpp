@@ -11,7 +11,9 @@
 
 #include "core.h"
 #include "SimpleArgs.h"
+#include "AppBase.h"
 #include "ConsoleApp.h"
+#include "CursesApp.h"
 
 namespace po = boost::program_options;
 namespace po = boost::program_options;
@@ -106,37 +108,42 @@ int main(int argc, char* argv[])
         if (mode == "curses") termMode = NCURSES;
     }
 
+    arcc::AppBasePtr app;
+
     if (termMode == NCURSES)
     {
-        // [[maybe_unused]] auto window = arcc::curses_init();
-        initscr();
-        printw("Hi there!");
-        // printw("hi there! %d", static_cast<void*>(window));
-        getch();
-        endwin();
+        //// [[maybe_unused]] auto window = arcc::curses_init();
+        //initscr();
+        //printw("Hi there!");
+        //// printw("hi there! %d", static_cast<void*>(window));
+        //getch();
+        //endwin();
+        app = std::make_unique<arcc::CursesApp>();
     }
     else
     {
+        app = std::make_unique<arcc::ConsoleApp>(settings);
+
         std::cout << APP_TITLE << std::endl;
         std::cout << COPYRIGHT << std::endl;
         std::cout << std::endl;
 
-        auto consoleApp = std::make_unique<ConsoleApp>(settings);
         if (consoleApp->loadSession())
         {
             ConsoleApp::printStatus("saved session restored");
         }
-
-        try
-        {
-            consoleApp->run();
-            settings.save(utils::getDefaultConfigFile());
-        }
-        catch (const std::exception& ex)
-        {
-            std::cerr << "terminal error: " << ex.what() << std::endl;
-        }
     }
+
+    try
+    {
+        app->run();
+        settings.save(utils::getDefaultConfigFile());
+    }
+    catch (const std::exception& ex)
+    {
+        std::cerr << "error: " << ex.what() << std::endl;
+    }
+    
 
     return 0;
 }

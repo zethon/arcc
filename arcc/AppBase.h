@@ -3,23 +3,20 @@
 
 #pragma once
 
-#include <stdexcept>
-
-#include <curses.h>
-
-#include "AppBase.h"
+#include <memory>
 
 namespace arcc
 {
 
-WINDOW* curses_init();
+class AppBase;
+using AppBasePtr = std::unique_ptr<AppBase>;
 
-class CursesApp final : public AppBase
+class AppBase
 {
 
 public:
-    void run() override;
-
+    virtual void run() = 0;
+    
 };
 
 } // namespace

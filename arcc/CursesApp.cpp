@@ -31,4 +31,14 @@ WINDOW* curses_init()
     return win;
 }
 
+void CursesApp::run()
+{
+        // [[maybe_unused]] auto window = arcc::curses_init();
+        initscr();
+        printw("Hi there!");
+        // printw("hi there! %d", static_cast<void*>(window));
+        getch();
+        endwin();
+}
+
 } // namespace
