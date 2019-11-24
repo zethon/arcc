@@ -40,10 +40,6 @@ matrix:
       env:
         - CONFIG=Release
         - COVERAGE=OFF
-      addons:
-        apt:
-          packages:
-            - lcov
 
 install:
   - JOBS=2
