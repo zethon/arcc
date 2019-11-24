@@ -44,9 +44,11 @@ add_executable(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    ${CONAN_LIBS}
-    ${EXTRA_LIBS}
-    simple-web-server
+    PUBLIC
+        ${CONAN_LIBS}
+        ${EXTRA_LIBS}
+        simple-web-server
+        "$<$<CONFIG:DEBUG>:${COVERAGE_FLAG}>"
 )
 
 target_compile_definitions(

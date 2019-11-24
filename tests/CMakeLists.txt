@@ -21,7 +21,9 @@ add_executable(TestUtils
 )
 
 target_link_libraries(TestUtils
-    ${CONAN_LIBS}
+    PUBLIC
+        ${CONAN_LIBS}
+        "$<$<CONFIG:DEBUG>:${COVERAGE_FLAG}>"
 )
 
 add_test(NAME TestUtils

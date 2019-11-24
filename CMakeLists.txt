@@ -1,6 +1,6 @@
 project(arcc)
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 17)
 
 # initialize conan libs
@@ -10,6 +10,7 @@ conan_basic_setup(NO_OUTPUT_DIRS KEEP_RPATHS)
 # optional configuration
 option(BUILD_ARCC_TESTS "Build unit tests (default OFF)" OFF)
 option(BUILD_SESSION_TESTS "Build Sessions Tests (default OFF)" OFF)
+option(BUILD_CODE_COVERAGE "Enable coverage reporting" OFF)
 
 # Global definitions
 add_definitions(
@@ -48,10 +49,20 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
         # disabled errors/warnings
         -Wno-error=date-time
     )
+
+    if (BUILD_CODE_COVERAGE)
+        add_compile_options(
+            "$<$<CONFIG:DEBUG>:--coverage>"
+        )
+
+        # travis-ci still uses an old cmake which does not support
+        # add_link_options, so we set a variable here and then
+        # append it to each build target manually
+        set(COVERAGE_FLAG "--coverage")
+    endif(BUILD_CODE_COVERAGE)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
-
     add_compile_options(
         $<$<COMPILE_LANGUAGE:CXX>:-stdlib=libc++>
 
