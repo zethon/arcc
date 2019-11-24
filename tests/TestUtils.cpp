@@ -156,18 +156,23 @@ BOOST_AUTO_TEST_CASE(basicSettings)
     BOOST_REQUIRE_NO_THROW(settings.set("age", "150"));
     BOOST_REQUIRE_THROW(settings.set("age", "250"), std::invalid_argument);
     BOOST_REQUIRE_THROW(settings.set("age", "-1"), std::invalid_argument);
+    BOOST_TEST(settings.setNoThrow("age", "47") == true);
 
     BOOST_REQUIRE_NO_THROW(settings.set("int", "-2"));
     BOOST_REQUIRE_NO_THROW(settings.set("int", "2"));
     BOOST_REQUIRE_THROW(settings.set("int", "-11"), std::invalid_argument);
     BOOST_REQUIRE_THROW(settings.set("int", "11"), std::invalid_argument);
-    BOOST_TEST(!settings.setNoThrow("int", "123"));
-    BOOST_TEST(!settings.setNoThrow("int", "test"));
+    BOOST_TEST(settings.setNoThrow("int", "-5") == true);
+    BOOST_TEST(!settings.setNoThrow("int", "123") == true);
+    BOOST_TEST(!settings.setNoThrow("int", "test") == true);
 
     BOOST_REQUIRE_NO_THROW(settings.set("alive", "true"));
     BOOST_REQUIRE_NO_THROW(settings.set("alive", "off"));
     BOOST_REQUIRE_NO_THROW(settings.set("alive", "1"));
     BOOST_REQUIRE_THROW(settings.set("alive", "foo"), std::invalid_argument);
+    BOOST_TEST(settings.setNoThrow("alive", "true") == true);
+    BOOST_TEST(settings.setNoThrow("alive", "on") == true);
+    BOOST_TEST(settings.setNoThrow("alive", "1") == true);
 
     BOOST_REQUIRE_NO_THROW(settings.set("enum", "option2"));
     BOOST_REQUIRE_THROW(settings.set("enum", "option4"), std::invalid_argument);
@@ -180,7 +185,7 @@ BOOST_AUTO_TEST_CASE(basicSettings)
     
     BOOST_TEST(settings.value("firstname", "") == "bob"s);
     BOOST_TEST(settings.value("firstname", "") == "bob"s);
-    BOOST_TEST(settings.value("age", 0u) == 150u);
+    BOOST_TEST(settings.value("age", 43u) == 47u);
     BOOST_TEST(settings.value("alive", false) == true);
     BOOST_TEST(settings.value("enum", "") == "option2"s);
     
@@ -202,7 +207,7 @@ BOOST_AUTO_TEST_CASE(basicSettings)
     registerAllSettings(settings2);
     BOOST_TEST(settings.size() == settings2.load(configfile.string()));
     BOOST_TEST(settings2.value("firstname", ""s) == "bob"s);
-    BOOST_TEST(settings2.value("age", 0u) == 150u);
+    BOOST_TEST(settings2.value("age", 0u) == 47);
     BOOST_TEST(settings2.value("alive", false) == true);
     BOOST_TEST(settings2.value("enum", ""s) == "option2"s);
 

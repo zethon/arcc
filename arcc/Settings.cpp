@@ -147,19 +147,19 @@ bool Settings::setNoThrow(const std::string& name, const std::string& value)
         return false;
     }
 
-    if (_settings[name].is_number_integer())
-    {
-        if (_validators[name]->isValid(value))
-        {
-            _settings[name] = boost::lexical_cast<std::int32_t>(value);
-            return true;
-        }
-    }
-    else if (_settings[name].is_number_unsigned())
+    if (_settings[name].is_number_unsigned())
     {
         if (_validators[name]->isValid(value))
         {
             _settings[name] = boost::lexical_cast<std::uint32_t>(value);
+            return true;
+        }
+    }
+    else if (_settings[name].is_number_integer())
+    {
+        if (_validators[name]->isValid(value))
+        {
+            _settings[name] = boost::lexical_cast<std::int32_t>(value);
             return true;
         }
     }
