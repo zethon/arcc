@@ -3,27 +3,43 @@ version: 0.1.0-{build}-{branch}
 image: 
  - Visual Studio 2017
 
+configuration:
+  - Debug
+  - Release
+
 environment:
   matrix:
-    - CONFIG: RelWithDebInfo
-    - CONFIG: Release
+    - COVERAGE: ON
+    - COVERAGE: OFF
+
+matrix:
+  exclude:
+    - configuration: Debug
+      COVERAGE: OFF
+    - configuration: Release
+      COVERAGE: ON
 
 install:
   - echo "Initializing test data..."
   - ps: iex ((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/appveyor/secure-file/master/install.ps1'))
   - cmd: appveyor-tools\secure-file -decrypt tests\session.dat.enc -secret %session_secret% -salt %session_salt%
+  - echo "Installing OpenCppCoverage"
+  - choco install opencppcoverage
+  - set path=C:\Program Files\OpenCppCoverage;%PATH%
+  - choco install codecov
+  - set path=C:\ProgramData\chocolatey\lib\codecov\tools;%PATH%
   - echo "Downloading conan..."
-  - set PATH=%PATH%;%PYTHON%/Scripts/
+  - set PATH=%PYTHON%/Scripts/;%PATH%
   - pip.exe install conan
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
 
 build_script:
   - git submodule update --init --recursive
-  - mkdir build
-  - cd build
-  - conan install .. --build missing
-  - cmake .. "-GVisual Studio 15 2017 Win64" -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON
-  - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
+  - mkdir build && cd build
+  - conan install .. --build missing -s build_type=%configuration%
+  - cmake .. "-GVisual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=%configuration% -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON -DBUILD_CODE_COVERAGE=%COVERAGE%
+  - cmake --build . --config "%configuration%" -- /maxcpucount:4
 
 test_script:
-  - ctest -VV -C "%CONFIG%" --output-on-failure
+  - IF "%COVERAGE%" EQU "ON" %APPVEYOR_BUILD_FOLDER%\appveyor\coverage.cmd
+  - IF "%COVERAGE%" EQU "OFF" (ctest -VV -C "%configuration%" --output-on-failure)

@@ -7,7 +7,6 @@
 
 #include <nlohmann/json.hpp>
 #include <fmt/core.h>
-#include <spdlog/spdlog.h>
 
 #include "Settings.h"
 
