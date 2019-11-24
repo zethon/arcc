@@ -43,7 +43,3 @@ build_script:
 test_script:
   - IF "%COVERAGE%" EQU "ON" %APPVEYOR_BUILD_FOLDER%\appveyor\coverage.cmd
   - IF "%COVERAGE%" EQU "OFF" (ctest -VV -C "%configuration%" --output-on-failure)
-
-after_test:
-  - dir "%APPVEYOR_BUILD_FOLDER%""
-  - dir "%APPVEYOR_BUILD_FOLDER%\*.exe" /s
