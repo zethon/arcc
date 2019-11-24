@@ -1,12 +1,12 @@
-version: 0.7.7-{build}-{branch}
+version: 0.1.0-{build}-{branch}
 
 image: 
  - Visual Studio 2017
 
 environment:
   matrix:
+    - CONFIG: Debug
     - CONFIG: Release
-    - CONFIG: RelWithDebInfo
 
 install:
   - echo "Initializing test data..."
