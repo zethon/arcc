@@ -3,12 +3,21 @@ version: 0.1.0-{build}-{branch}
 image: 
  - Visual Studio 2017
 
+configuration:
+  - Debug
+  - Release
+
 environment:
   matrix:
-    - CONFIG: Debug
-      COVERAGE=ON
-    - CONFIG: Release
+    - COVERAGE=ON
+    - COVERAGE=OFF
+
+matrix:
+  exclude:
+    - configuration: Debug
       COVERAGE=OFF
+    - configuration: Release
+      COVERAGE=ON
 
 install:
   - echo "Initializing test data..."
@@ -26,12 +35,12 @@ install:
 build_script:
   - git submodule update --init --recursive
   - mkdir build && cd build
-  - conan install .. --build missing -s build_type=%CONFIG%
-  - cmake .. "-GVisual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=%CONFIG% -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON -DBUILD_CODE_COVERAGE=%COVERAGE%
-  - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
+  - conan install .. --build missing -s build_type=$env:configuration
+  - cmake .. "-GVisual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=$env:configuration -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON -DBUILD_CODE_COVERAGE=%COVERAGE%
+  - cmake --build . --config "$env:configuration" -- /maxcpucount:4
 
 test_script:
-  - ctest -VV -C "%CONFIG%" --output-on-failure
+  - ctest -VV -C "$env:configuration" --output-on-failure
 
 after_test:
   - dir "%APPVEYOR_BUILD_FOLDER%\*.exe" /s
