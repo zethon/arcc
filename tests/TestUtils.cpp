@@ -183,6 +183,13 @@ BOOST_AUTO_TEST_CASE(basicSettings)
     BOOST_TEST(settings.value("age", 0u) == 150u);
     BOOST_TEST(settings.value("alive", false) == true);
     BOOST_TEST(settings.value("enum", "") == "option2"s);
+    
+    BOOST_REQUIRE_THROW(settings.set("ha", "omg"), std::invalid_argument);
+    BOOST_TEST(settings.setNoThrow("ha", "omg") == false);
+    BOOST_TEST(settings.value("ha", -42) == -42);
+    BOOST_TEST(settings.value("ha", 42u) == 42u);
+    BOOST_TEST(settings.value("ha", false) == false);
+    BOOST_TEST(settings.value("ha", "omg") == "omg");
 
     const auto temppath = boost::filesystem::temp_directory_path() 
         / boost::filesystem::unique_path("arcc%%%%");

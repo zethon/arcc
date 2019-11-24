@@ -144,7 +144,7 @@ bool Settings::setNoThrow(const std::string& name, const std::string& value)
 {
     if (_settings.find(name) == _settings.end())
     {
-        throw std::invalid_argument(fmt::format("setting '{}' has not been registered", name));
+        return false;
     }
 
     if (_settings[name].is_number_integer())
