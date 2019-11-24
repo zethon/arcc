@@ -33,7 +33,7 @@ std::pair<bool, char> getChar()
     using namespace std;
 
     bool bSuccess = false;
-    char retchar;
+    char retchar = '';
 
     // get a keystroke
     while (true)

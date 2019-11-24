@@ -22,15 +22,25 @@ install:
 
 matrix:
   include:
-    # - os: osx
-    #   osx_image: xcode10
-    #   compiler: clang
-    #   env: CONFIG=Release
-    # - os: osx
-    #   osx_image: xcode10
-    #   compiler: clang
-    #   env: CONFIG=Debug
-
+# MACOS: DEBUG
+    - os: osx
+      osx_image: xcode10
+      compiler: clang
+      env: 
+        - CONFIG=Debug
+        - COVERAGE=ON
+      addons:
+        homebrew:
+          packages:
+            - lcov
+# MACOS: RELEASE
+    - os: osx
+      osx_image: xcode10
+      compiler: clang
+      env: 
+        - CONFIG=Release
+        - COVERAGE=OFF
+# LINUX: DEBUG
     - os: linux
       dist: bionic
       sudo: required
@@ -42,6 +52,7 @@ matrix:
         apt:
           packages:
             - lcov
+# LINUX: RELEASE
     - os: linux
       dist: bionic
       sudo: required
