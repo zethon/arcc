@@ -6,7 +6,7 @@ image:
 environment:
   matrix:
     - CONFIG: Debug
-    # - CONFIG: Release
+    - CONFIG: Release
 
 install:
   - echo "Initializing test data..."
