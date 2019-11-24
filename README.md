@@ -2,8 +2,9 @@
 
 [![Build Status][travis-img]][travis]
 [![Build Status][appveyor-img]][appveyor]
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/14685/badge.svg)](https://scan.coverity.com/projects/zethon-arcc)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d1edc1ba75ec4170b4fbffda2a9a6f4b)](https://www.codacy.com/app/zethon/arcc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zethon/arcc&amp;utm_campaign=Badge_Grade)
+<!-- [![Coverity Scan Build Status](https://scan.coverity.com/projects/14685/badge.svg)](https://scan.coverity.com/projects/zethon-arcc)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/d1edc1ba75ec4170b4fbffda2a9a6f4b)](https://www.codacy.com/app/zethon/arcc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=zethon/arcc&amp;utm_campaign=Badge_Grade) -->
+[![codecov](https://codecov.io/gh/zethon/arcc/branch/master/graph/badge.svg)](https://codecov.io/gh/zethon/arcc)
 [![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org)
 
 <!--
