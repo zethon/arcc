@@ -46,8 +46,7 @@ test_script:
 after_test:
   - dir "%APPVEYOR_BUILD_FOLDER%\*.exe" /s
   - |
-    IF "%COVERAGE%" EQU "ON"
-    (
+    IF "%COVERAGE%" EQU "ON" (
       OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:arcc.bin -- arcc.exe
       OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestUtils.bin -- TestUtils.exe
       OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestSession.bin -- TestSession.exe
