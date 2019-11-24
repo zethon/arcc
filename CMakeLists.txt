@@ -101,6 +101,7 @@ if (MSVC)
         # treat warnings as errors
         /WX
         /wd4996
+        /wd4099
     )
 endif(MSVC)
 
