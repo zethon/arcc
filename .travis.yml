@@ -70,7 +70,14 @@ script:
   - git submodule update --init --recursive
   - mkdir build
   - cd build
-  - conan install .. --build missing  -s compiler.libcxx=libstdc++11
+  
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      conan install .. --build missing -s cppstd=17
+    elif if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      conan install .. --build missing  -s compiler.libcxx=libstdc++11
+    fi  
+
   - cmake .. -DCMAKE_BUILD_TYPE=${CONFIG} -DBUILD_ARCC_TESTS=ON -DBUILD_CODE_COVERAGE=${COVERAGE}
   - cmake --build . --config "${CONFIG}" -- -j3 VERBOSE=1
   - ctest -C "${CONFIG}" --output-on-failure
