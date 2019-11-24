@@ -70,11 +70,11 @@ script:
   - git submodule update --init --recursive
   - mkdir build
   - cd build
-  
+
   - |
-    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
       conan install .. --build missing -s cppstd=17
-    elif if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    elif [ "$TRAVIS_OS_NAME" == "linux" ]; then
       conan install .. --build missing  -s compiler.libcxx=libstdc++11
     fi  
 
