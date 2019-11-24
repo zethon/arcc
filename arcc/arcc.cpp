@@ -128,10 +128,10 @@ int main(int argc, char* argv[])
         std::cout << COPYRIGHT << std::endl;
         std::cout << std::endl;
 
-        if (consoleApp->loadSession())
-        {
-            ConsoleApp::printStatus("saved session restored");
-        }
+        //if (consoleApp->loadSession())
+        //{
+        //    ConsoleApp::printStatus("saved session restored");
+        //}
     }
 
     try
