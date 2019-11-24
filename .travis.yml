@@ -70,9 +70,9 @@ script:
 
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-      conan install .. --build missing -s cppstd=17
+      conan install .. --build missing -s cppstd=17 -s build_type=${CONFIG}
     elif [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      conan install .. --build missing  -s compiler.libcxx=libstdc++11
+      conan install .. --build missing  -s compiler.libcxx=libstdc++11 -s build_type=${CONFIG}
     fi  
 
   - cmake .. -DCMAKE_BUILD_TYPE=${CONFIG} -DBUILD_ARCC_TESTS=ON -DBUILD_CODE_COVERAGE=${COVERAGE}
