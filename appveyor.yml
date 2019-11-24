@@ -6,7 +6,9 @@ image:
 environment:
   matrix:
     - CONFIG: Debug
+      COVERAGE=ON
     - CONFIG: Release
+      COVERAGE=OFF
 
 install:
   - echo "Initializing test data..."
@@ -14,6 +16,7 @@ install:
   - cmd: appveyor-tools\secure-file -decrypt tests\session.dat.enc -secret %session_secret% -salt %session_salt%
   - echo "Installing OpenCppCoverage"
   - choco install opencppcoverage
+  - choco install codecov
   - set path=C:\Program Files\OpenCppCoverage;%PATH%
   - echo "Downloading conan..."
   - set PATH=%PYTHON%/Scripts/;%PATH%
@@ -24,7 +27,7 @@ build_script:
   - git submodule update --init --recursive
   - mkdir build && cd build
   - conan install .. --build missing -s build_type=%CONFIG%
-  - cmake .. "-GVisual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=%CONFIG% -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON
+  - cmake .. "-GVisual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=%CONFIG% -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON -DBUILD_CODE_COVERAGE=%COVERAGE%
   - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
 
 test_script:
@@ -32,6 +35,12 @@ test_script:
 
 after_test:
   - dir "%APPVEYOR_BUILD_FOLDER%\*.exe" /s
-  # - OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:arcc.bin -- arcc.exe
-  # - OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestUtils.bin -- TestUtils.exe
-  # - OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestSession.bin -- TestSession.exe
+  - |
+    IF "%COVERAGE%"" EQU "ON"
+    (
+      OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:arcc.bin -- arcc.exe
+      OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestUtils.bin -- TestUtils.exe
+      OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestSession.bin -- TestSession.exe
+      OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=cobertura:overallReport.xml --input_coverage=arcc.bin --input_coverage=TestUtils.bin --input_coverage=TestSession.bin
+      codecov --root ../.. --no-color --disable gcov -f overallReport.xml
+    )
