@@ -5,8 +5,8 @@ image:
 
 environment:
   matrix:
-    - CONFIG: RelWithDebInfo
-    - CONFIG: Release
+    - CONFIG: Debug
+    # - CONFIG: Release
 
 install:
   - echo "Initializing test data..."
@@ -24,7 +24,7 @@ build_script:
   - git submodule update --init --recursive
   - mkdir build && cd build
   - conan install .. --build missing
-  - cmake .. "-GVisual Studio 15 2017 Win64" -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON
+  - cmake .. "-GVisual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=%CONFIG% -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON
   - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
 
 test_script:
@@ -32,9 +32,6 @@ test_script:
 
 after_test:
   - dir "%APPVEYOR_BUILD_FOLDER%\*.exe" /s
-  # OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*"
-
-  # --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*"
-  # --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*"
-  
-  # --export_type=binary:envTermMissingReport.bin -- envTermMissing.exe
+  # - OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:arcc.bin -- arcc.exe
+  # - OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestUtils.bin -- TestUtils.exe
+  # - OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestSession.bin -- TestSession.exe
