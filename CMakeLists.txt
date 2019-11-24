@@ -101,13 +101,9 @@ if (MSVC)
         # treat warnings as errors
         /WX
         /wd4996
-<<<<<<< HEAD
-        /wd4099
-=======
         
         # ignore macro redefinition warnings because of PDCurses and MOUSE_MOVED
         /wd4005 
->>>>>>> 3fb917f... ignore macro redefinition warnings because of PDCurses;
     )
 
     add_link_options(
