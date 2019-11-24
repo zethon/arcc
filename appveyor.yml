@@ -45,11 +45,4 @@ test_script:
 
 after_test:
   - dir "%APPVEYOR_BUILD_FOLDER%\*.exe" /s
-  - |
-    IF "%COVERAGE%" EQU "ON" (
-      OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:arcc.bin -- arcc.exe
-      OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestUtils.bin -- TestUtils.exe
-      OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=binary:TestSession.bin -- TestSession.exe
-      OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*" --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*" --export_type=cobertura:overallReport.xml --input_coverage=arcc.bin --input_coverage=TestUtils.bin --input_coverage=TestSession.bin
-      codecov --root ../.. --no-color --disable gcov -f overallReport.xml
-    )
+  - IF "%COVERAGE%" EQU "ON" appveyor\coverage.cmd
