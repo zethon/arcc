@@ -5,7 +5,7 @@ image:
 
 environment:
   matrix:
-    - CONFIG: Debug
+    - CONFIG: RelWithDebInfo
     - CONFIG: Release
 
 install:
