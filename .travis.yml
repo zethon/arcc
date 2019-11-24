@@ -1,23 +1,5 @@
 language: cpp
 
-install:
-  - JOBS=2
-  - |
-    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      export CC=${CC_COMPILER}
-      export CXX=${CXX_COMPILER}
-
-      alias python=python3
-      sudo pip install conan
-    elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
-      brew update
-      brew install conan
-      brew install cmake || brew upgrade cmake
-    fi
-
-  - cmake --version
-  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-
 matrix:
   include:
 # MACOS: DEBUG
@@ -62,6 +44,24 @@ matrix:
         apt:
           packages:
             - lcov
+
+install:
+  - JOBS=2
+  - |
+    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+      export CC=${CC_COMPILER}
+      export CXX=${CXX_COMPILER}
+
+      alias python=python3
+      sudo pip install conan
+    elif [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      brew update
+      brew install conan
+      brew install cmake || brew upgrade cmake
+    fi
+
+  - cmake --version
+  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
 
 script:
   - git submodule update --init --recursive
