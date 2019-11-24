@@ -15,6 +15,7 @@ class AppBase
 {
 
 public:
+    virtual ~AppBase() = default;
     virtual void run() = 0;
     
 };
