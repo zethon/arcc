@@ -48,8 +48,6 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
 
         # disabled errors/warnings
         -Wno-error=date-time
-
-        # --coverage
     )
 endif()
 
@@ -62,8 +60,6 @@ if (CMAKE_COMPILER_IS_GNUCXX AND BUILD_CODE_COVERAGE)
     # add_link_options, so we set a variable here and then
     # append it to each build target manually
     set(COVERAGE_FLAG "--coverage")
-
-    MESSAGE(STATUS "271828: ${COVERAGE_FLAG}")
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
