@@ -9,18 +9,15 @@ configuration:
 
 environment:
   matrix:
-    - COVERAGE=ON
-    - COVERAGE=OFF
+    - COVERAGE: ON
+    - COVERAGE: OFF
 
 matrix:
   exclude:
     - configuration: Debug
-      COVERAGE:OFF
-
-matrix:
-  exclude:
+      COVERAGE: OFF
     - configuration: Release
-      COVERAGE:ON
+      COVERAGE: ON
 
 install:
   - echo "Initializing test data..."
