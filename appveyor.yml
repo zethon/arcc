@@ -12,18 +12,29 @@ install:
   - echo "Initializing test data..."
   - ps: iex ((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/appveyor/secure-file/master/install.ps1'))
   - cmd: appveyor-tools\secure-file -decrypt tests\session.dat.enc -secret %session_secret% -salt %session_salt%
+  - echo "Installing OpenCppCoverage"
+  - choco install opencppcoverage
+  - set path=C:\Program Files\OpenCppCoverage;%PATH%
   - echo "Downloading conan..."
-  - set PATH=%PATH%;%PYTHON%/Scripts/
+  - set PATH=%PYTHON%/Scripts/;%PATH%
   - pip.exe install conan
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
 
 build_script:
   - git submodule update --init --recursive
-  - mkdir build
-  - cd build
+  - mkdir build && cd build
   - conan install .. --build missing
   - cmake .. "-GVisual Studio 15 2017 Win64" -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON
   - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
 
 test_script:
   - ctest -VV -C "%CONFIG%" --output-on-failure
+
+after_test:
+  - dir "%APPVEYOR_BUILD_FOLDER%\*.exe" /s
+  # OpenCppCoverage --sources %APPVEYOR_BUILD_FOLDER% --excluded_sources "%APPVEYOR_BUILD_FOLDER%\build\*"
+
+  # --excluded_sources "%APPVEYOR_BUILD_FOLDER%\Simple-Web-Server\*"
+  # --excluded_sources "%APPVEYOR_BUILD_FOLDER%\rang\*"
+  
+  # --export_type=binary:envTermMissingReport.bin -- envTermMissing.exe
