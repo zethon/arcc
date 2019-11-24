@@ -1,12 +1,12 @@
-version: 0.7.7-{build}-{branch}
+version: 0.1.0-{build}-{branch}
 
 image: 
  - Visual Studio 2017
 
 environment:
   matrix:
-    - CONFIG: Release
     - CONFIG: RelWithDebInfo
+    - CONFIG: Release
 
 install:
   - echo "Initializing test data..."
@@ -22,7 +22,7 @@ build_script:
   - mkdir build
   - cd build
   - conan install .. --build missing
-  - cmake .. "-GVisual Studio 15 2017 Win64" -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=OFF
+  - cmake .. "-GVisual Studio 15 2017 Win64" -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON
   - cmake --build . --config "%CONFIG%" -- /maxcpucount:4
 
 test_script:
