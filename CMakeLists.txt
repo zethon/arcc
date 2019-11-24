@@ -49,17 +49,17 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
         # disabled errors/warnings
         -Wno-error=date-time
     )
-endif()
 
-if (CMAKE_COMPILER_IS_GNUCXX AND BUILD_CODE_COVERAGE)
-    add_compile_options(
-        "$<$<CONFIG:DEBUG>:--coverage>"
-    )
+    if (BUILD_CODE_COVERAGE)
+        add_compile_options(
+            "$<$<CONFIG:DEBUG>:--coverage>"
+        )
 
-    # travis-ci still uses an old cmake which does not support
-    # add_link_options, so we set a variable here and then
-    # append it to each build target manually
-    set(COVERAGE_FLAG "--coverage")
+        # travis-ci still uses an old cmake which does not support
+        # add_link_options, so we set a variable here and then
+        # append it to each build target manually
+        set(COVERAGE_FLAG "--coverage")
+    endif(BUILD_CODE_COVERAGE)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES Clang)

@@ -42,6 +42,17 @@ matrix:
         apt:
           packages:
             - lcov
+    - os: linux
+      dist: bionic
+      sudo: required
+      compiler: gcc
+      env:
+        - CONFIG=Release
+        - COVERAGE=OFF
+      addons:
+        apt:
+          packages:
+            - lcov
 
 script:
   - git submodule update --init --recursive
