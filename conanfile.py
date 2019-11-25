@@ -17,7 +17,7 @@ class ArccConan(ConanFile):
 
     requires = (
         "boost/1.68.0@conan/stable",
-        "libcurl/7.61.1@bincrafters/stable",
+        "libcurl/7.64.1@bincrafters/stable",
         "fmt/5.3.0@bincrafters/stable",
         "jsonformoderncpp/3.4.0@vthiery/stable"
     )
