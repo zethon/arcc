@@ -32,6 +32,7 @@ install:
   - set PATH=%PYTHON%/Scripts/;%PATH%
   - pip.exe install conan
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+  - conan remote add arcc https://api.bintray.com/conan/zethon/arcc
 
 build_script:
   - git submodule update --init --recursive

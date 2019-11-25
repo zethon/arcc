@@ -4,27 +4,28 @@ set(SOURCE_FILES
     arcc.cpp
     CommandHistory.cpp
     ConsoleApp.cpp
+    CursesApp.cpp
     Listing.cpp
-    Reddit.cpp
-    Settings.cpp
-    utils.cpp
-    SimpleArgs.cpp
-    WebClient.cpp
     OAuth2Login.cpp
+    RedditSession.cpp
+    Settings.cpp
+    SimpleArgs.cpp
+    utils.cpp
+    WebClient.cpp
 )
 
 set(HEADER_FILES
+    AppBase.h
     CommandHistory.h
     ConsoleApp.h
     core.h
+    CursesApp.h
     Listing.h
-    Reddit.h
-    Settings.h
+    OAuth2Login.h
+    RedditSession.h
     Terminal.h
     utils.h
-    SimpleArgs.h
     WebClient.h
-    OAuth2Login.h
 )
 
 if (WIN32)
@@ -38,12 +39,12 @@ if (APPLE)
     set(EXTRA_LIBS ${APP_SERVICES_LIBRARY} ${CORE_SERVICES_LIBRARY})
 endif()
 
-add_executable(${PROJECT_NAME}
+add_executable(arcc
     ${SOURCE_FILES}
     ${HEADER_FILES}
 )
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(arcc
     PUBLIC
         ${CONAN_LIBS}
         ${EXTRA_LIBS}
@@ -51,8 +52,7 @@ target_link_libraries(${PROJECT_NAME}
         "$<$<CONFIG:DEBUG>:${COVERAGE_FLAG}>"
 )
 
-target_compile_definitions(
-    ${PROJECT_NAME}
+target_compile_definitions(arcc
     PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:_CRT_SECURE_NO_WARNINGS>
 )
