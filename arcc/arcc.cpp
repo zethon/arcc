@@ -7,8 +7,6 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 
-#include <curses.h>
-
 #include "core.h"
 #include "SimpleArgs.h"
 #include "ConsoleApp.h"
@@ -65,7 +63,6 @@ int main(int argc, char* argv[])
     desc.add_options()
         ("help,?", "print help message")
         ("version,v", "print version string")
-        ("mode,m", po::value<std::string>(), "run in 'curses' (default) or 'text' mode")
     ;
 
     po::variables_map vm;
@@ -86,56 +83,24 @@ int main(int argc, char* argv[])
 
     auto settings = initSettings();
 
-    enum ModeEnum { NCURSES, TEXT } termMode = TEXT;
-    if (vm.count("mode"))
+    std::cout << APP_TITLE << std::endl;
+    std::cout << COPYRIGHT << std::endl;
+    std::cout << std::endl;
+
+    auto consoleApp = std::make_unique<ConsoleApp>(settings);
+    if (consoleApp->loadSession())
     {
-        const std::string mode = vm["mode"].as<std::string>();
-        if (boost::iequals(mode, "curses")) 
-        {   
-            termMode = NCURSES;
-        }
-        else if (!boost::iequals(mode, "text"))
-        {
-            std::cout << "error: possible values for 'mode' are [curses|text]\n";
-            return 1;
-        }
-    }
-    else
-    {
-        const auto mode = settings.value("global.mode", "text");
-        if (mode == "curses") termMode = NCURSES;
+        ConsoleApp::printStatus("saved session restored");
     }
 
-    if (termMode == NCURSES)
+    try
     {
-        // [[maybe_unused]] auto window = arcc::curses_init();
-        initscr();
-        printw("Hi there!");
-        // printw("hi there! %d", static_cast<void*>(window));
-        getch();
-        endwin();
+        consoleApp->run();
+        settings.save(utils::getDefaultConfigFile());
     }
-    else
+    catch (const std::exception& ex)
     {
-        std::cout << APP_TITLE << std::endl;
-        std::cout << COPYRIGHT << std::endl;
-        std::cout << std::endl;
-
-        auto consoleApp = std::make_unique<ConsoleApp>(settings);
-        if (consoleApp->loadSession())
-        {
-            ConsoleApp::printStatus("saved session restored");
-        }
-
-        try
-        {
-            consoleApp->run();
-            settings.save(utils::getDefaultConfigFile());
-        }
-        catch (const std::exception& ex)
-        {
-            std::cerr << "terminal error: " << ex.what() << std::endl;
-        }
+        std::cerr << "terminal error: " << ex.what() << std::endl;
     }
 
     return 0;
