@@ -16,7 +16,7 @@ namespace arcc
 {
 
 class RedditSession;
-using RedditSessionPtr = std::shared_ptr<RedditSession>;
+using RedditSessionPtr = std::weak_ptr<RedditSession>;
 
 struct ConsoleCommand
 {
@@ -40,7 +40,6 @@ class ConsoleApp final : public AppBase
     enum class ViewFormType { NORMAL, MOBILE, COMPACT, JSON };
     
     Terminal                        _terminal;
-    RedditSessionPtr                _reddit;
     CommandHistory                  _history;
 
     std::vector<ConsoleCommand>     _commands;
@@ -49,15 +48,16 @@ class ConsoleApp final : public AppBase
     Listing::Page                   _currentPage;
 
     bool                            _doExit = false;
-    std::string                     _location = "/";
+
     arcc::Settings&                 _settings;
+    arcc::RedditSessionPtr          _session;
 
 public:
     static void printError(const std::string& error);
     static void printWarning(const std::string& warning);
     static void printStatus(const std::string& status);
     
-    ConsoleApp(arcc::Settings& settings);
+    ConsoleApp(arcc::Settings& settings, arcc::RedditSession& session);
 
     std::string doRedditGet(const std::string& endpoint);
     std::string doRedditGet(const std::string& endpoint, const Params& params);
@@ -73,16 +73,6 @@ public:
     void doExitApp() { _doExit = true; }
 
     bool setLocation(const std::string&);
-    bool isLoggedIn() const { return _reddit != nullptr; }
-
-    RedditSessionPtr getRedditSession() { return _reddit; }
-    void setRedditSession(RedditSessionPtr val) 
-    { 
-        _reddit = val;
-        _reddit->setRefreshCallback(std::bind(&ConsoleApp::saveSession, this)); 
-        saveSession();
-    }
-
     bool loadSession();
     void saveSession();
     void resetSession();

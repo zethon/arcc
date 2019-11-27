@@ -11,13 +11,13 @@
 namespace arcc
 {
 
-Listing::Listing(SessionPtr session,
+Listing::Listing(RedditSessionPtr session,
                  const std::string& endpoint,
                  std::size_t limit)
     : Listing(session, endpoint, limit, Params{})
 {}
 
-Listing::Listing(SessionPtr session, const std::string& endpoint, std::size_t limit, const Params& params)
+Listing::Listing(RedditSessionPtr session, const std::string& endpoint, std::size_t limit, const Params& params)
     : _sessionPtr{ session },
     _endpoint{ endpoint },
     _limit{ limit },

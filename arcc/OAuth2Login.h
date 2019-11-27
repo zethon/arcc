@@ -16,7 +16,7 @@ namespace arcc
 {
 
 class RedditSession;
-using RedditSessionPtr = std::shared_ptr<RedditSession>;
+using RedditSessionPtr = std::weak_ptr<RedditSession>;
 
 using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
 

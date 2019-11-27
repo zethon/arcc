@@ -4,6 +4,7 @@
 #include <ctime>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #include <nlohmann/json.hpp>
 #include <fmt/core.h>
@@ -111,6 +112,58 @@ std::string RedditSession::doGetRequest(
     return result.data;
 }
 
+bool RedditSession::load(const std::string& filename)
+{
+    namespace bfs = boost::filesystem;
+    namespace nl = nlohmann;
+
+    if (bfs::path file{ filename }; bfs::exists(file))
+    {
+        std::ifstream in(filename);
+        nl::json j = nl::json::parse(in);
+        in.close();
+
+        _accessToken = j["accessToken"].get<std::string>();
+        _refreshToken = j["refreshToken"].get<std::string>();
+        _expiry = j["expiry"].get<double>();
+        _lastRefresh = j["time"].get<time_t>();
+
+        _loggedIn = !_accessToken.empty() && !_refreshToken.empty();
+        return true;
+    }
+
+    return false;
+}
+
+void RedditSession::save(const std::string& filename)
+{
+    namespace bfs = boost::filesystem;
+    namespace nl = nlohmann;
+
+    bfs::path sessionfile{ filename };
+
+    nl::json j;
+
+    j["accessToken"] = _accessToken;
+    j["refreshToken"] = _refreshToken;
+    j["expiry"] = _expiry;
+    j["time"] = _lastRefresh;
+    j["location"] = _location;
+
+    std::ofstream out(sessionfile.string());
+    out << j;
+    out.close();
+}
+
+void RedditSession::reset()
+{
+    _accessToken.clear();
+    _refreshToken.clear();
+    _expiry = 0;
+    _lastRefresh = 0;
+    _location.clear();
+}
+
 void RedditSession::doRefreshToken()
 {
     std::time_t elapsed_seconds = std::time(nullptr) - _lastRefresh;
@@ -145,6 +198,12 @@ void RedditSession::doRefreshToken()
             {
                 _refreshCallback();
             }
+
+            _loggedIn = !_accessToken.empty();
+        }
+        else
+        {
+            _loggedIn = false;
         }
     }
 }

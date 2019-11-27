@@ -53,6 +53,11 @@ arcc::Settings initSettings()
     return settings;
 }
 
+arcc::RedditSessionPtr initSession()
+{
+    return std::make_weak<arcc::RedditSession>();
+}
+
 int main(int argc, char* argv[])
 {
     using namespace arcc;
@@ -82,6 +87,7 @@ int main(int argc, char* argv[])
     }
 
     auto settings = initSettings();
+    auto session = initSession();
 
     std::cout << APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;

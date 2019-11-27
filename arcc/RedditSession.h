@@ -15,6 +15,9 @@
 namespace arcc
 {
 
+class RedditSession;
+using RedditSessionPtr = std::weak_ptr<RedditSession>;
+
 class RedditSession final 
     : public std::enable_shared_from_this<RedditSession>
 {
@@ -31,6 +34,7 @@ class RedditSession final
 
     bool                        _loggedIn = false;
     std::string                 _lastRequest;
+    std::string                 _location;
 
 public:
 
@@ -47,6 +51,9 @@ public:
     double expiry() const { return _expiry; }
     time_t lastRefresh() const { return _lastRefresh; }
 
+    std::string location() const { return _location; }
+    void setLocation(const std::string& val) { _location = val; }
+
     bool loggedIn() const { return _loggedIn; }
     std::string lastRequest() const { return _lastRequest; }
 
@@ -54,6 +61,11 @@ public:
     {
         _refreshCallback = cb;
     }
+
+    [[maybe_unused]] bool load(const std::string& filename);
+    void save(const std::string& filename);
+
+    void reset();
 
 private:
     void doRefreshToken();   
