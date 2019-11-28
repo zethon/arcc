@@ -41,7 +41,7 @@ std::string buildQueryParamString(const Params& params)
 RedditSession::RedditSession()
     : _expiry { 0 }
 {
-    const std::string userAgent = fmt::format("{}:{}:v{} (by /u/ll)"
+    const std::string userAgent = fmt::format("{}:{}:v{} (by /u/wolosocu)"
         ,utils::getOsString() 
         ,APP_TITLE 
         ,VERSION);
@@ -127,8 +127,11 @@ bool RedditSession::load(const std::string& filename)
         _refreshToken = j["refreshToken"].get<std::string>();
         _expiry = j["expiry"].get<std::uint32_t>();
         _lastRefresh = j["time"].get<time_t>();
+        _location = j["location"].get<std::string>();
 
+        _webclient.setHeader("Authorization: bearer " + _accessToken);
         _loggedIn = !_accessToken.empty() && !_refreshToken.empty();
+
         return true;
     }
 

@@ -784,7 +784,7 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
 
     if (link["stickied"].get<bool>())
     {
-        std::cout << rang::fg::black << rang::style::bold << rang::bg::yellow;
+        std::cout << rang::style::bold << rang::fg::yellow << '*';
     }
 
     std::string namestr;
@@ -973,6 +973,8 @@ void ConsoleApp::list(const std::string& cmdParams)
     {
         ConsoleApp::printStatus(fmt::format("showing {} '{}' items from '{}'",
             limit, listType, endpoint ));
+
+        std::cout << '\n';
 
         _listing = std::move(listing);
         _currentPage = std::move(page);
