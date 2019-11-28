@@ -8,7 +8,7 @@
 namespace arcc
 {
 
-void CommandHistory::loadHistory(bool throwOnError)
+void CommandHistory::load(bool throwOnError)
 {
     if (_historyFile.empty()) return;
 
@@ -40,7 +40,7 @@ void CommandHistory::loadHistory(bool throwOnError)
     in.close();
 }
 
-void CommandHistory::saveHistory()
+void CommandHistory::save()
 {
     if (_historyFile.empty()) return;
 
@@ -59,8 +59,14 @@ void CommandHistory::saveHistory()
     out.close();
 }
 
-void CommandHistory::commit(const std::string &command)
+void CommandHistory::commit(const std::string& command)
 {
+    if (_buffer.size() > 0
+            && _buffer.back() == command)
+    {
+        return;
+    }
+
     _buffer.push_back(command);
     _currentPos = _buffer.size();
 

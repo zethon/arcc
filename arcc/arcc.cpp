@@ -70,6 +70,7 @@ int main(int argc, char* argv[])
     desc.add_options()
         ("help,?", "print help message")
         ("version,v", "print version string")
+        ("reset", "reset all program data and settings")
     ;
 
     po::variables_map vm;
@@ -100,6 +101,19 @@ int main(int argc, char* argv[])
     auto settings = initSettings();
     auto session = initSession();
 
+    if (vm.count("reset"))
+    {
+        settings.reset();
+        settings.save(utils::getDefaultConfigFile());
+
+        arcc::CommandHistory history;
+        history.setHistoryFile(utils::getDefaultHistoryFile());
+        history.save();
+
+        session->reset();
+        session->save(utils::getDefaultSessionFile());
+    }
+
     std::cout << APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;
     std::cout << std::endl;
@@ -115,7 +129,6 @@ int main(int argc, char* argv[])
     }
 
     settings.save(utils::getDefaultConfigFile());
-//    session->save(utils::getDefaultSessionFile());
 
     return 0;
 }

@@ -239,7 +239,7 @@ void Settings::reset()
 
     for (const auto& defval : _defaults.items())
     {
-        _settings[defval.key()] = _defaults[defval.key()];
+        _settings[defval.key()] = defval.value();
     }
 }
 

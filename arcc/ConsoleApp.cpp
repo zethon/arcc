@@ -84,7 +84,7 @@ ConsoleApp::ConsoleApp(arcc::Settings& settings, std::shared_ptr<arcc::RedditSes
 
     const std::string historyfile{ utils::getDefaultHistoryFile() };
     _history.setHistoryFile(historyfile);
-    _history.loadHistory(false);
+    _history.load(false);
 
     _session->setRefreshCallback(
         [this]() { _session->save(utils::getDefaultSessionFile()); });

@@ -18,13 +18,13 @@ public:
     CommandHistory() = default;
 
     void setHistoryFile(const std::string& val) { _historyFile = val; }
-    void loadHistory(bool throwOnError=true);
-    void saveHistory();
+    void load(bool throwOnError=true);
+    void save();
 
     void setBufferSize(std::size_t size) { _buffer.set_capacity(size); }
 
     void commit(const std::string& command);
-    void clear() { _buffer.clear(); }
+    void clear() { _buffer.clear(); reset(); }
     void reset() { _currentPos = _buffer.size(); }
 
     bool up();
