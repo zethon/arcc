@@ -1,0 +1,3 @@
+ignore:
+  - "/Applications"
+  - "/Users/travis/.conan"

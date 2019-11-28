@@ -13,7 +13,7 @@ namespace arcc
 {
 
 class RedditSession;
-using SessionPtr = std::weak_ptr<RedditSession>;
+using RedditSessionPtr = std::weak_ptr<RedditSession>;
 
 class Listing;
 using ListingPtr = std::unique_ptr<Listing>;
@@ -24,7 +24,7 @@ class Listing
 {
     friend class RedditSession;
 
-    SessionPtr                  _sessionPtr;
+    RedditSessionPtr            _sessionPtr;
 
     const std::string           _endpoint;
     const std::size_t           _limit;
@@ -41,8 +41,8 @@ public:
     using Items = std::optional<std::reference_wrapper<const nlohmann::json>>;
 
     Listing(const Listing& other);
-    Listing(SessionPtr session, const std::string& endpoint, std::size_t limit);
-    Listing(SessionPtr session, const std::string& endpoint, std::size_t limit, const Params& params);
+    Listing(RedditSessionPtr session, const std::string& endpoint, std::size_t limit);
+    Listing(RedditSessionPtr session, const std::string& endpoint, std::size_t limit, const Params& params);
 
     [[maybe_unused]] Listing::Page getFirstPage();
     [[maybe_unused]] Listing::Page getNextPage();

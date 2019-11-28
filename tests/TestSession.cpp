@@ -6,7 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include "../arcc/ConsoleApp.h"
-#include "../arcc/Reddit.h"
+#include "../arcc/RedditSession.h"
 
 using namespace std::string_literals;
 
@@ -31,12 +31,13 @@ arcc::RedditSessionPtr loadSession(const std::string& filename)
             j["time"].get<time_t>());
     }
 
-    return nullptr;
+    return arcc::RedditSessionPtr{};
 }
 
 BOOST_AUTO_TEST_CASE(TestWhoAmI)
 {
-    auto session = loadSession(_SESSION_FILE);
+    auto sessionWeak = loadSession(_SESSION_FILE);
+    auto session = sessionWeak.lock();
     BOOST_REQUIRE(session);
 
     const auto jsontext = session->doGetRequest("/api/v1/me");
@@ -53,7 +54,9 @@ BOOST_AUTO_TEST_CASE(testWeirdEndPoints)
         "/r/IAmA/top", "/r/IAmA/top/", "r/IAmA/top", "r/IAmA/top/"
     };
 
-    auto session = loadSession(_SESSION_FILE);
+    auto sessionWeak = loadSession(_SESSION_FILE);
+    auto session = sessionWeak.lock();
+    BOOST_REQUIRE(session);
 
     for (const auto& endpoint : endpoints)
     {
@@ -86,7 +89,9 @@ BOOST_AUTO_TEST_CASE(testNewSubListing)
 {
     constexpr auto endpoint = "r/Omnism/new/";
 
-    auto session = loadSession(_SESSION_FILE);
+    auto sessionWeak = loadSession(_SESSION_FILE);
+    auto session = sessionWeak.lock();
+    BOOST_REQUIRE(session);
 
     arcc::Listing biglist{ session, endpoint, 24u };
     arcc::Listing::Page bigpage = biglist.getFirstPage();
@@ -127,7 +132,9 @@ BOOST_AUTO_TEST_CASE(testNewSubListing)
 
 BOOST_AUTO_TEST_CASE(testHotSubListing)
 {
-    auto session = loadSession(_SESSION_FILE);
+    auto sessionWeak = loadSession(_SESSION_FILE);
+    auto session = sessionWeak.lock();
+    BOOST_REQUIRE(session);
 
     // Based off of this post: http://shorturl.at/btwH4, we know that
     // the all time top voted thread was Obama's AMA

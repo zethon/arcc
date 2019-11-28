@@ -75,8 +75,9 @@ void ConsoleApp::printStatus(const std::string& status)
         << std::endl;
 }
 
-ConsoleApp::ConsoleApp(arcc::Settings& settings)
-    : _settings{ settings }
+ConsoleApp::ConsoleApp(arcc::Settings& settings, std::shared_ptr<arcc::RedditSession> session)
+    : _settings{ settings },
+      _session{ session }
 {
     initTerminal();
     initCommands();
@@ -84,6 +85,9 @@ ConsoleApp::ConsoleApp(arcc::Settings& settings)
     const std::string historyfile{ utils::getDefaultHistoryFile() };
     _history.setHistoryFile(historyfile);
     _history.loadHistory(false);
+
+    _session->setRefreshCallback(
+        [this]() { _session->save(utils::getDefaultSessionFile()); });
 }
 
 void ConsoleApp::initTerminal()
@@ -144,14 +148,15 @@ void ConsoleApp::initCommands()
     addCommand("login", "login",
         [this](const std::string&)
         {
-            if (!_reddit->loggedIn())
+            if (!_session->loggedIn())
             {
                 OAuth2Login login;
                 login.start(); // will block until the login results are returned
 
                 if (login.loggedIn())
                 {
-                    this->setRedditSession(login.getRedditSession());
+                    _session = login.getRedditSession();
+                    _session->save(utils::getDefaultSessionFile());
                     std::cout << "login successful " << utils::sentimentText(utils::Sentiment::POSITIVE) << std::endl;
                 }
                 else
@@ -168,14 +173,10 @@ void ConsoleApp::initCommands()
     addCommand("logout", "logout of the current session",
         [this](const std::string&)
         {
-            if (this->getRedditSession() != nullptr)
+            if (_session->loggedIn())
             {
-                // set location to the root
                 this->setLocation("/");
-
-                // delete our session object
-                this->resetSession();
-
+                _session->reset();
                 std::cout << "you have logged out " << utils::sentimentText(utils::Sentiment::NEGATIVE) << std::endl;
             }
             else
@@ -365,18 +366,6 @@ void ConsoleApp::run()
             std::cout << std::endl;
         }
     }
-
-    if (_reddit)
-    {
-        try
-        {
-            saveSession();
-        }
-        catch (const std::exception& ex)
-        {
-            printError(ex.what());
-        }
-    }
 }
 
 bool ConsoleApp::setLocation(const std::string& location)
@@ -385,35 +374,35 @@ bool ConsoleApp::setLocation(const std::string& location)
 
     if (location == "/")
     {
-        _location.clear();
-        retval = true;
+        _session->setLocation(""s);
+        return true;
     }
-    else
-    {
-        const std::regex subRegex { R"(^\/r\/[a-zA-Z0-9]+$)" };
 
-        if (std::regex_match(location, subRegex))
+    const std::regex subRegex { R"(^\/r\/[a-zA-Z0-9]+$)" };
+
+    if (std::regex_match(location, subRegex))
+    {
+        const std::string jstr = doRedditGet(location + "/about");
+        if (jstr.size() > 0)
         {
-            const std::string jstr = doRedditGet(location + "/about");
-            if (jstr.size() > 0)
+            try
             {
-                try
+                auto jreply = nlohmann::json::parse(jstr);
+                if (jreply["data"]["created"].get<unsigned int>() > 0)
                 {
-                    auto jreply = nlohmann::json::parse(jstr);
-                    if (jreply["data"]["created"].get<unsigned int>() > 0)
-                    {
-                        retval = true;
-                        _location = location;
-                    }
+                    retval = true;
+                    _session->setLocation(location);
+                    return true;
                 }
-                catch (const nlohmann::json::exception&)
-                {
-                }
+            }
+            catch (const nlohmann::json::exception& ex)
+            {
+                printError(fmt::format("could no set location: {}", ex.what()));
             }
         }
     }
-    
-    return retval;
+
+    return false;
 }
 
 std::string ConsoleApp::doRedditGet(const std::string& endpoint)
@@ -425,9 +414,9 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const Params& p
 {
     std::string retval;
 
-    if (_reddit)
+    if (_session->loggedIn())
     {
-        retval = _reddit->doGetRequest(endpoint, params);
+        retval = _session->doGetRequest(endpoint, params);
     }
     else
     {
@@ -437,77 +426,14 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const Params& p
     return retval;
 }
 
-bool ConsoleApp::loadSession()
-{
-    boost::filesystem::path sessionfile{ utils::getDefaultSessionFile() };
-
-    if (boost::filesystem::exists(sessionfile))
-    {
-        std::ifstream i(sessionfile.string());
-
-        try
-        {
-            nlohmann::json j = nlohmann::json::parse(i);
-
-            i >> j;
-
-            if (j.find("accessToken") != j.end() && j.find("refreshToken") != j.end() && j.find("expiry") != j.end())
-            {
-                setRedditSession(std::make_shared<RedditSession>(
-                    j["accessToken"].get<std::string>(), 
-                    j["refreshToken"].get<std::string>(), 
-                    j["expiry"].get<double>(),
-                    j["time"].get<time_t>()));
-
-                    _location = j["location"].get<std::string>();
-            }
-        }
-        catch (const nlohmann::json::exception& )
-        {
-            // TODO: should warn the user here
-            resetSession();
-        }
-    }
-
-    return _reddit != nullptr;
-}
-
-void ConsoleApp::saveSession()
-{
-    boost::filesystem::path sessionfile{ utils::getDefaultSessionFile() };
-
-    nlohmann::json j;
-
-    j["accessToken"] = _reddit->accessToken();
-    j["refreshToken"] = _reddit->refreshToken();
-    j["expiry"] = _reddit->expiry();
-    j["time"] = _reddit->lastRefresh();
-    j["location"] = _location;
-
-    std::ofstream out(sessionfile.string());
-    out << j;
-    out.close();
-}
-
-void ConsoleApp::resetSession()
-{
-    _reddit = std::make_shared<RedditSession>();
-
-    std::string sessionfile{ utils::getDefaultSessionFile() };
-
-    std::ofstream out(sessionfile);
-    out << nlohmann::json{};
-    out.close();
-}
-
 void ConsoleApp::printPrompt() const
 {
-    if (isLoggedIn())
+    if (_session->loggedIn())
     {
         std::cout
             << rang::fg::cyan
             << '$'
-            << _location
+            << _session->location()
             << rang::fg::reset
             << rang::bg::reset
             << rang::style::reset
@@ -519,7 +445,7 @@ void ConsoleApp::printPrompt() const
             << rang::style::bold
             << rang::fg::red
             << '$'
-            << _location
+            << _session->location()
             << rang::style::reset
             << rang::fg::reset
             << "> ";
@@ -959,9 +885,9 @@ void ConsoleApp::list(const std::string& cmdParams)
             endpoint = fmt::format("/r/{}", subName);
         }
     }
-    else if (_location != "/")
+    else if (_session->location() != "/")
     {
-        endpoint = _location;
+        endpoint = _session->location();
     }
 
     std::string listType;
@@ -1018,7 +944,7 @@ void ConsoleApp::list(const std::string& cmdParams)
         limit = static_cast<std::uint32_t>(std::stoul(limitstr));
     }
 
-    auto listing = std::make_unique<Listing>(_reddit, endpoint, limit, listParams);
+    auto listing = std::make_unique<Listing>(_session, endpoint, limit, listParams);
     if (auto page = listing->getFirstPage(); !page.empty())
     {
         ConsoleApp::printStatus(fmt::format("showing {} '{}' items from '{}'",

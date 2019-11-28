@@ -5,7 +5,8 @@
 
 #include <nlohmann/json_fwd.hpp>
 
-#include "Reddit.h"
+#include "AppBase.h"
+#include "RedditSession.h"
 #include "Terminal.h"
 #include "CommandHistory.h"
 #include "Listing.h"
@@ -15,7 +16,7 @@ namespace arcc
 {
 
 class RedditSession;
-using RedditSessionPtr = std::shared_ptr<RedditSession>;
+using RedditSessionPtr = std::weak_ptr<RedditSession>;
 
 struct ConsoleCommand
 {
@@ -34,12 +35,11 @@ struct ConsoleCommand
 
 using CommandHandler = ConsoleCommand::Handler;
 
-class ConsoleApp final
+class ConsoleApp final : public AppBase
 {
     enum class ViewFormType { NORMAL, MOBILE, COMPACT, JSON };
     
     Terminal                        _terminal;
-    RedditSessionPtr                _reddit;
     CommandHistory                  _history;
 
     std::vector<ConsoleCommand>     _commands;
@@ -48,21 +48,22 @@ class ConsoleApp final
     Listing::Page                   _currentPage;
 
     bool                            _doExit = false;
-    std::string                     _location = "/";
-    arcc::Settings&                 _settings;
+
+    arcc::Settings&                         _settings;
+    std::shared_ptr<arcc::RedditSession>    _session;
 
 public:
     static void printError(const std::string& error);
     static void printWarning(const std::string& warning);
     static void printStatus(const std::string& status);
     
-    ConsoleApp(arcc::Settings& settings);
+    ConsoleApp(arcc::Settings& settings, std::shared_ptr<arcc::RedditSession> session);
 
     std::string doRedditGet(const std::string& endpoint);
     std::string doRedditGet(const std::string& endpoint, const Params& params);
 
     void exec(const std::string& rawline);
-    void run();
+    void run() override;
 
     void addCommand(const std::string& n, const std::string& hlp, ConsoleCommand::Handler hdr)
     {
@@ -72,16 +73,6 @@ public:
     void doExitApp() { _doExit = true; }
 
     bool setLocation(const std::string&);
-    bool isLoggedIn() const { return _reddit != nullptr; }
-
-    RedditSessionPtr getRedditSession() { return _reddit; }
-    void setRedditSession(RedditSessionPtr val) 
-    { 
-        _reddit = val;
-        _reddit->setRefreshCallback(std::bind(&ConsoleApp::saveSession, this)); 
-        saveSession();
-    }
-
     bool loadSession();
     void saveSession();
     void resetSession();

@@ -37,7 +37,7 @@ build_script:
   - git submodule update --init --recursive
   - mkdir build && cd build
   - conan install .. --build missing -s build_type=%configuration%
-  - cmake .. "-GVisual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=%configuration% -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=ON -DBUILD_CODE_COVERAGE=%COVERAGE%
+  - cmake .. "-GVisual Studio 15 2017 Win64" -DCMAKE_BUILD_TYPE=%configuration% -DBUILD_ARCC_TESTS=ON -DBUILD_SESSION_TESTS=OFF -DBUILD_CODE_COVERAGE=%COVERAGE%
   - cmake --build . --config "%configuration%" -- /maxcpucount:4
 
 test_script:
