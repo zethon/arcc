@@ -49,15 +49,15 @@ class ConsoleApp final : public AppBase
 
     bool                            _doExit = false;
 
-    arcc::Settings&                 _settings;
-    arcc::RedditSessionPtr          _session;
+    arcc::Settings&                         _settings;
+    std::shared_ptr<arcc::RedditSession>    _session;
 
 public:
     static void printError(const std::string& error);
     static void printWarning(const std::string& warning);
     static void printStatus(const std::string& status);
     
-    ConsoleApp(arcc::Settings& settings, arcc::RedditSession& session);
+    ConsoleApp(arcc::Settings& settings, std::shared_ptr<arcc::RedditSession> session);
 
     std::string doRedditGet(const std::string& endpoint);
     std::string doRedditGet(const std::string& endpoint, const Params& params);

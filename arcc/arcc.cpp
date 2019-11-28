@@ -53,9 +53,11 @@ arcc::Settings initSettings()
     return settings;
 }
 
-arcc::RedditSessionPtr initSession()
+std::shared_ptr<arcc::RedditSession> initSession()
 {
-    return std::make_weak<arcc::RedditSession>();
+    auto session = std::make_shared<arcc::RedditSession>();
+    session->load(utils::getDefaultSessionFile());
+    return session;
 }
 
 int main(int argc, char* argv[])
@@ -71,8 +73,17 @@ int main(int argc, char* argv[])
     ;
 
     po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
+
+    try
+    {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+    }
+    catch(const po::error& er)
+    {
+        ConsoleApp::printError(er.what());
+        return 1;
+    }
 
     if (vm.count("help")) 
     {
@@ -93,21 +104,17 @@ int main(int argc, char* argv[])
     std::cout << COPYRIGHT << std::endl;
     std::cout << std::endl;
 
-    auto consoleApp = std::make_unique<ConsoleApp>(settings);
-    if (consoleApp->loadSession())
-    {
-        ConsoleApp::printStatus("saved session restored");
-    }
-
     try
     {
+        auto consoleApp = std::make_unique<ConsoleApp>(settings, session);
         consoleApp->run();
-        settings.save(utils::getDefaultConfigFile());
     }
     catch (const std::exception& ex)
     {
         std::cerr << "terminal error: " << ex.what() << std::endl;
     }
+
+    settings.save(utils::getDefaultConfigFile());
 
     return 0;
 }

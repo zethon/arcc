@@ -25,7 +25,8 @@ class OAuth2Login
     const std::string               _loginUrl;
     HttpServer                      _server;
     bool                            _loggedIn = false;
-    RedditSessionPtr                _reddit;
+
+    std::shared_ptr<arcc::RedditSession>    _reddit;
 
 public:
     OAuth2Login();
@@ -36,7 +37,9 @@ public:
     void start();
 
     bool loggedIn() { return _loggedIn; }
-    RedditSessionPtr getRedditSession() { return _reddit; }
+
+    std::shared_ptr<arcc::RedditSession>
+        getRedditSession() { return _reddit; }
 };
 
 } // namespace

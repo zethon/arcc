@@ -75,7 +75,7 @@ void ConsoleApp::printStatus(const std::string& status)
         << std::endl;
 }
 
-ConsoleApp::ConsoleApp(arcc::Settings& settings, arcc::RedditSession& session)
+ConsoleApp::ConsoleApp(arcc::Settings& settings, std::shared_ptr<arcc::RedditSession> session)
     : _settings{ settings },
       _session{ session }
 {
@@ -86,8 +86,8 @@ ConsoleApp::ConsoleApp(arcc::Settings& settings, arcc::RedditSession& session)
     _history.setHistoryFile(historyfile);
     _history.loadHistory(false);
 
-    _session.setRefreshCallback(
-        [this]() { this->_session.save(utils::getDefaultSessionFile()); });
+    _session->setRefreshCallback(
+        [this]() { _session->save(utils::getDefaultSessionFile()); });
 }
 
 void ConsoleApp::initTerminal()
@@ -148,14 +148,15 @@ void ConsoleApp::initCommands()
     addCommand("login", "login",
         [this](const std::string&)
         {
-            if (!_session.loggedIn())
+            if (!_session->loggedIn())
             {
                 OAuth2Login login;
                 login.start(); // will block until the login results are returned
 
                 if (login.loggedIn())
                 {
-                    _session.save(utils::getDefaultSessionFile());
+                    _session = login.getRedditSession();
+                    _session->save(utils::getDefaultSessionFile());
                     std::cout << "login successful " << utils::sentimentText(utils::Sentiment::POSITIVE) << std::endl;
                 }
                 else
@@ -172,10 +173,10 @@ void ConsoleApp::initCommands()
     addCommand("logout", "logout of the current session",
         [this](const std::string&)
         {
-            if (_session.loggedIn())
+            if (_session->loggedIn())
             {
                 this->setLocation("/");
-                _session.reset();
+                _session->reset();
                 std::cout << "you have logged out " << utils::sentimentText(utils::Sentiment::NEGATIVE) << std::endl;
             }
             else
@@ -373,7 +374,7 @@ bool ConsoleApp::setLocation(const std::string& location)
 
     if (location == "/")
     {
-        _session.setLocation(""s);
+        _session->setLocation(""s);
         return true;
     }
 
@@ -390,7 +391,7 @@ bool ConsoleApp::setLocation(const std::string& location)
                 if (jreply["data"]["created"].get<unsigned int>() > 0)
                 {
                     retval = true;
-                    _session.setLocation(location);
+                    _session->setLocation(location);
                     return true;
                 }
             }
@@ -413,9 +414,9 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const Params& p
 {
     std::string retval;
 
-    if (_session.loggedIn())
+    if (_session->loggedIn())
     {
-        retval = _session.doGetRequest(endpoint, params);
+        retval = _session->doGetRequest(endpoint, params);
     }
     else
     {
@@ -427,12 +428,12 @@ std::string ConsoleApp::doRedditGet(const std::string& endpoint, const Params& p
 
 void ConsoleApp::printPrompt() const
 {
-    if (_session.loggedIn())
+    if (_session->loggedIn())
     {
         std::cout
             << rang::fg::cyan
             << '$'
-            << _session.location()
+            << _session->location()
             << rang::fg::reset
             << rang::bg::reset
             << rang::style::reset
@@ -444,7 +445,7 @@ void ConsoleApp::printPrompt() const
             << rang::style::bold
             << rang::fg::red
             << '$'
-            << _session.location()
+            << _session->location()
             << rang::style::reset
             << rang::fg::reset
             << "> ";
@@ -884,9 +885,9 @@ void ConsoleApp::list(const std::string& cmdParams)
             endpoint = fmt::format("/r/{}", subName);
         }
     }
-    else if (_session.location() != "/")
+    else if (_session->location() != "/")
     {
-        endpoint = _session.location();
+        endpoint = _session->location();
     }
 
     std::string listType;
@@ -943,7 +944,7 @@ void ConsoleApp::list(const std::string& cmdParams)
         limit = static_cast<std::uint32_t>(std::stoul(limitstr));
     }
 
-    auto listing = std::make_unique<Listing>(_reddit, endpoint, limit, listParams);
+    auto listing = std::make_unique<Listing>(_session, endpoint, limit, listParams);
     if (auto page = listing->getFirstPage(); !page.empty())
     {
         ConsoleApp::printStatus(fmt::format("showing {} '{}' items from '{}'",
