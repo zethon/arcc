@@ -61,7 +61,10 @@ void OAuth2Login::start()
                 if (result.status == 200)
                 {
                     auto jreply = nlohmann::json::parse(result.data);
-                    _reddit = std::make_shared<RedditSession>(jreply["access_token"], jreply["refresh_token"], jreply["expires_in"].get<double>());
+                    _reddit = std::make_shared<RedditSession>(
+                        jreply["access_token"],
+                        jreply["refresh_token"],
+                        jreply["expires_in"].get<std::uint32_t>());
 
                     _loggedIn = true;
                 }

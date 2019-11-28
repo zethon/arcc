@@ -175,8 +175,8 @@ void ConsoleApp::initCommands()
         {
             if (_session->loggedIn())
             {
-                this->setLocation("/");
                 _session->reset();
+                _session->save(utils::getDefaultSessionFile());
                 std::cout << "you have logged out " << utils::sentimentText(utils::Sentiment::NEGATIVE) << std::endl;
             }
             else
@@ -258,6 +258,22 @@ void ConsoleApp::initCommands()
             auto tm = *std::localtime(&t);
             std::cout << "time  : " << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << '\n';
             std::cout << "epoch : " << t << std::endl;
+        });
+
+    addCommand("session", "print current session info",
+        [this](const std::string&)
+        {
+            std::cout << "access token  : " <<
+                (_session->accessToken().empty() ? "\"\""s : _session->accessToken()) << '\n';
+
+            std::cout << "refresh token : " <<
+                (_session->refreshToken().empty() ? "\"\""s : _session->refreshToken()) << '\n';
+
+            std::cout << "expiry        : " << _session->expiry() << '\n';
+            std::cout << "time          : " << _session->lastRefresh() << '\n';
+
+            std::cout << "location      : " <<
+                (_session->location().empty() ? "\"\""s : _session->location()) << '\n';
         });
 }
 
@@ -375,34 +391,37 @@ bool ConsoleApp::setLocation(const std::string& location)
     if (location == "/")
     {
         _session->setLocation(""s);
-        return true;
+        retval = true;
     }
-
-    const std::regex subRegex { R"(^\/r\/[a-zA-Z0-9]+$)" };
-
-    if (std::regex_match(location, subRegex))
+    else
     {
-        const std::string jstr = doRedditGet(location + "/about");
-        if (jstr.size() > 0)
+        const std::regex subRegex { R"(^\/r\/[a-zA-Z0-9]+$)" };
+
+        if (std::regex_match(location, subRegex))
         {
-            try
+            const std::string jstr = doRedditGet(location + "/about");
+            if (jstr.size() > 0)
             {
-                auto jreply = nlohmann::json::parse(jstr);
-                if (jreply["data"]["created"].get<unsigned int>() > 0)
+                try
                 {
-                    retval = true;
-                    _session->setLocation(location);
-                    return true;
+                    auto jreply = nlohmann::json::parse(jstr);
+                    if (jreply["data"]["created"].get<std::uint32_t>() > 0)
+                    {
+                        _session->setLocation(location);
+                        retval = true;
+                    }
                 }
-            }
-            catch (const nlohmann::json::exception& ex)
-            {
-                printError(fmt::format("could no set location: {}", ex.what()));
+                catch (const nlohmann::json::exception& ex)
+                {
+                    printError(fmt::format("could no set location: {}", ex.what()));
+                }
             }
         }
     }
 
-    return false;
+    if (retval) _session->save(utils::getDefaultSessionFile());
+
+    return retval;
 }
 
 std::string ConsoleApp::doRedditGet(const std::string& endpoint)
@@ -456,9 +475,14 @@ void ConsoleApp::printPrompt() const
 
 void ConsoleApp::whoami()
 {
-    auto jsontext = doRedditGet("/api/v1/me");
+    if (!_session->loggedIn())
+    {
+        printWarning("you must be logged in first");
+        return;
+    }
 
-    if (jsontext.size() > 0)
+    if (const auto jsontext = doRedditGet("/api/v1/me");
+        jsontext.size() > 0)
     {
         auto jreply = nlohmann::json::parse(jsontext);
 

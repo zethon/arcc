@@ -23,7 +23,7 @@ inline std::string json_to_string(const nlohmann::json& j)
     return j.dump();
 }
 
-std::size_t Settings::load(const std::string & filename)
+std::size_t Settings::load(const std::string& filename, bool strict)
 {
     std::size_t count = 0;
 
@@ -41,8 +41,11 @@ std::size_t Settings::load(const std::string & filename)
             if (const auto key = item.key();
                 _settings.find(key) == _settings.end())
             {
-                throw std::invalid_argument(
-                    fmt::format("unregistered config value '{}'", item.key()));
+                if (strict)
+                {
+                    throw std::invalid_argument(
+                        fmt::format("unregistered config value '{}'", item.key()));
+                }
             }
             else
             {
@@ -51,7 +54,7 @@ std::size_t Settings::load(const std::string & filename)
                     _settings[key] = item.value();
                     count++;
                 }
-                else
+                else if (strict)
                 {
                     throw std::invalid_argument(
                         fmt::format("error loading config item '{}': invalid value '{}'", key, item.value()));
@@ -238,6 +241,40 @@ void Settings::reset()
     {
         _settings[defval.key()] = _defaults[defval.key()];
     }
+}
+
+void Validator::validate(const std::string& value)
+{
+    if (!isValid(value))
+    {
+        throw std::invalid_argument(error(value));
+    }
+}
+
+bool LengthValidator::isValid(const std::string& value)
+{
+    return value.size() <= _maxlen;
+}
+
+std::string LengthValidator::error(const std::string& value) const
+{
+    return fmt::format("the value '{}' exceeds the max legnth '{}'", value, _maxlen);
+}
+
+bool EnumValidator::isValid(const std::string& value)
+{
+    return std::find_if(std::begin(_values), std::end(_values),
+                        [&value](const std::string& val) -> bool
+    {
+        return boost::iequals(val, value);
+    })
+            != std::end(_values);
+}
+
+std::string EnumValidator::error(const std::string& value) const
+{
+    return fmt::format("invalid value '{}', possible values are: {}",
+                       value, boost::algorithm::join(_values,","));
 }
 
 } // namespace

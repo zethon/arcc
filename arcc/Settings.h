@@ -25,13 +25,7 @@ public:
     virtual bool isValid(const std::string& value) = 0;
     virtual std::string error(const std::string& value) const = 0;
 
-    virtual void validate(const std::string& value)
-    {
-        if (!isValid(value))
-        {
-            throw std::invalid_argument(error(value));
-        }
-    }
+    virtual void validate(const std::string& value);
 
 
     virtual ~Validator() = default;
@@ -48,15 +42,9 @@ public:
 
     virtual ~LengthValidator() = default;
 
-    bool isValid(const std::string& value) override
-    {
-        return value.size() <= _maxlen;
-    }
+    bool isValid(const std::string& value) override;
 
-    std::string error(const std::string& value) const override
-    {
-        return fmt::format("the value '{}' exceeds the max legnth '{}'", value, _maxlen);
-    }
+    std::string error(const std::string& value) const override;
 };
 
 template<typename T>
@@ -82,7 +70,7 @@ public:
 
     std::string error(const std::string& value) const override
     {
-        return fmt::format("the value '{}' is not a numeric value");
+        return fmt::format("the value '{}' is not a numeric value", value);
     }
 };
 
@@ -160,21 +148,9 @@ public:
         : _values{ vals } // copying a vector!!
     {}
 
-    bool isValid(const std::string& value) override
-    {
-        return std::find_if(std::begin(_values), std::end(_values),
-            [&value](const std::string& val) -> bool
-            {
-                return boost::iequals(val, value);
-            })
-            != std::end(_values);
-    }
+    bool isValid(const std::string& value) override;
 
-    std::string error(const std::string& value) const override
-    {
-        return fmt::format("invalid value '{}', possible values are: {}",
-            value, boost::algorithm::join(_values,","));
-    }
+    std::string error(const std::string& value) const override;
 };
 
 class Settings final
@@ -197,7 +173,12 @@ public:
         return _settings.items().end();
     }
 
-    std::size_t load(const std::string& filename);
+    // 'strict' mode will cause an error to be thrown if a value is
+    // being loaded that has not been registered or if an invalid value
+    // is being loaded. In non-strict mode, these error conditions will
+    // be ignored.
+    std::size_t load(const std::string& filename, bool strict = true);
+
     void save(const std::string& filename);
 
     bool exists(const std::string& name) const;

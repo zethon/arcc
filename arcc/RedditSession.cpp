@@ -50,12 +50,12 @@ RedditSession::RedditSession()
     _webclient.setHeader("Authorization: bearer " + _accessToken);
 }
 
-RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry)
+RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, std::uint32_t expiry)
     : RedditSession(accessToken, refreshToken, expiry, 0)
 {
 }
 
-RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh)
+RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, std::uint32_t expiry, time_t lastRefresh)
     : _accessToken(accessToken), 
         _refreshToken(refreshToken), 
         _expiry(expiry),
@@ -125,7 +125,7 @@ bool RedditSession::load(const std::string& filename)
 
         _accessToken = j["accessToken"].get<std::string>();
         _refreshToken = j["refreshToken"].get<std::string>();
-        _expiry = j["expiry"].get<double>();
+        _expiry = j["expiry"].get<std::uint32_t>();
         _lastRefresh = j["time"].get<time_t>();
 
         _loggedIn = !_accessToken.empty() && !_refreshToken.empty();
@@ -162,6 +162,7 @@ void RedditSession::reset()
     _expiry = 0;
     _lastRefresh = 0;
     _location.clear();
+    _loggedIn = false;
 }
 
 void RedditSession::doRefreshToken()

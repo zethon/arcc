@@ -115,6 +115,7 @@ int main(int argc, char* argv[])
     }
 
     settings.save(utils::getDefaultConfigFile());
+//    session->save(utils::getDefaultSessionFile());
 
     return 0;
 }

@@ -28,7 +28,7 @@ class RedditSession final
     std::string                 _accessToken;
     std::string                 _refreshToken;
     
-    double                      _expiry;                // number of seconds until the session needs refresh
+    std::uint32_t               _expiry;                // number of seconds until the session needs refresh
     time_t                      _lastRefresh;           // keep track so we know when to refresh our token
     WebClient                   _webclient;             // our "connection" to www.reddit.com
 
@@ -39,8 +39,8 @@ class RedditSession final
 public:
 
     RedditSession();
-    RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
-    RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh);
+    RedditSession(const std::string& accessToken, const std::string& refreshToken, std::uint32_t expiry);
+    RedditSession(const std::string& accessToken, const std::string& refreshToken, std::uint32_t expiry, time_t lastRefresh);
 
     std::string doGetRequest(const std::string& endpoint,
                               const Params& params = Params{},
@@ -48,7 +48,7 @@ public:
 
     std::string accessToken() const { return _accessToken; }
     std::string refreshToken() const { return _refreshToken; }
-    double expiry() const { return _expiry; }
+    std::uint32_t expiry() const { return _expiry; }
     time_t lastRefresh() const { return _lastRefresh; }
 
     std::string location() const { return _location; }

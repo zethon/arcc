@@ -27,7 +27,7 @@ arcc::RedditSessionPtr loadSession(const std::string& filename)
         return std::make_shared<arcc::RedditSession>(
             j["accessToken"].get<std::string>(),
             j["refreshToken"].get<std::string>(),
-            j["expiry"].get<double>(),
+            j["expiry"].get<std::uint32_t>(),
             j["time"].get<time_t>());
     }
 
