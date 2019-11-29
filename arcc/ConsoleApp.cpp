@@ -503,6 +503,8 @@ void ConsoleApp::whoami()
 
 void ConsoleApp::openIndex(std::size_t index)
 {
+    namespace nl = nlohmann;
+
     if (!_listing)
     {
         printError("there is no active list");
@@ -520,6 +522,15 @@ void ConsoleApp::openIndex(std::size_t index)
         std::cout << item["data"]["permalink"] << std::endl;
 
         auto jsontext = doRedditGet(item["data"]["permalink"]);
+        nl::json items = nl::json::parse(jsontext);
+
+        if (!items.is_array())
+        {
+            printError("invalid response");
+            return;
+        }
+
+
         std::cout << jsontext << std::endl;
     }
 }
