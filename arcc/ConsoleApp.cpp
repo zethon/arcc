@@ -275,6 +275,30 @@ void ConsoleApp::initCommands()
             std::cout << "location      : " <<
                 (_session->location().empty() ? "\"\""s : _session->location()) << '\n';
         });
+
+    addCommand("dump", "dump the json of a listing item",
+        [this](const std::string& params)
+        {
+            SimpleArgs args { params };
+            if (args.getTokenCount() > 0)
+            {
+                if (auto firstArg = args.getToken(0);
+                    utils::isNumeric(firstArg))
+                {
+                    std::size_t index = boost::lexical_cast<std::size_t>(firstArg);
+                    if (index == 0 || (index > _currentPage.size()))
+                    {
+                        printError(fmt::format("invalid listing index: {}", index));
+                    }
+                    else
+                    {
+                        const auto& data = _currentPage.at(index - 1);
+                        std::cout << std::setw(4) << data << '\n';
+                    }
+                }
+            }
+        });
+
 }
 
 // poor man's way of updating settings, would be better
@@ -516,22 +540,36 @@ void ConsoleApp::openIndex(std::size_t index)
     else
     {
         const auto& item = _currentPage.at(index - 1);
-        const auto kind = item["kind"];
-        
-        std::cout << kind << std::endl;
-        std::cout << item["data"]["permalink"] << std::endl;
+        const auto& data = item["data"];
 
-        auto jsontext = doRedditGet(item["data"]["permalink"]);
+        auto jsontext = doRedditGet(data["permalink"]);
         nl::json items = nl::json::parse(jsontext);
 
-        if (!items.is_array())
+        if (!items.is_array() || items.size() == 0)
         {
             printError("invalid response");
             return;
         }
 
+        const auto text = data.value("selftext","");
+        renderLink(data, 0, data.value("is_self", false) && !text.empty());
 
-        std::cout << jsontext << std::endl;
+        if (items.size() > 1)
+        {
+            const auto& commentlistobj = items.at(1);
+            if (commentlistobj.value("kind","") != "Listing")
+            {
+                throw std::runtime_error("invalid 'kind");
+            }
+
+            const auto& listarray = commentlistobj["data"]["children"];
+            if (!listarray.is_array())
+            {
+                printError("no children");
+            }
+
+            std::cout << fmt::format("there are {} comment children in the tree", listarray.size()) << std::endl;
+        }
     }
 }
 
@@ -824,7 +862,7 @@ void ConsoleApp::history(const std::string& params)
     }
 }
 
-void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
+void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx, bool details)
 {
     std::string flairText;
     if (link.find("link_flair_text") != link.end()
@@ -872,10 +910,49 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
         }
     }
 
+    std::string idxstr;
+    if (idx > 0) idxstr = fmt::format("{}. ", idx);
+
+    std::string textstr;
+    if (details) textstr = fmt::format("{}\n", link.value("selftext",""));
+
+    std::string typetstr;
+    if (link.value("is_self", false))
+    {
+        typetstr = "[s]";
+    }
+    else if (link.value("is_reddit_media_domain", false))
+    {
+        typetstr = "[m]";
+    }
+    else if (link.value("is_video", false))
+    {
+        typetstr = "[v]";
+    }
+    else if (!link.value("post_hint", "").empty())
+    {
+        const auto hint = link["post_hint"];
+        if (hint == "link")
+        {
+            typetstr = "[l]";
+        }
+        else if (hint == "rich:video")
+        {
+            typetstr = "[v]";
+        }
+        else
+        {
+            typetstr = fmt::format("({})", link["post_hint"]);
+        }
+    }
+    else
+    {
+        typetstr = "[?]";
+    }
+
     std::cout
         << rang::style::bold
-        << idx
-        << ". "
+        << idxstr
         << titlestr
         << namestr
         << rang::style::reset
@@ -884,7 +961,10 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
         << rang::style::underline
         << urlstr
         << rang::style::reset
-        << rang::fg::gray
+        << rang::fg::reset
+        << textstr
+        << rang::style::reset
+        << rang::fg::green
         << link["score"].get<int>()
         << " pts"
         << updownstr
@@ -893,9 +973,14 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
         << " - "
         << link["num_comments"].get<int>() << " comments"
         << '\n'
+        << rang::style::reset
         << rang::fg::magenta
         << link["author"].get<std::string>()
+        << rang::style::bold
+        << rang::fg::cyan
+        << typetstr
         << ' '
+        << rang::style::reset
         << rang::fg::yellow
         << link["subreddit_name_prefixed"].get<std::string>();
 
@@ -903,6 +988,7 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
     {
         std::cout
             << ' '
+            << rang::style::bold
             << rang::fg::red
             << flairText;
     }
@@ -930,7 +1016,7 @@ void ConsoleApp::printListing()
         const auto listkind = item.value("kind", "t3");
         if (listkind == "t3")
         {
-            renderLink(item.at("data"), ++idx);
+            renderLink(item.at("data"), ++idx, false);
         }
         else
         {
