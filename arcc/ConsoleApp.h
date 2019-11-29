@@ -72,16 +72,16 @@ public:
 
     void doExitApp() { _doExit = true; }
 
-    bool setLocation(const std::string&);
-    bool loadSession();
-    void saveSession();
-    void resetSession();
+    
 
 private:
+    void openIndex(std::size_t index);
+
     ViewFormType parserViewFormType(const std::string& val);
+    
+    bool setLocation(const std::string&);
 
     void printPrompt() const;
-    std::size_t printListing(const arcc::Listing& listing);
 
     void printListing();
     void renderLink(const nlohmann::json& link, std::size_t idx);

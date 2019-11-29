@@ -338,15 +338,8 @@ void ConsoleApp::exec(const std::string& rawline)
 
     if (utils::isNumeric(command))
     {
-        auto index = boost::lexical_cast<std::uint32_t>(command);
-        if (index == 0 || (index > _listing->count()))
-        {
-            printError(fmt::format("invalid listing index: {}", index));
-        }
-        else
-        {
-
-        }
+        std::size_t index = boost::lexical_cast<std::size_t>(command);
+        openIndex(index);
     }
     else
     {
@@ -508,25 +501,57 @@ void ConsoleApp::whoami()
     }
 }
 
+void ConsoleApp::openIndex(std::size_t index)
+{
+    if (!_listing)
+    {
+        printError("there is no active list");
+    }
+    else if (index == 0 || (index > _currentPage.size()))
+    {
+        printError(fmt::format("invalid listing index: {}", index));
+    }
+    else
+    {
+        const auto& item = _currentPage.at(index - 1);
+        const auto kind = item["kind"];
+        
+        std::cout << kind << std::endl;
+        std::cout << item["data"]["permalink"] << std::endl;
+
+        auto jsontext = doRedditGet(item["data"]["permalink"]);
+        std::cout << jsontext << std::endl;
+    }
+}
+
 void ConsoleApp::go(const std::string& params)
 {
     SimpleArgs args { params };
     if (args.getTokenCount() > 0)
     {
-        auto location = args.getToken(0);
-        if (location != "/" &&
-            !boost::istarts_with(location, "/r/"))
+        if (auto firstArg = args.getToken(0);
+            utils::isNumeric(firstArg))
         {
-            location = "/r/" + location;
+            std::size_t index = boost::lexical_cast<std::size_t>(firstArg);
+            openIndex(index);
         }
+        else
+        {
+            auto location = firstArg;
+            if (location != "/" &&
+                !boost::istarts_with(location, "/r/"))
+            {
+                location = "/r/" + location;
+            }
 
-        if (!setLocation(location))
-        {
-            ConsoleApp::printError("invalid subreddit '" + args.getToken(0) + "'");
-        }
-        else if (_settings.value("command.go.autolist", (bool)false))
-        {
-            list(std::string{});
+            if (!setLocation(location))
+            {
+                ConsoleApp::printError("invalid subreddit '" + firstArg + "'");
+            }
+            else if (_settings.value("command.go.autolist", (bool)false))
+            {
+                list(std::string{});
+            }
         }
     }
     else
@@ -799,7 +824,7 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
 
     if (link["stickied"].get<bool>())
     {
-        std::cout << rang::style::bold << rang::fg::yellow << '*';
+        std::cout << rang::style::bold << rang::fg::yellow;
     }
 
     std::string namestr;
