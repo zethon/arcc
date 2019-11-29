@@ -336,34 +336,49 @@ void ConsoleApp::exec(const std::string& rawline)
         command = command.substr(0, firstspace);
     }
 
-    for (auto& c : _commands)
+    if (utils::isNumeric(command))
     {
-        for (auto& alias : c.commandNames_)
+        auto index = boost::lexical_cast<std::uint32_t>(command);
+        if (index == 0 || (index > _listing->count()))
         {
-            if (alias == command)
+            printError(fmt::format("invalid listing index: {}", index));
+        }
+        else
+        {
+
+        }
+    }
+    else
+    {
+        for (auto& c : _commands)
+        {
+            for (auto& alias : c.commandNames_)
             {
-                try
+                if (alias == command)
                 {
-                    // TODO: optimize out the std::string()
-                    c.handler_(params);
-                    _history.commit(historyCommand);
+                    try
+                    {
+                        c.handler_(params);
+                    }
+                    catch (const std::exception& ex)
+                    {
+                        ConsoleApp::printError(ex.what());
+                    }
+
+                    executed = true;
+                    goto endloop;
                 }
-                catch (const std::exception& ex)
-                {
-                    ConsoleApp::printError(ex.what());
-                }
-                
-                executed = true;
-                goto endloop;
             }
+        }
+
+        endloop:
+        if (!executed)
+        {
+            printError(fmt::format("invalid command: {}", command));
         }
     }
 
-    endloop:
-    if (!executed)
-    {
-        printError(fmt::format("invalid command: {}", command));
-    }
+    if (!historyCommand.empty()) _history.commit(historyCommand);
 }
 
 void ConsoleApp::run()
