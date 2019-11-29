@@ -84,6 +84,8 @@ private:
     void printPrompt() const;
 
     void printListing();
+
+    void renderComment(const nlohmann::json& comment);
     void renderLink(const nlohmann::json& link, std::size_t idx, bool details);
 
     void initCommands();

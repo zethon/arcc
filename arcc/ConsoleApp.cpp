@@ -938,7 +938,7 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx, bool de
         }
         else if (hint == "rich:video")
         {
-            typetstr = "[v]";
+            typetstr = "[V]";
         }
         else
         {
@@ -954,6 +954,8 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx, bool de
         << rang::style::bold
         << idxstr
         << titlestr
+        << rang::style::reset
+        << rang::fg::reset
         << namestr
         << rang::style::reset
         << '\n'
@@ -999,6 +1001,11 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx, bool de
         << rang::style::reset
         << '\n'
         << std::endl;
+}
+
+void ConsoleApp::renderComment(const nlohmann::json& comment)
+{
+
 }
 
 void ConsoleApp::printListing()
