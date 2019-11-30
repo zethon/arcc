@@ -7,6 +7,10 @@ configuration:
   - Debug
   - Release
 
+# Disabling Coverage because AppVeyor's servers suddenly
+# cannot reach out to choco's servers even though they
+# are up and running
+
 environment:
   matrix:
     - COVERAGE: ON
@@ -23,11 +27,7 @@ install:
   - echo "Initializing test data..."
   - ps: iex ((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/appveyor/secure-file/master/install.ps1'))
   - cmd: appveyor-tools\secure-file -decrypt tests\session.dat.enc -secret %session_secret% -salt %session_salt%
-  # - echo "Installing OpenCppCoverage"
-  # - choco install opencppcoverage
-  # - set path=C:\Program Files\OpenCppCoverage;%PATH%
-  # - choco install codecov
-  # - set path=C:\ProgramData\chocolatey\lib\codecov\tools;%PATH%
+  - IF "%COVERAGE%" EQU "ON" %APPVEYOR_BUILD_FOLDER%\appveyor\install_coverage.cmd
   - echo "Downloading conan..."
   - set PATH=%PYTHON%/Scripts/;%PATH%
   - pip.exe install conan
@@ -41,5 +41,5 @@ build_script:
   - cmake --build . --config "%configuration%" -- /maxcpucount:4
 
 test_script:
-  - IF "%COVERAGE%" EQU "ON" %APPVEYOR_BUILD_FOLDER%\appveyor\coverage.cmd
+  - IF "%COVERAGE%" EQU "ON" %APPVEYOR_BUILD_FOLDER%\appveyor\run_coverage.cmd
   - IF "%COVERAGE%" EQU "OFF" (ctest -VV -C "%configuration%" --output-on-failure)
