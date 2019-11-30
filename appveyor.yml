@@ -5,12 +5,13 @@ image:
 
 configuration:
   - Debug
-  # - Release
+  - Release
 
 environment:
   matrix:
     - COVERAGE: OFF
-    - COVERAGE: ON
+    # OMG, disable code coverage until AppVeyor fixes their issues
+    # - COVERAGE: ON
 
 matrix:
   exclude:
