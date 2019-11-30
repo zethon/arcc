@@ -7,14 +7,10 @@ configuration:
   - Debug
   - Release
 
-# Disabling Coverage because AppVeyor's servers suddenly
-# cannot reach out to choco's servers even though they
-# are up and running
-
 environment:
   matrix:
-    - COVERAGE: ON
     - COVERAGE: OFF
+    - COVERAGE: ON
 
 matrix:
   exclude:
