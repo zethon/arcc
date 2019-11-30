@@ -7,18 +7,18 @@ configuration:
   - Debug
   - Release
 
-environment:
-  matrix:
-    - COVERAGE: OFF
-    # OMG, disable code coverage until AppVeyor fixes their issues
-    # - COVERAGE: ON
+# environment:
+#   matrix:
+#     - COVERAGE: OFF
+#     # OMG, disable code coverage until AppVeyor fixes their issues
+#     # - COVERAGE: ON
 
-matrix:
-  exclude:
-    - configuration: Debug
-      COVERAGE: OFF
-    - configuration: Release
-      COVERAGE: ON
+# matrix:
+#   exclude:
+#     - configuration: Debug
+#       COVERAGE: OFF
+#     - configuration: Release
+#       COVERAGE: ON
 
 install:
   - echo "Initializing test data..."
