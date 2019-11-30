@@ -489,8 +489,7 @@ void ConsoleApp::printPrompt() const
     {
         std::cout
             << rang::fg::cyan
-            << '$'
-            << _session->location()
+            << (_session->location().empty() ? "/"s : _session->location())
             << rang::fg::reset
             << rang::bg::reset
             << rang::style::reset
@@ -501,7 +500,6 @@ void ConsoleApp::printPrompt() const
         std::cout
             << rang::style::bold
             << rang::fg::red
-            << '$'
             << _session->location()
             << rang::style::reset
             << rang::fg::reset
