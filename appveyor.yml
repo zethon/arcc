@@ -23,8 +23,8 @@ install:
   - echo "Initializing test data..."
   - ps: iex ((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/appveyor/secure-file/master/install.ps1'))
   - cmd: appveyor-tools\secure-file -decrypt tests\session.dat.enc -secret %session_secret% -salt %session_salt%
-  - echo "Installing OpenCppCoverage"
-  - choco install opencppcoverage
+  # - echo "Installing OpenCppCoverage"
+  # - choco install opencppcoverage
   - set path=C:\Program Files\OpenCppCoverage;%PATH%
   - choco install codecov
   - set path=C:\ProgramData\chocolatey\lib\codecov\tools;%PATH%
