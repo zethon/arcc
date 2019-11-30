@@ -904,7 +904,7 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx, bool de
     }
 
     std::string titlestr { link.value("title","")} ;
-    if (const std::size_t maxlen = _settings.value("render.list.title.length",0);
+    if (const std::size_t maxlen = _settings.value("render.list.title.length",0u);
         maxlen > 0 && titlestr.size() > maxlen)
     {
         // first try trimming the string, there could be some 
