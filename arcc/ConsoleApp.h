@@ -15,6 +15,19 @@
 namespace arcc
 {
 
+template<typename... Args>
+void printInfo(Args&&... args)
+{
+    std::cout
+        << rang::style::bold
+        << rang::fg::gray
+        << "-- "
+        << rang::fg::reset
+        << rang::style::reset
+        << fmt::format(std::forward<Args>(args)...)
+        << std::endl;
+}
+
 class RedditSession;
 using RedditSessionPtr = std::weak_ptr<RedditSession>;
 

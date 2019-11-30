@@ -260,6 +260,12 @@ void ConsoleApp::initCommands()
             std::cout << "epoch : " << t << std::endl;
         });
 
+    addCommand("last", "print the url of the last request",
+        [this](const std::string&)
+        {
+            printInfo("last request: {}", _session->lastRequest());
+        });
+
     addCommand("session", "print current session info",
         [this](const std::string&)
         {
@@ -542,7 +548,10 @@ void ConsoleApp::openIndex(std::size_t index)
         const auto& item = _currentPage.at(index - 1);
         const auto& data = item["data"];
 
-        auto jsontext = doRedditGet(data["permalink"]);
+        const auto endpoint =
+            fmt::format("/r/{}/comments/{}", data["subreddit"], data["id"]);
+
+        auto jsontext = doRedditGet(endpoint);
         nl::json items = nl::json::parse(jsontext);
 
         if (!items.is_array() || items.size() == 0)
@@ -952,8 +961,12 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx, bool de
 
     std::cout
         << rang::style::bold
-        << idxstr
-        << titlestr
+        << idxstr;
+
+    std::wcout
+        << titlestr.c_str();
+
+    std::cout
         << rang::style::reset
         << rang::fg::reset
         << namestr
