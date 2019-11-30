@@ -961,12 +961,8 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx, bool de
 
     std::cout
         << rang::style::bold
-        << idxstr;
-
-    std::wcout
-        << titlestr.c_str();
-
-    std::cout
+        << idxstr
+        << utils::stripWideCharacters(titlestr)
         << rang::style::reset
         << rang::fg::reset
         << namestr
@@ -977,7 +973,7 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx, bool de
         << urlstr
         << rang::style::reset
         << rang::fg::reset
-        << textstr
+        << utils::stripWideCharacters(textstr)
         << rang::style::reset
         << rang::fg::green
         << link["score"].get<int>()

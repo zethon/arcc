@@ -36,6 +36,7 @@ std::string sentimentText(Sentiment s);
 bool isNumeric(const std::string_view& s);
 bool isBoolean(const std::string_view s);
 bool convertToBool(const std::string_view s);
+std::string stripWideCharacters(const std::string& text);
 
 std::string getDefaultHistoryFile();
 std::string getDefaultSessionFile();

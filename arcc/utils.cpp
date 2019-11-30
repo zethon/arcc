@@ -186,9 +186,6 @@ std::string sentimentText(Sentiment s)
 
     switch (s)
     {
-        default:
-        break;
-
         case Sentiment::NEGATIVE:
         {
             std::uniform_int_distribution<> dis(0, static_cast<int>(negEmojis.size()) - 1);
@@ -280,7 +277,14 @@ std::string getDefaultSessionFile()
 std::string getDefaultConfigFile()
 {
     return fmt::format("{}{}{}",
-        utils::getUserFolder(), PATH_SEPERATOR, ".arcc_config");
+                       utils::getUserFolder(), PATH_SEPERATOR, ".arcc_config");
+}
+
+std::string stripWideCharacters(const std::string &text)
+{
+    std::string retval { text };
+    std::replace_if(retval.begin(), retval.end(), [](auto c) { return !(c>=0 && c < 256); }, '?');
+    return retval;
 }
 
 

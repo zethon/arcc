@@ -120,8 +120,13 @@ bool RedditSession::load(const std::string& filename)
     if (bfs::path file{ filename }; bfs::exists(file))
     {
         std::ifstream in(filename);
-        nl::json j = nl::json::parse(in);
+        nl::json j = nl::json::parse(in, nullptr, false);
         in.close();
+
+        if (j.is_discarded() || j.is_null())
+        {
+            return false;
+        }
 
         _accessToken = j["accessToken"].get<std::string>();
         _refreshToken = j["refreshToken"].get<std::string>();

@@ -4,6 +4,7 @@
 #pragma once
 
 #include <nlohmann/json_fwd.hpp>
+#include <rang.hpp>
 
 #include "AppBase.h"
 #include "RedditSession.h"
