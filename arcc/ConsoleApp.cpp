@@ -433,7 +433,8 @@ bool ConsoleApp::setLocation(const std::string& location)
     }
     else
     {
-        const std::regex subRegex { R"(^\/r\/[a-zA-Z0-9]+$)" };
+        static const std::regex subRegex { R"(^\/r\/[a-zA-Z0-9]+$)" };
+        static const std::regex commentRegex { R"(^\/r\/[a-zA-Z0-9]+\/[a-zA-Z0-9]+$)" };
 
         if (std::regex_match(location, subRegex))
         {
@@ -560,6 +561,9 @@ void ConsoleApp::openIndex(std::size_t index)
 
         const auto text = data.value("selftext","");
         renderLink(data, 0, data.value("is_self", false) && !text.empty());
+
+        std::cout << "(" << fmt::format("{}/{}", _session->location(), data["id"]) << ")\n";
+//        setLocation();
 
         if (items.size() > 1)
         {
@@ -886,7 +890,7 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx, bool de
     std::string namestr;
     if (_settings.value("render.list.name", false))
     {
-        namestr = fmt::format(" ({})", link["name"]);
+        namestr = fmt::format(" ({})", link["id"]);
     }
 
     std::string updownstr;
