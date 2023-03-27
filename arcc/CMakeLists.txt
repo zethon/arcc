@@ -44,12 +44,20 @@ add_executable(${PROJECT_NAME}
     ${HEADER_FILES}
 )
 
+message("-----> ${CURL_libcurl_LIBS}")
+
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         ${CONAN_LIBS}
         ${EXTRA_LIBS}
+        CURL::libcurl
+        # ${CURL_FRAMEWORKS}
         simple-web-server
         "$<$<CONFIG:DEBUG>:${COVERAGE_FLAG}>"
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+"-framework CoreServices"
 )
 
 target_compile_definitions(

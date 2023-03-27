@@ -2,8 +2,7 @@
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #include <iostream>
-
-#include <boost/filesystem.hpp>
+#include <fstream>
 
 #include <nlohmann/json.hpp>
 #include <fmt/core.h>
@@ -27,9 +26,9 @@ std::size_t Settings::load(const std::string & filename)
 {
     std::size_t count = 0;
 
-    boost::filesystem::path file{ filename };
+    std::filesystem::path file{ filename };
 
-    if (boost::filesystem::exists(file))
+    if (std::filesystem::exists(file))
     {
         nlohmann::json settings;
         std::ifstream in(filename);
@@ -65,11 +64,11 @@ std::size_t Settings::load(const std::string & filename)
 
 void Settings::save(const std::string & filename)
 {
-    boost::filesystem::path file{ filename };
+    std::filesystem::path file{ filename };
 
-    boost::filesystem::ofstream out;
+    std::ofstream out;
     out.open(filename,
-        boost::filesystem::ofstream::out | boost::filesystem::ofstream::trunc);
+        std::ofstream::out | std::ofstream::trunc);
 
     out << _settings;
     out.close();
