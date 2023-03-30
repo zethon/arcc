@@ -5,7 +5,6 @@
 #include <fstream>
 
 #include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string/join.hpp>

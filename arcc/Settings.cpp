@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <charconv>
 
 #include <nlohmann/json.hpp>
 #include <fmt/core.h>
@@ -118,11 +119,15 @@ void Settings::set(const std::string& name, const std::string& value)
 
     if (_settings[name].is_number_unsigned())
     {
-        _settings[name] = boost::lexical_cast<std::uint32_t>(value);
+        std::uint32_t temp{};
+        std::from_chars(value.data(), value.data() + value.size(), temp);
+        _settings[name] = temp;
     }
     else if (_settings[name].is_number_integer())
     {
-        _settings[name] = boost::lexical_cast<std::int32_t>(value);
+        std::int32_t temp{};
+        std::from_chars(value.data(), value.data() + value.size(), temp);
+        _settings[name] = temp;
     }
     else if (_settings[name].is_boolean())
     {
@@ -149,7 +154,9 @@ bool Settings::setNoThrow(const std::string& name, const std::string& value)
     {
         if (_validators[name]->isValid(value))
         {
-            _settings[name] = boost::lexical_cast<std::uint32_t>(value);
+            std::uint32_t temp{};
+            std::from_chars(value.data(), value.data() + value.size(), temp);
+            _settings[name] = temp;
             return true;
         }
     }
@@ -157,7 +164,9 @@ bool Settings::setNoThrow(const std::string& name, const std::string& value)
     {
         if (_validators[name]->isValid(value))
         {
-            _settings[name] = boost::lexical_cast<std::int32_t>(value);
+            std::int32_t temp{};
+            std::from_chars(value.data(), value.data() + value.size(), temp);
+            _settings[name] = temp;
             return true;
         }
     }
