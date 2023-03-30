@@ -66,6 +66,7 @@ script:
 
   - |
     if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      export CFLAGS="$CFLAGS -DHAVE_UNISTD_H"
       conan install .. --build missing -s cppstd=17
     elif [ "$TRAVIS_OS_NAME" == "linux" ]; then
       conan install .. --build missing  -s compiler.libcxx=libstdc++11

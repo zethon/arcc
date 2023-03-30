@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include <boost/lexical_cast.hpp>
+#include <charconv>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/join.hpp>
 
@@ -63,21 +64,10 @@ template<typename T>
 class NumberValidator : public Validator
 {
 public:
-    virtual bool isValid(const std::string& value) override
+    virtual bool isValid(const std::string& s) override
     {
-        bool retval = false;
-
-        try
-        {
-            boost::lexical_cast<T>(value);
-            retval = true;
-        }
-        catch (const boost::bad_lexical_cast&)
-        {
-            return false;
-        }
-
-        return retval;
+        T value;
+        return std::from_chars(s.data(), s.data() + s.size(), value).ec == std::errc{};
     }
 
     std::string error(const std::string& value) const override
@@ -98,21 +88,15 @@ public:
           _maxval{ max }
     {}
 
-    virtual bool isValid(const std::string& value) override
+    virtual bool isValid(const std::string& s) override
     {
-        bool retval = false;
-
-        try
-        {
-            auto x = boost::lexical_cast<T>(value);
-            retval = _minval <= x && x <= _maxval;
-        }
-        catch (const boost::bad_lexical_cast&)
+        T x;
+        if (std::from_chars(s.data(), s.data() + s.size(), x).ec == std::errc{})
         {
             return false;
         }
 
-        return retval;
+        return _minval <= x && x <= _maxval;
     }
 
     void validate(const std::string& value) override

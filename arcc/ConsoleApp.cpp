@@ -2,9 +2,9 @@
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #include <iomanip>
+#include <fstream>
 
 #include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -739,9 +739,9 @@ void ConsoleApp::history(const std::string& params)
     {
         const std::string historyfile{ utils::getDefaultHistoryFile() };
 
-        boost::filesystem::ofstream out;
+        std::ofstream out;
         out.open(historyfile,
-            boost::filesystem::ofstream::out | boost::filesystem::ofstream::trunc);
+            std::ofstream::out | std::ofstream::trunc);
         out << std::endl;
         out.close();
 
