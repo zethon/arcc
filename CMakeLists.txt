@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(arcc)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # initialize conan libs
 include(CMake/conan.cmake)
@@ -162,17 +162,12 @@ endif(APPLE)
 
 
 include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
-# find_package(Boost 1.81.0 REQUIRED COMPONENTS system filesystem thread)
 find_package(CURL 7.88.1 REQUIRED)
 find_package(fmt 9.1.0 REQUIRED)
 find_package(nlohmann_json 3.11.2 REQUIRED)
-include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
-# message("${CONAN_NLOHMANN_JSON_ROOT}/include")
-include_directories(${CONAN_NLOHMANN_JSON_ROOT}/include)
-include_directories(${CONAN_FMT_ROOT}/include)
 
-include_directories(${CONAN_INCLUDE_DIRS})
-link_directories(${CONAN_LIB_DIRS})
+include_directories(${nlohmann_json_INCLUDE_DIRS})
+include_directories(${fmt_fmt_INCLUDE_DIRS})
 
 add_subdirectory(Simple-Web-Server)
 include_directories(Simple-Web-Server)

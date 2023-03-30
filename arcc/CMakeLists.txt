@@ -44,8 +44,6 @@ add_executable(${PROJECT_NAME}
     ${HEADER_FILES}
 )
 
-message("-----> ${CURL_libcurl_LIBS}")
-
 target_link_libraries(${PROJECT_NAME}
     PUBLIC
         ${CONAN_LIBS}
