@@ -33,8 +33,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # - name: Get Conan
-    #   uses: turtlebrowser/get-conan@v1.0
+    - name: Set Xcode 14.2
+      run: |
+        ls -al /Applications
+        sudo xcode-select -s /Applications/Xcode_14.2.app/Contents/Developer
+        clang -v
+
     - name: Install Conan
       id: conan
       uses: turtlebrowser/get-conan@main
