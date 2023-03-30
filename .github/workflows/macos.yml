@@ -1,8 +1,6 @@
 name: macos
 
 on:
-  schedule:
-    - cron: "0 0 * * 2"
   push:
     branches:
       - master
@@ -51,7 +49,7 @@ jobs:
     - name: Configure CMake
       shell: bash
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_ASH_TESTS=ON
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_ARCC_TESTS=ON
 
     - name: Build
       working-directory: ${{github.workspace}}/build

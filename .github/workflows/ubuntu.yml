@@ -1,8 +1,6 @@
 name: Ubuntu
 
 on:
-  schedule:
-    - cron: "0 0 * * 2"
   push:
     branches:
       - master
@@ -24,7 +22,7 @@ on:
 
 jobs:
   build-ubuntu:
-    if: ${{ false }}  # disable for now
+    # if: ${{ false }}  # disable for now
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -62,7 +60,7 @@ jobs:
     - name: Configure CMake
       shell: bash
       working-directory: ${{github.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_ASH_TESTS=ON
+      run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_ARCC_TESTS=ON
       env:
         CC:   gcc-11
         CXX:  g++-11
