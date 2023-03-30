@@ -33,9 +33,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Get Conan
-      uses: turtlebrowser/get-conan@v1.0
-      
+    # - name: Get Conan
+    #   uses: turtlebrowser/get-conan@v1.0
+    - name: Install Conan
+      id: conan
+      uses: turtlebrowser/get-conan@main
+      with:
+        version: 1.59.0
+
     - name: Create Build Environment
       shell: bash
       working-directory: ${{github.workspace}}
@@ -46,10 +51,10 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: git submodule update --init --recursive
 
-    - name: Init Conan
-      shell: bash
-      working-directory: ${{github.workspace}}/build
-      run: conan profile detect
+    # - name: Init Conan
+    #   shell: bash
+    #   working-directory: ${{github.workspace}}/build
+    #   run: conan profile detect
 
     - name: Configure CMake
       shell: bash
