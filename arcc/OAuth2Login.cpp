@@ -50,6 +50,7 @@ void OAuth2Login::start()
 
                 WebClient client;
                 client.setBasicAuth(REDDIT_CLIENT_ID,"");
+                client.setUserAgent("arcc/0.1 by /u/zethon");
 
                 const std::string postData = 
                     fmt::format("grant_type=authorization_code&code={}&redirect_uri={}", 
@@ -76,7 +77,7 @@ void OAuth2Login::start()
                     }
                     else
                     {
-                        failedReason = "authorization failed for an unknown reason";
+                        failedReason = fmt::format("authorization failed for an unknown reason (error code {})", result.status);
                     }
                 }
             }

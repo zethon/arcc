@@ -33,6 +33,11 @@ arcc::Settings registerAllSettings()
     settings.registerBool("render.list.name", false);
     settings.registerUInt("render.list.title.length", 0);
 
+    settings.registerString("reddit.clientid", "");
+    settings.registerString("reddit.clientsecret", "");
+    settings.registerString("reddit.useragent", "");
+    settings.registerString("reddit.randomstring", "");
+
     return settings;
 }
 

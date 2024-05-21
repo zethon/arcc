@@ -55,11 +55,6 @@ jobs:
       working-directory: ${{github.workspace}}/build
       run: git submodule update --init --recursive
 
-    # - name: Init Conan
-    #   shell: bash
-    #   working-directory: ${{github.workspace}}/build
-    #   run: conan profile detect
-
     - name: Configure CMake
       shell: bash
       working-directory: ${{github.workspace}}/build
