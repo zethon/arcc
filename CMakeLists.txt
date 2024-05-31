@@ -7,8 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 include(CMake/conan.cmake)
 conan_cmake_configure(
     REQUIRES
-        boost/1.81.0
-        libcurl/7.88.1
+        boost/1.84.0
+        libcurl/8.6.0
         fmt/9.1.0
         nlohmann_json/3.11.2
     GENERATORS
