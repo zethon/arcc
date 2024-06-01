@@ -1,11 +1,60 @@
-project(arcc)
+cmake_minimum_required(VERSION 3.20)
 
-cmake_minimum_required(VERSION 3.12)
-set(CMAKE_CXX_STANDARD 17)
+project(arcc)
+set(CMAKE_CXX_STANDARD 20)
 
 # initialize conan libs
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(NO_OUTPUT_DIRS KEEP_RPATHS)
+include(CMake/conan.cmake)
+conan_cmake_configure(
+    REQUIRES
+        boost/1.84.0
+        libcurl/8.6.0
+        fmt/9.1.0
+        nlohmann_json/3.11.2
+    GENERATORS
+        cmake_find_package
+        cmake_paths
+    OPTIONS
+        boost:shared=False
+        boost:without_test=False
+        boost:without_thread=False
+        boost:without_filesystem=False
+        boost:without_system=False
+        boost:without_stacktrace=False
+        boost:without_program_options=False
+        boost:without_math=True
+        boost:without_wave=True
+        boost:without_container=False
+        boost:without_contract=True
+        boost:without_exception=False
+        boost:without_graph=True
+        boost:without_iostreams=True
+        boost:without_locale=True
+        boost:without_log=True
+        boost:without_random=True
+        boost:without_regex=True
+        boost:without_mpi=True
+        boost:without_serialization=False
+        boost:without_coroutine=True
+        boost:without_fiber=True
+        boost:without_context=True
+        boost:without_timer=True
+        boost:without_chrono=False
+        boost:without_date_time=False
+        boost:without_atomic=False
+        boost:without_graph_parallel=True
+        boost:without_python=True
+        boost:without_type_erasure=True
+    )
+
+conan_cmake_autodetect(settings)
+
+conan_cmake_install(
+    PATH_OR_REFERENCE  .
+    BUILD  missing
+    REMOTE conancenter
+    SETTINGS ${settings}
+)
 
 # optional configuration
 option(BUILD_ARCC_TESTS "Build unit tests (default OFF)" OFF)
@@ -17,6 +66,7 @@ add_definitions(
     -DCURL_STATICLIB
     -DBOOST_TEST_NO_LIB
     -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
+    -DFMT_HEADER_ONLY
 )
 
 if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES Clang)
@@ -73,7 +123,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
         -Werror=constant-conversion
         -Werror=bool-conversion
         -Werror=enum-conversion
-        -Werror=deprecated-declarations
+        # -Werror=deprecated-declarations
         -Werror=return-stack-address
 
         $<$<COMPILE_LANGUAGE:CXX>:-Werror=overloaded-virtual>
@@ -108,6 +158,16 @@ endif(MSVC)
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
 endif(APPLE)
+
+
+
+include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
+find_package(CURL 7.88.1 REQUIRED)
+find_package(fmt 9.1.0 REQUIRED)
+find_package(nlohmann_json 3.11.2 REQUIRED)
+
+include_directories(${nlohmann_json_INCLUDE_DIRS})
+include_directories(${fmt_fmt_INCLUDE_DIRS})
 
 add_subdirectory(Simple-Web-Server)
 include_directories(Simple-Web-Server)

@@ -7,7 +7,7 @@
 
 #include <server_http.hpp>
 
-#define REDDIT_CLIENT_ID        "8T4M69w3Eop4YA"
+#define REDDIT_CLIENT_ID        "ZJLKKvOJN4R91l8PImLH9Q"
 #define REDDIT_RANDOM_STRING    "ArccClientForReddit"
 #define REDDIT_REDIRECT_URL     "http://localhost:27182/oauth2"
 #define REDDIT_SCOPE            "identity,edit,history,mysubreddits,privatemessages,read,save,submit,subscribe,vote"

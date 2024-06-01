@@ -2,6 +2,7 @@
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #include <ctime>
+#include <fstream>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>

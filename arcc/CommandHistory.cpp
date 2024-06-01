@@ -1,4 +1,4 @@
-#include <boost/filesystem.hpp>
+#include <fstream>
 
 #include <fmt/format.h>
 
@@ -12,7 +12,7 @@ void CommandHistory::loadHistory(bool throwOnError)
 {
     if (_historyFile.empty()) return;
 
-    boost::filesystem::ifstream in(_historyFile);
+    std::ifstream in(_historyFile);
     in.imbue(std::locale::classic());
     if (in.fail())
     {
@@ -44,9 +44,9 @@ void CommandHistory::saveHistory()
 {
     if (_historyFile.empty()) return;
 
-    boost::filesystem::ofstream out;
+    std::ofstream out;
     out.open(_historyFile,
-        boost::filesystem::ofstream::out | boost::filesystem::ofstream::trunc);
+        std::ofstream::out | std::ofstream::trunc);
 
     if (!out.fail())
     {
@@ -66,9 +66,9 @@ void CommandHistory::commit(const std::string &command)
 
     if (!_historyFile.empty())
     {
-        boost::filesystem::ofstream out;
+        std::ofstream out;
         out.open(_historyFile,
-            boost::filesystem::ofstream::out | boost::filesystem::ofstream::app);
+            std::ofstream::out | std::ofstream::app);
 
         if (!out.fail())
         {
