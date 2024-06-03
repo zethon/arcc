@@ -27,6 +27,8 @@ class RedditSession final
 
     std::string                 _accessToken;
     std::string                 _refreshToken;
+
+    std::string                 _redditClientID;
     
     double                      _expiry;                // number of seconds until the session needs refresh
     time_t                      _lastRefresh;           // keep track so we know when to refresh our token
@@ -39,7 +41,7 @@ class RedditSession final
 public:
 
     RedditSession();
-    RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
+    // RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry);
     RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh);
 
     std::string doGetRequest(const std::string& endpoint,

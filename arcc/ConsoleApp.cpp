@@ -196,8 +196,10 @@ void ConsoleApp::initCommands()
         { 
             std::cout << fmt::format("{} ({})\n", APP_TITLE, utils::getOsString());
             std::cout << COPYRIGHT << '\n';
-            std::cout << fmt::format("build-date : {}\n", BUILDTIMESTAMP);
-            std::cout << fmt::format("user-folder : {}\n", utils::getUserFolder());
+            std::cout << fmt::format("build-date    : {}\n", BUILDTIMESTAMP);
+            std::cout << fmt::format("settings-file : {}\n", utils::getDefaultConfigFile());
+            std::cout << fmt::format("session-file  : {}\n", utils::getDefaultSessionFile());
+            std::cout << fmt::format("history-file  : {}\n", utils::getDefaultHistoryFile());
             std::cout << std::endl;
         });
 
@@ -556,7 +558,7 @@ void ConsoleApp::view(const std::string& params)
 
                 if (viewType == COMMENTS)
                 {
-                    url = fmt::format("https://www.reddit.com{}", data["permalink"]);
+                    url = fmt::format("https://www.reddit.com{}", static_cast<std::string>(data["permalink"]));
                     
                     auto formType = ViewFormType::NORMAL;
                     if (args.hasArgument("mobile")) formType = ViewFormType::MOBILE;
@@ -755,7 +757,7 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
     if (link.find("link_flair_text") != link.end()
         && !link["link_flair_text"].is_null())
     {
-        flairText = fmt::format("[{}]", link.at("link_flair_text"));
+        flairText = fmt::format("[{}]", link.at("link_flair_text").template get<std::string>());
     }
 
     if (link["stickied"].get<bool>())
@@ -766,7 +768,7 @@ void ConsoleApp::renderLink(const nlohmann::json& link, std::size_t idx)
     std::string namestr;
     if (_settings.value("render.list.name", false))
     {
-        namestr = fmt::format(" ({})", link["name"]);
+        namestr = fmt::format(" ({})", link["name"].get<std::string>());
     }
 
     std::string updownstr;

@@ -9,7 +9,7 @@ conan_cmake_configure(
     REQUIRES
         boost/1.84.0
         libcurl/8.6.0
-        fmt/9.1.0
+        fmt/10.2.1
         nlohmann_json/3.11.2
     GENERATORS
         cmake_find_package

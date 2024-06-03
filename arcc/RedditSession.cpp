@@ -43,18 +43,18 @@ RedditSession::RedditSession()
     : _expiry { 0 }
 {
     const std::string userAgent = fmt::format("{}:{}:v{} (by /u/ll)"
-        ,utils::getOsString() 
-        ,APP_TITLE 
+        ,utils::getOsString()
+        ,APP_TITLE
         ,VERSION);
 
     _webclient.setUserAgent(userAgent);
     _webclient.setHeader("Authorization: bearer " + _accessToken);
 }
 
-RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry)
-    : RedditSession(accessToken, refreshToken, expiry, 0)
-{
-}
+// RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry)
+//     : RedditSession(accessToken, refreshToken, expiry, 0)
+// {
+// }
 
 RedditSession::RedditSession(const std::string& accessToken, const std::string& refreshToken, double expiry, time_t lastRefresh)
     : _accessToken(accessToken), 
@@ -167,6 +167,8 @@ void RedditSession::reset()
 
 void RedditSession::doRefreshToken()
 {
+    constexpr auto REDDIT_CLIENT_ID = "client_id??";
+    
     std::time_t elapsed_seconds = std::time(nullptr) - _lastRefresh;
     if (elapsed_seconds > _expiry || _expiry == 0)
     {

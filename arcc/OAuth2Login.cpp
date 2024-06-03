@@ -14,12 +14,20 @@
 namespace arcc
 {
 
+namespace
+{
+    constexpr auto REDDIT_CLIENT_ID = "ZJLKKvOJN4R91l8PImLH9Q";
+    constexpr auto REDDIT_RANDOM_STRING = "ArccClientForReddit";
+    constexpr auto REDDIT_REDIRECT_URL = "http://localhost:27182/oauth2";
+    constexpr auto REDDIT_SCOPE = "identity,edit,history,mysubreddits,privatemessages,read,save,submit,subscribe,vote";
+    // constexpr auto REDDIT_LOGIN_URL = "https://ssl.reddit.com/api/v1/authorize?client_id={}&response_type=code&state={}&redirect_uri={}&duration=permanent&scope={}";
+
+    constexpr auto USER_AGENT = "arcc/0.1 by /u/zethon";
+}    
+
 OAuth2Login::OAuth2Login()
-    : _loginUrl{fmt::format("https://ssl.reddit.com/api/v1/authorize?client_id={}&response_type=code&state={}&redirect_uri={}&duration=permanent&scope={}",
-    REDDIT_CLIENT_ID, 
-    REDDIT_RANDOM_STRING, 
-    REDDIT_REDIRECT_URL, 
-    REDDIT_SCOPE)}
+    : _loginUrl{fmt::format("https://ssl.reddit.com/api/v1/authorize?client_id={}&response_type=code&state={}&redirect_uri={}&duration=permanent&scope={}", 
+            REDDIT_CLIENT_ID, REDDIT_RANDOM_STRING, REDDIT_REDIRECT_URL, REDDIT_SCOPE)}
 {
     _server.config.port = 27182;
 }
@@ -50,7 +58,7 @@ void OAuth2Login::start()
 
                 WebClient client;
                 client.setBasicAuth(REDDIT_CLIENT_ID,"");
-                client.setUserAgent("arcc/0.1 by /u/zethon");
+                client.setUserAgent(USER_AGENT);
 
                 const std::string postData = 
                     fmt::format("grant_type=authorization_code&code={}&redirect_uri={}", 
@@ -62,7 +70,7 @@ void OAuth2Login::start()
                 if (result.status == 200)
                 {
                     auto jreply = nlohmann::json::parse(result.data);
-                    _reddit = std::make_shared<RedditSession>(jreply["access_token"], jreply["refresh_token"], jreply["expires_in"].get<double>());
+                    _reddit = std::make_shared<RedditSession>(jreply["access_token"], jreply["refresh_token"], jreply["expires_in"].get<double>(), 0);
 
                     _loggedIn = true;
                 }

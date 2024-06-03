@@ -2,6 +2,7 @@
 // Copyright (c) 2017-2019, Adalid Claure <aclaure@gmail.com>
 
 #include <iostream>
+#include <fstream>
 
 #include <boost/program_options.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -60,9 +61,25 @@ arcc::Settings initSettings()
 
 std::shared_ptr<arcc::RedditSession> initSession()
 {
-    auto session = std::make_shared<arcc::RedditSession>();
-    session->load(utils::getDefaultSessionFile());
-    return session;
+    namespace bfs = boost::filesystem;
+    namespace nl = nlohmann;
+
+    const auto filename { utils::getDefaultSessionFile() };
+    if (bfs::path file{ filename }; bfs::exists(file))
+    {
+        std::ifstream in(filename);
+        nl::json j = nl::json::parse(in);
+        in.close();
+
+        const auto accessToken = j["accessToken"].get<std::string>();
+        const auto refreshToken = j["refreshToken"].get<std::string>();
+        const auto expiry = j["expiry"].get<double>();
+        const auto lastRefresh = j["time"].get<time_t>();
+
+        return std::make_shared<arcc::RedditSession>(accessToken, refreshToken, expiry, lastRefresh);
+    }
+
+    return std::make_shared<arcc::RedditSession>();
 }
 
 int main(int argc, char* argv[])
@@ -75,6 +92,7 @@ int main(int argc, char* argv[])
     desc.add_options()
         ("help,?", "print help message")
         ("version,v", "print version string")
+        ("reset", po::bool_switch()->default_value(false), "reset session data") 
     ;
 
     po::variables_map vm;
@@ -102,12 +120,19 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    auto settings = initSettings();
-    auto session = initSession();
-
     std::cout << APP_TITLE << std::endl;
     std::cout << COPYRIGHT << std::endl;
     std::cout << std::endl;
+
+    if (vm.count("reset") > 0 && vm["reset"].as<bool>())
+    {
+        const auto sessionFile = utils::getDefaultSessionFile();
+        std::filesystem::remove(sessionFile);
+        std::cout << "Session data has been reset (file: " << sessionFile << ")" << std::endl;
+    }
+
+    auto settings = initSettings();
+    auto session = initSession();
 
     try
     {

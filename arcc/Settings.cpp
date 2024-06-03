@@ -46,7 +46,8 @@ std::size_t Settings::load(const std::string & filename)
             }
             else
             {
-                if (_validators[key]->isValid(json_to_string(item.value())))
+                if ((_validators.find(key) == _validators.end() || _validators[key] == nullptr)
+                        || _validators[key]->isValid(json_to_string(item.value())))
                 {
                     _settings[key] = item.value();
                     count++;
@@ -54,7 +55,7 @@ std::size_t Settings::load(const std::string & filename)
                 else
                 {
                     throw std::invalid_argument(
-                        fmt::format("error loading config item '{}': invalid value '{}'", key, item.value()));
+                        fmt::format("error loading config item '{}': invalid value '{}'", key, static_cast<std::string>(item.value())));
                 }
             }
         }
